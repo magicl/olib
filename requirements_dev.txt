@@ -1,0 +1,67 @@
+pip #mypy needs pip to install deps
+
+#Baseline for framework
+pre-commit
+pre-commit-hooks
+pylint[spelling]
+ipython
+parproc
+click
+rich
+mypy
+types-requests
+types-python-dateutil
+types-pytz
+pympler
+bandit
+coverage
+covdefaults
+ansible
+
+#olib dependencies
+sh
+Django
+Pillow
+pylint-django
+pylint-celery
+pylintfileheader
+isort
+pyupgrade
+unify
+webdriver_manager
+black
+mysqlclient
+psycopg[binary]
+redis
+kubernetes
+django-environ
+django_middleware_global_request==0.3.3 #Needed by custom logger
+google-api-python-client==2.80.0
+oauth2client==4.1.3
+gspread==5.12.0
+gspread-dataframe==3.3.1
+gspread-formatting
+jinja2
+
+pandas
+selenium
+freezegun
+pycryptodome
+
+#Graphql
+graphene-django
+
+celery
+cryptography
+openpyxl
+
+strawberry-graphql
+strawberry-graphql-django
+django-choices-field
+relay
+
+#Required for emacs
+pylsp-mypy
+pylsp-rope
+python-lsp-ruff
+python-lsp-black

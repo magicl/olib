@@ -1,0 +1,17 @@
+[mypy]
+python_version = 3.12
+warn_unused_configs = True
+follow_imports = silent
+ignore_missing_imports = True
+show_error_codes = True
+check_untyped_defs = True
+strict_equality = True
+plugins = strawberry.ext.mypy_plugin
+
+
+#Migrations may be missing type annotations..
+[mypy-*.migrations.*]
+ignore_errors = True
+
+#[mypy-utils._meta]
+#ignore_errors = True

@@ -1,0 +1,99 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      #Checkers
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: '/templates/'
+      - id: check-json
+      - id: check-xml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: detect-private-key
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: end-of-file-fixer
+        exclude: '.*\\.json'
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: double-quote-string-fixer #Does the same as unify, but unify is lagging
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.13.0
+    hooks:
+      - id: yamlfmt
+        exclude: '/templates/'
+  # Only checks styles.. Does not fix them, so too much work :)
+  # - repo: https://github.com/openstack/bashate
+  #   rev: 2.1.1
+  #   hooks:
+  #   - id: bashate
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.10.0
+    hooks:
+      - id: shellcheck
+        args: ['--severity=warning']
+  - repo: local
+    hooks:
+      - id: license-update
+        name: license headers
+        entry: bash
+        args: ['-c', '$OLIB_PATH/scripts/license-update.py']
+        language: system
+        types_or: [python, sh, javascript, jsx, css, scss, c, c++]
+      - id: pylint
+        name: pylint
+        entry: bash
+        language: system
+        types: [python]
+        args: ['-c', 'python -m ${OLIB_MODULE} py lint --quiet $@', '--']
+      - id: mypy
+        name: mypy
+        entry: bash
+        language: system
+        types: [python]
+        args: ['-c', 'python -m ${OLIB_MODULE} py mypy --no-install-types $@', '--']
+      - id: isort
+        name: isort
+        entry: isort
+        require_serial: true
+        language: python
+        types_or: [cython, pyi, python]
+        args: ['--filter-files', '--profile=black', #For interop with black
+        ]
+        minimum_pre_commit_version: '2.9.2'
+      - id: pyupgrade
+        name: pyupgrade
+        entry: pyupgrade
+        language: system
+        types: [python]
+        args: ['--py312-plus']
+      - id: unify
+        name: unify
+        entry: unify
+        language: system
+        types: [python]
+        args: ['--in-place', "--quote='"]
+      - id: black
+        name: black
+        entry: black
+        language: system
+        types: [python]
+        args: ['--line-length=120', '--skip-string-normalization', '--target-version=py312']
+      - id: bandit
+        name: bandit
+        entry: bandit
+        language: system
+        types: [python]
+        exclude: '.*tests.*'
+        args: ['--silent'] #, '--format', 'custom', '--msg-template', '{abspath}:{line}: {test_id}[{range}]: {severity}/{confidence}: {msg}']
+      - id: eslint
+        name: eslint
+        entry: bash
+        language: system
+        types_or: [javascript, jsx, ts, tsx]
+        args: ['-c', 'python -m ${OLIB_MODULE} js lint $@', '--']
+default_language_version:
+  python: python3.12

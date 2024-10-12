@@ -1,0 +1,168 @@
+TODO: Create jinja-version of DJango admin base, so we can wrap this in that
+
+<div class="container-fluid">
+  <h1>Admin View</h1>
+
+  <div class="panel panel-default col-lg-12">
+		<h2>All Admins</h2>
+		<table id="admins-table" class="table">
+			<thead>
+				<tr>
+					<th>Joined</th>
+					<th>Last Active</th>
+					<th>Status</th>
+					<th>Id</th>
+					<th>Username</th>
+					<th>Email</th>
+					<th>Level</th>
+					<th>Password</th>
+					<th>Groups</th>
+					<th>+Permissions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for u in users %}
+				<tr>
+					<td>{{ localtime(u.date_joined).strftime("%Y-%m-%d %H:%M:%S") }}</td>
+					<td>{{ localtime(u.last_login).strftime("%Y-%m-%d %H:%M:%S") }}</td>
+					<td>{{ 'active' if u.is_active else '-'  }}</td>
+					<td>{{ u.id }}</td>
+					<td>{{ u.username }}</td>
+					<td>{{ u.email }}</td>
+					<td>{{ 'superuser' if u.is_superuser else 'staff' if u.is_staff else '-'  }}</td>
+					<td>{{ 'yes' if u.has_usable_password() else 'no' }}</td>
+					<td>
+						{% for g in u.groups.all() %}
+						{{ g.name }},
+						{% endfor %}
+					</td>
+					<td>
+						{% for p in u.user_permissions.all() %}
+						{{ p.codename }},
+						{% endfor %}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+  </div>
+	<div class="panel panel-default col-lg-12">
+		<h2>Admin Groups/Roles</h2>
+		<table id="groups-table" class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Permissions</th>
+					{% for u in users %}
+					<th>{{ u.username }}</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for g in groups %}
+				<tr>
+					<td>{{ g.name }}</td>
+					<td>
+						{% for p in g.permissions.all() %}
+						{{ p.codename }},
+						{% endfor %}
+					</td>
+					{% for u in users %}
+					<td>{% if u.is_superuser or g.name in groupSets[u.id] %}Y{% endif %}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+  </div>
+	<div class="panel panel-default col-lg-12">
+		<h2>Permissions</h2>
+		<table id="permissions-table" class="table">
+			<thead>
+				<tr>
+					<th>Name</th>
+					{% for u in users %}
+					<th>{{ u.username }}</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for p in perms %}
+				<tr>
+					<td>{{ p }}</td>
+					{% for u in users %}
+					<td>{% if checkAccess(p, u, returnBool=True) %}Y{% endif %}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+  </div>
+	<div class="panel panel-default col-lg-12">
+		<h2>Base Permissions</h2>
+		<table id="base-permissions-table" class="table">
+			<thead>
+				<tr>
+					<th>Codename</th>
+					<th>Description</th>
+					{% for u in users %}
+					<th>{{ u.username }}</th>
+					{% endfor %}
+					{% for g in groups %}
+					<th>{{ g.name }}</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for p in permissions %}
+				<tr>
+					<td>{{ p.codename }}</td>
+					<td>{{ p.name }}</td>
+					{% for u in users %}
+					<td>{% if u.has_perm(p.codename) %}Y{% endif %}</td>
+					{% endfor %}
+					{% for g in groups %}
+					<td>{% if p.codename in groupPermSets[g.id] %}Y{% endif %}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+  </div>
+</div>
+
+<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/v/bs5/dt-2.0.2/datatables.min.css" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/v/bs5/dt-2.0.2/datatables.min.js"></script>
+
+<script>
+	new DataTable('#admins-table', {
+		 'pageLength': 50,
+		 'lengthMenu': [50, 100, 500, 1000],
+			'order':      [[0, 'desc']]
+	});
+
+	new DataTable('#groups-table', {
+		 'pageLength': 50,
+		 'lengthMenu': [50, 100, 500, 1000],
+		 'order':      [[0, 'desc']]
+	});
+	new DataTable('#permissions-table', {
+		 'pageLength': 200,
+		 'lengthMenu': [50, 100, 500, 1000],
+		 'order':      [[0, 'desc']],
+ });
+	new DataTable('#base-permissions-table', {
+		 'pageLength': 50,
+		 'lengthMenu': [50, 100, 500, 1000],
+		 'order':      [[0, 'desc']],
+		 'oSearch':    {'sSearch': 'global'},
+ });
+</script>

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "Deactivating venv"
+
+#Deactivate env
+. deactivate
+
+unset OLIB_VENV

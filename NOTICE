@@ -1,0 +1,8 @@
+OLIB
+
+Copyright 2024 Øivind Loe
+
+This product includes software developed by Øivind Loe
+
+This product includes third-party libraries:
+- github.com/jistr/ansible-gsetting: Licensed under Apache 2.0

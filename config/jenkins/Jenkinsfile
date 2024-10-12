@@ -1,0 +1,54 @@
+pipeline {
+    agent { label 'python' }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Building..'
+                checkout scm
+            }
+        }
+        stage('Init') {
+            steps {
+                echo 'Init..'
+                sh '''
+                   set +x
+
+                   . ~/.env
+
+                   #System does not like sourcing through symlink
+                   if [ -d ./olib ]; then
+                      . olib/.envrc #Set OLIB_PATH
+                      $OLIB_PATH/scripts/init.sh --nodev
+                      . olib/.envrc #Activate venv
+                   else
+                      . ./.envrc
+                      $OLIB_PATH/scripts/init.sh --nodev
+                      . ./.envrc
+                   fi
+
+                   if run has --tool javascript; then
+                      $OLIB_PATH/scripts/init-js.sh
+                   fi
+                '''
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing..'
+                sh '''
+                   set +x
+
+                   . ~/.env
+                   if [ -d ./olib ]; then
+                      . olib/.envrc #System does not like sourcing through symlink
+                   else
+                      . ./.envrc #System does not like sourcing through symlink
+                   fi
+
+                   run dev test-all
+                '''
+            }
+        }
+    }
+}
