@@ -19,7 +19,7 @@ covdefaults
 ansible
 
 #olib dependencies
-sh
+sh==2.0.7 # 2.1.0 gives pylint warnings
 Django
 Pillow
 pylint-django
