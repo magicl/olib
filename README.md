@@ -30,16 +30,17 @@ fi
 
 ## Basic usage
 
-You should now be able to use the `run` command as described further down
+You should now be able to use the `run` command. A small subset of available commands are shown below. Some are not visible without a correctly specified config file.
 
 ```
-#Small subset of available commands
-run -h            #Show help
-run init          #Install packages
-run py lint       #Run python lint
-run py test       #Run python tests
-run js lint       #Run javascript lint (if enabled)
-run dev test-all  #Run all configured lints / tests
+run -h              #Show help
+run init            #Install packages
+run py lint         #Run python lint
+run py test         #Run python tests
+run js lint         #Run javascript lint (if enabled)
+run dev test-all    #Run all configured lints / tests
+run docker compose  #Run docker-compose
+run app deploy      #Install / deploy app on k8s
 ```
 
 ## Config file
