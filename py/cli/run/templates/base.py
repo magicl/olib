@@ -16,7 +16,6 @@ class ConfigMeta:
     # Environment
     isOlib = os.path.exists('.is_olib')
     olib_path = os.environ['OLIB_PATH']
-    infrabase_path = '/home/oivind/yolo/infrabase'
 
     # Options
     django = False

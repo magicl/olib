@@ -75,7 +75,6 @@ def images_analyze(cls, ctx, images=None):
         click.echo('Installing dive...')
         try:
             with sh.contrib.sudo:
-                # sh.snap('install', 'docker', _fg=True)
                 sh.snap('install', 'dive', _fg=True)
                 sh.snap(
                     'connect',
@@ -111,11 +110,6 @@ def k8s_push_config(cls, ctx):
         # Ensure namespace exists
         k8s_namespace_create(ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
-        # sh.bash(
-        #    '-c',
-        #    f"kubectl create configmap env --from-env-file={','.join(inst['env_files'])} -n {ctx.obj.k8sNamespace} --dry-run=client -o yaml | kubectl apply -f -",
-        #    _fg=True,
-        # )
         config = sh.kubectl(
             'create',
             'configmap',
@@ -152,7 +146,6 @@ def k8s_migrate(cls, ctx, break_on_error=False):
         sh.kubectl(
             'apply', '-f', 'migration.yml', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}', _fg=True
         )
-        # sh.bash('-c', 'kubectl apply -f migration.yml')
     else:
         helm_values = [arg for v in ctx.obj.inst['helm_values'] for arg in ('-f', v)]
         sh.helm(
@@ -167,11 +160,6 @@ def k8s_migrate(cls, ctx, break_on_error=False):
             *helm_values,
             _fg=True,
         )
-        # sh.bash(
-        #    '-c',
-        #    f"helm upgrade --install migration {meta.build_helm_migrate} -n {ctx.obj.k8sNamespace} --create-namespace {helm_values}",
-        #    _fg=True,
-        # )
 
     success = True
     if not k8s_job_wait_for_completion('migration', ctx.obj.k8sNamespace, ctx.obj.k8sContext):
@@ -185,10 +173,8 @@ def k8s_migrate(cls, ctx, break_on_error=False):
         sh.kubectl(
             'delete', '-f', 'migration.yml', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}', _fg=True
         )
-        # sh.bash('-c', 'kubectl delete -f migration.yml')
     else:
         sh.helm('uninstall', 'migration', '-n', ctx.obj.k8sNamespace, f'--kube-context={ctx.obj.k8sContext}', _fg=True)
-        # sh.bash('-c', f"helm uninstall migration -n {ctx.obj.k8sNamespace}", _fg=True)
 
     if not success:
         click.echo('Migrations failed', err=True)
@@ -207,14 +193,11 @@ def k8s_deploy(cls, ctx, deployments):
     # Do we already have deployed services from app
     need_deploy = bool(sh.kubectl('get', 'service', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}'))
 
-    # need_deploy = bool(sh.bash('-c', f"kubectl get service -n {ctx.obj.k8sNamespace}"))
-
     if meta.build_helm_deploy is None:
         # Expect a 'deploy.yml' file with the full deployment
         sh.kubectl(
             'apply', '-f', 'deployment.yml', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}', _fg=True
         )
-        # sh.bash('-c', 'kubectl apply -f deployment.yml', _fg=True)
 
     else:
         # Build based on helm chart
@@ -231,11 +214,6 @@ def k8s_deploy(cls, ctx, deployments):
             *helm_values,
             _fg=True,
         )
-        # sh.bash(
-        #    '-c',
-        #    f"helm upgrade --install {meta.build_name} {meta.build_helm_deploy} -n {ctx.obj.k8sNamespace} --create-namespace {helm_values}",
-        #    _fg=True,
-        # )
 
     if need_deploy:
         for d in meta.build_deployments:
@@ -252,39 +230,20 @@ def k8s_deploy(cls, ctx, deployments):
                 _fg=True,
             )
 
-            # sh.bash(
-            #    '-c',
-            #    f"kubectl rollout restart deployment {d} -n {ctx.obj.k8sNamespace}",
-            # )
-
 
 def k8s_uninstall(cls, ctx):
     click.echo('Deleting from Kubernetes...')
     meta = ctx.obj.meta
-    # inst = ctx.obj.inst
 
     if meta.build_helm_deploy is None:
         sh.kubectl(
             'delete', '-f', 'deployment.yml', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}', _fg=True
         )
-        # sh.bash('-c', 'kubectl delete -f deployment.yml', _fg=True)
 
     else:
         sh.helm(
             'uninstall', meta.build_name, '-n', ctx.obj.k8sNamespace, f'--kube-context={ctx.obj.k8sContext}', _fg=True
         )
-        # sh.bash(
-        #    '-c',
-        #    f"helm uninstall {meta.build_name} -n {ctx.obj.k8sNamespace}",
-        #    _fg=True,
-        # )
-
-    # # Delete cert
-    # sh.bash(
-    #     '-c',
-    #     f"{meta.infrabase_path}/scripts/certs/remove-service-tls-cert.sh {inst['name']}-tls {ctx.obj.k8sNamespace}",
-    #     _fg=True,
-    # )
 
 
 def docker_run(cls, ctx):
