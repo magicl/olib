@@ -20,3 +20,4 @@ class Config:
     displayName = 'OLIB'
     clusters = None
     tools = ['python']
+    license = 'apache'

@@ -6,7 +6,6 @@
 # Update license headers for all source files including self and lint files
 
 import glob
-import os
 import re
 
 import click
@@ -176,13 +175,14 @@ def pathGenerator(spec, paths=None):
 
 
 @click.command()
-@click.option('--dryrun/--no-dryrun')  # Disable dryrun to do stuff for real
+@click.option('--dryrun/--no-dryrun', default=False, is_flag=True)  # Disable dryrun to do stuff for real
+@click.option('--license', type=click.Choice(['restrictive', 'apache']), default='restrictive')
 @click.argument('paths', nargs=-1)
-def main(paths, dryrun=False):
+def main(paths, dryrun, license):
     global headerMatches, totalUpdated  # pylint: disable=global-statement
 
     # Olib is the only on using apache at this point. Expand later
-    use_apache = os.path.exists('.is_olib')
+    use_apache = license == 'apache'
 
     for spec in get_headers(use_apache):
         headerMatches = 0

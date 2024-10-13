@@ -8,3 +8,4 @@ class Config:
     displayName = 'APP'
     insts = None
     tools = ['python']
+    license = 'restrictive'

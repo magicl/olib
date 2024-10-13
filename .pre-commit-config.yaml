@@ -40,7 +40,7 @@ repos:
       - id: license-update
         name: license headers
         entry: bash
-        args: ['-c', '$OLIB_PATH/scripts/license-update.py']
+        args: ['-c', '$OLIB_PATH/scripts/license-update.py --license $(python -m ${OLIB_MODULE} get --license)']
         language: system
         types_or: [python, sh, javascript, jsx, css, scss, c, c++]
       - id: pylint

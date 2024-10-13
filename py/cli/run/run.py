@@ -60,7 +60,20 @@ def create_cli(config=None):
     @click.pass_context
     def has(ctx, tool):
         """Check if tool is available"""
-        sys.exit(0 if tool in ctx.obj.config.tools else 1)
+        if tool is not None:
+            sys.exit(0 if tool in ctx.obj.config.tools else 1)
+        sys.exit(1)
+
+    @cli.command()
+    @click.option('--license', default=False, is_flag=True)
+    @click.pass_context
+    def get(ctx, license):
+        """Return a value"""
+        if license:
+            click.echo(ctx.obj.config.license, nl=False)
+            sys.exit(0)
+
+        sys.exit(1)
 
     prep_config(config)
 

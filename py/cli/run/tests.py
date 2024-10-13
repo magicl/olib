@@ -12,6 +12,7 @@ import sh
 from click.testing import CliRunner
 from django.test import tag
 
+from olib.py.cli.run.defaults import Config as defaultConfig
 from olib.py.cli.run.run import create_cli
 from olib.py.cli.run.templates import remote
 from olib.py.cli.run.utils.remote import RemoteHost, clear_sessions
@@ -74,17 +75,23 @@ class TestCliRun(OTestCase):
         mock_server_reset_all()
         clear_sessions()
 
-    def _check_cli_result(self, result, exp_code=None, exp_output=None):
+    def _cli_check(self, runner, cli, args, exp_code=0, exp_out=None, exp_err=None):
+        logger.info(f'run {' '.join(args)}')
+
+        result = runner.invoke(cli, args, catch_exceptions=False)
+        self._check_cli_result(result, exp_code, exp_out, exp_err)
+
+    def _check_cli_result(self, result, exp_code=None, exp_out=None, exp_err=None):
         """Print exception in cli result if any"""
-        # if result.exit_code and result.exc_info is not None:
-        #    traceback.print_exception(*result.exc_info)
-        #    self.fail('Exception in cli result')
+        logger.info(f'  exit_code={result.exit_code}')
+        logger.info(f'  stdout={result.stdout_bytes}')
+        logger.info(f'  stderr={result.stderr_bytes}')
 
-        if exp_code is not None:
-            self.assertEqual(result.exit_code, exp_code)
-
-        if exp_output is not None:
-            self.assertEqual(result.output, exp_output)
+        self.assertEqual(result.exit_code, exp_code)
+        if exp_out is not None:
+            self.assertEqual(result.stdout_bytes, exp_out.encode('utf-8'))
+        if exp_err is not None:
+            self.assertEqual(result.stderr_bytes, exp_err.encode('utf-8'))
 
     def test_shell(self):
         """Smoke-test for shell. Verify that getting help message works"""
@@ -95,8 +102,44 @@ class TestCliRun(OTestCase):
         """Smoke-test via click.testing. Verify that getting help message works"""
         cli = create_cli()
         runner = CliRunner()
-        result = runner.invoke(cli, ['--help'])
+        result = runner.invoke(cli, ['--help'], catch_exceptions=False)
         self.assertTrue(result.output.startswith('Usage: cli'))
+
+    def test_has(self):
+        """Verify capability checking"""
+
+        runner = CliRunner()
+
+        cli = create_cli(config=defaultConfig)
+
+        self._cli_check(runner, cli, ['has'], 1)
+        self._cli_check(runner, cli, ['has', '--tool', 'python'], 0)  # Python is default on
+        self._cli_check(runner, cli, ['has', '--tool', 'javascript'], 1)  # Javascript is default off
+
+        class Config:
+            tools = ['javascript']
+
+        cli = create_cli(config=Config)
+
+        self._cli_check(runner, cli, ['has'], 1)
+        self._cli_check(runner, cli, ['has', '--tool', 'python'], 1)  # Python is now off
+        self._cli_check(runner, cli, ['has', '--tool', 'javascript'], 0)  # Javascript is now on
+
+    def test_get(self):
+        """Verify capability checking"""
+        cli = create_cli(config=defaultConfig)
+        runner = CliRunner()
+
+        self._cli_check(runner, cli, ['get'], 1)  # No arg
+        self._cli_check(runner, cli, ['get', '--license'], 0, 'restrictive')  # Default license
+
+        class Config:
+            license = 'apache'
+
+        cli = create_cli(config=Config)
+
+        self._cli_check(runner, cli, ['get'], 1)  # No arg
+        self._cli_check(runner, cli, ['get', '--license'], 0, 'apache')  # Default license
 
     def test_auto_login(self):
         """Verifies automatic login with predefined credentials"""
