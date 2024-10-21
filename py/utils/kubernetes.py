@@ -95,6 +95,19 @@ def k8s_secret_read_single(name: str, namespace: str, context: str, *keys: str):
         f'None of the secret keys "{', '.join(keys)}" are available in secret "{name}" in namespace "{namespace}"'
     )
 
+def k8s_secret_exists(name: str, namespace: str, context: str):
+    from kubernetes import client, config
+
+    config.load_kube_config(context=context)
+    v1 = client.CoreV1Api()
+
+    try:
+        secret = v1.read_namespaced_secret(name=name, namespace=namespace)
+    except client.exceptions.ApiException as e:
+        return False
+
+    return True
+
 
 def k8s_job_create(image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name=None):
     from kubernetes import client, config

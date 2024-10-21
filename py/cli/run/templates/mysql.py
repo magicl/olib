@@ -18,6 +18,7 @@ from ....utils.kubernetes import (
     k8s_secret_create,
     k8s_secret_delete,
     k8s_secret_read_single,
+    k8s_secret_exists,
 )
 from ....utils.passwords import makePassword
 from ..utils.mysql import (
@@ -99,6 +100,19 @@ def _implement(defaultRoot=True):
                     },
                 )
                 click.echo('Added mysql secret to kubernetes')
+
+        @mysqlGroup.command()
+        @click.pass_context
+        def app_exists(ctx):
+            """Check if app exists"""
+            secretName, *_ = mysql_convert_name(ctx)
+
+            exists = k8s_secret_exists(
+                secretName,
+                ctx.obj.k8sNamespace,
+                ctx.obj.k8sContext)
+
+            sys.exit(0 if exists else 1)
 
         @mysqlGroup.command()
         @click.pass_context

@@ -7,11 +7,13 @@
 
 import click
 import sh
+import sys
 
 from ....utils.kubernetes import (
     k8s_namespace_create,
     k8s_secret_create,
     k8s_secret_delete,
+    k8s_secret_exists,
 )
 from ..utils.redis_utils import redis_convert_name, redis_creds, redis_port_forward
 from .base import prep_config
@@ -56,6 +58,19 @@ def _implement(defaultRoot=True):
                 },
             )
             click.echo('Added redis secret to kubernetes')
+
+        @redisGroup.command()
+        @click.pass_context
+        def app_exists(ctx):
+            """Check if app exists"""
+            secretName, *_ = redis_convert_name(ctx)
+
+            exists = k8s_secret_exists(
+                secretName,
+                ctx.obj.k8sNamespace,
+                ctx.obj.k8sContext)
+
+            sys.exit(0 if exists else 1)
 
         @redisGroup.command()
         @click.pass_context

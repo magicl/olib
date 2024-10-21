@@ -18,6 +18,7 @@ from ....utils.kubernetes import (
     k8s_secret_create,
     k8s_secret_delete,
     k8s_secret_read_single,
+    k8s_secret_exists,
 )
 from ....utils.passwords import makePassword
 from ..utils.mysql_backup import mysql_backup_import
@@ -85,6 +86,9 @@ def _implement(defaultRoot=True):
 
                 click.echo('Granted permissions for user to database')
 
+                for ext in ctx.obj.postgres_extensions:
+                    q(f"""CREATE EXTENSION IF NOT EXISTS {ext};""")
+
                 # Create a kubernetes secret for postgres in the target namespace
                 k8s_namespace_create(ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
@@ -98,6 +102,19 @@ def _implement(defaultRoot=True):
                     },
                 )
                 click.echo('Added postgres secret to kubernetes')
+
+        @postgresGroup.command()
+        @click.pass_context
+        def app_exists(ctx):
+            """Check if app exists"""
+            secretName, *_ = postgres_convert_name(ctx)
+
+            exists = k8s_secret_exists(
+                secretName,
+                ctx.obj.k8sNamespace,
+                ctx.obj.k8sContext)
+
+            sys.exit(0 if exists else 1)
 
         @postgresGroup.command()
         @click.pass_context
@@ -171,7 +188,7 @@ def _implement(defaultRoot=True):
     return postgresGroup
 
 
-def postgres(root=False):
+def postgres(root=False, extensions=[]):
     """
     Injects functions into service Config for managing postgres
 
@@ -183,6 +200,7 @@ def postgres(root=False):
         prep_config(cls)
 
         cls.meta.postgres = True
+        cls.meta.postgres_extensions = extensions
 
         cls.meta.commandGroups.append(('postgres', _implement(root)))
 
