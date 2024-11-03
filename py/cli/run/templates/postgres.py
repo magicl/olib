@@ -17,8 +17,8 @@ from ....utils.kubernetes import (
     k8s_namespace_create,
     k8s_secret_create,
     k8s_secret_delete,
-    k8s_secret_read_single,
     k8s_secret_exists,
+    k8s_secret_read_single,
 )
 from ....utils.passwords import makePassword
 from ..utils.mysql_backup import mysql_backup_import
@@ -47,6 +47,22 @@ def _implement(defaultRoot=True):
                 'TERM': 'xterm-256color',  # Help psql understand terminal type since we are running through sh
             }
             sh.psql(*args, _fg=True, _env=env)
+
+    @postgresGroup.command(help='Execute one or more postgres queries')
+    @click.argument('queries', nargs=-1)
+    @click.option('--root', help='Run as root', default=False, is_flag=True)
+    @click.option('--no-db', help='Run without selecting a db', default=False, is_flag=True)
+    @click.pass_context
+    def exec(ctx, queries, root, no_db):
+        with postgres_connect(ctx, root=root, use_db=not no_db) as db:
+            q = partial(postgres_query, db)
+            # queries = click.get_text_stream('stdin').read().strip().split(';')
+            for query in queries:
+                if query.strip():
+                    click.echo('> ' + query)
+                    res = q(query)
+                    if res is not None:
+                        click.echo(' => ' + str(res))
 
     if not defaultRoot:
 
@@ -109,10 +125,7 @@ def _implement(defaultRoot=True):
             """Check if app exists"""
             secretName, *_ = postgres_convert_name(ctx)
 
-            exists = k8s_secret_exists(
-                secretName,
-                ctx.obj.k8sNamespace,
-                ctx.obj.k8sContext)
+            exists = k8s_secret_exists(secretName, ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
             sys.exit(0 if exists else 1)
 
@@ -188,7 +201,7 @@ def _implement(defaultRoot=True):
     return postgresGroup
 
 
-def postgres(root=False, extensions=[]):
+def postgres(root=False, extensions: list[str] | None = None):
     """
     Injects functions into service Config for managing postgres
 
@@ -200,7 +213,7 @@ def postgres(root=False, extensions=[]):
         prep_config(cls)
 
         cls.meta.postgres = True
-        cls.meta.postgres_extensions = extensions
+        cls.meta.postgres_extensions = extensions or []
 
         cls.meta.commandGroups.append(('postgres', _implement(root)))
 
