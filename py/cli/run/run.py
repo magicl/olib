@@ -4,6 +4,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+import os
 import sys
 
 import click
@@ -19,6 +20,7 @@ from .tools.dev import register as register_dev
 from .tools.js import register as register_js
 from .tools.k8s import register as register_k8s
 from .tools.py import register as register_py
+from .utils.template import render_template
 
 CLI_CONTEXT_SETTINGS = {'help_option_names': ['-h', '--help']}
 
@@ -74,6 +76,17 @@ def create_cli(config=None):
             sys.exit(0)
 
         sys.exit(1)
+
+    @cli.command(help='Render a template file. Returns path to rendered file')
+    @click.argument('template')
+    @click.pass_context
+    def render(ctx, template):
+        """Render a template"""
+        click.echo(
+            render_template(
+                ctx, template, base_dir=os.getcwd(), suffix=f".{ctx.obj.inst['name']}.{ctx.obj.inst['cluster']}"
+            )
+        )
 
     prep_config(config)
 

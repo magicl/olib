@@ -8,27 +8,29 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 
-def _render(ctx, filename, out_filename, extra_context: dict | None = None):
-    env = Environment(loader=FileSystemLoader(ctx.obj.meta.olib_path))  # nosec
+def _render(ctx, filename, out_filename, base_dir: str, extra_context: dict | None = None):
+    env = Environment(loader=FileSystemLoader(base_dir))  # nosec
     template = env.get_template(filename)
     with open(out_filename, 'w', encoding='utf-8') as f:
-        f.write(template.render(ctx=ctx, meta=ctx.obj.meta, extra_context=extra_context))
+        f.write(template.render(ctx=ctx, meta=ctx.obj.meta, extra_context=extra_context, inst=ctx.obj.inst))
 
 
-def render_template(ctx, filename, extra_context: dict | None = None, suffix=''):
+def render_template(ctx, filename, extra_context: dict | None = None, suffix='', base_dir: str | None = None):
     """
     Applies template to targe file, and returns a path to the new file to use. The new file is only updated if necessary
     :param suffix: Optional suffix to add to output filename to allow different output versions
     """
-
     out_filename = f".output/tmpl/{filename}{suffix}"
     missing = False
+
+    if base_dir is None:
+        base_dir = ctx.obj.meta.olib_path
 
     if not os.path.exists(out_filename):
         os.makedirs(os.path.dirname(out_filename), exist_ok=True)
         missing = True
 
-    if missing or os.path.getmtime(f"{ctx.obj.meta.olib_path}/{filename}") > os.path.getmtime(out_filename):
-        _render(ctx, filename, out_filename, extra_context)
+    if missing or os.path.getmtime(f"{base_dir}/{filename}") > os.path.getmtime(out_filename):
+        _render(ctx, filename, out_filename, base_dir, extra_context)
 
     return out_filename
