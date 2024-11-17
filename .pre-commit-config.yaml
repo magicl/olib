@@ -3,9 +3,9 @@ repos:
     rev: v5.0.0
     hooks:
       #Checkers
-      - id: check-yaml
-        args: [--allow-multiple-documents]
-        exclude: '/templates/'
+      #- id: check-yaml
+      #  args: [--allow-multiple-documents]
+      #  exclude: '/templates/'
       - id: check-json
       - id: check-xml
       - id: check-toml
@@ -25,6 +25,7 @@ repos:
     hooks:
       - id: yamlfmt
         exclude: '/templates/'
+
   # Only checks styles.. Does not fix them, so too much work :)
   # - repo: https://github.com/openstack/bashate
   #   rev: 2.1.1
@@ -37,6 +38,12 @@ repos:
         args: ['--severity=warning']
   - repo: local
     hooks:
+      - id: yamllint
+        name: yamllint
+        entry: bash
+        language: system
+        args: ['-c', 'yamllint -c $OLIB_PATH/config/yamllint.yml $@', '--']
+        files: '\.ya?ml$'
       - id: license-update
         name: license headers
         entry: bash
