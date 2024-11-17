@@ -14,3 +14,7 @@ rules:
     max-spaces-after: -1
   indentation:
     indent-sequences: false
+  line-length: disable
+  document-start: disable
+  comments: disable
+  indentation: disable
