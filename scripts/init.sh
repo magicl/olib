@@ -10,8 +10,8 @@ trap "exit 1" ERR
 
 PYTHON_VERSION=3.12.6
 CUR_DIR=${PWD##*/}
-pipEnvName=$CUR_DIR
-#VENV_PATH=~/.pyenv/versions/${pipEnvName}
+VENV_NAME=$CUR_DIR
+#VENV_PATH=~/.pyenv/versions/${VENV_NAME}
 VENV_PATH=$CUR_DIR/.pyenv
 dev='true'
 force='false'
@@ -81,10 +81,10 @@ if [[ $CUR_DIR != "olib" ]]; then
 fi
 
 
-if $OLIB_PATH/scripts/utils/arg_if.py "--force" "$*"; then
+if [[ "$force" = true ]]; then
     #Delete directories, triggering full refresh
     echo "Deleting all existing pip/npm packages..."
-    #pyenv virtualenv-delete -f "$pipEnvName" || true
+    #pyenv virtualenv-delete -f "$VENV_NAME" || true
     #rm -rf ./node_modules
     #npmArgs=" --force"
 	rm -rf $VENV_PATH
@@ -97,20 +97,20 @@ if [ ! -d $VENV_PATH ] || ! pip -V; then
     #pyenv install -s $PYTHON_VERSION
 
     #Create new environment
-    echo "Creating new virtualenv $pipEnvName for `whoami`"
+    echo "Creating new virtualenv $VENV_NAME for `whoami`"
     rm -rf $VENV_PATH
-    #pyenv virtualenv $PYTHON_VERSION $pipEnvName
-    #pyenv local $pipEnvName
-	uv venv --python $PYTHON_VERSION $VENV_PATH
+    #pyenv virtualenv $PYTHON_VERSION $VENV_NAME
+    #pyenv local $VENV_NAME
+	uv venv --python $PYTHON_VERSION --prompt $VENV_NAME $VENV_PATH
 fi
 
 if [ "$(uname)" == "Darwin" ]; then
     # shellcheck disable=SC1090
-    #source "/Users/$USER/.pyenv/versions/${pipEnvName}/bin/activate"
+    #source "/Users/$USER/.pyenv/versions/${VENV_NAME}/bin/activate"
 	. $VENV_PATH/bin/activate
 else
     # shellcheck disable=SC1090
-    #source "/home/$USER/.pyenv/versions/${pipEnvName}/bin/activate"
+    #source "/home/$USER/.pyenv/versions/${VENV_NAME}/bin/activate"
 	. $VENV_PATH/bin/activate
 fi
 
