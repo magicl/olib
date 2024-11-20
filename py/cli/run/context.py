@@ -73,6 +73,10 @@ class RunContext:
         return cast(dict, self._inst)
 
     @property
+    def inst_or_none(self):
+        return self.inst if self._inst is not None else None
+
+    @property
     def k8sContext(self):
         return self.inst['cluster']
 

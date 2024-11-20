@@ -12,7 +12,7 @@ def _render(ctx, filename, out_filename, base_dir: str, extra_context: dict | No
     env = Environment(loader=FileSystemLoader(base_dir))  # nosec
     template = env.get_template(filename)
     with open(out_filename, 'w', encoding='utf-8') as f:
-        f.write(template.render(ctx=ctx, meta=ctx.obj.meta, extra_context=extra_context, inst=ctx.obj.inst))
+        f.write(template.render(ctx=ctx, meta=ctx.obj.meta, extra_context=extra_context, inst=ctx.obj.inst_or_none))
 
 
 def render_template(ctx, filename, extra_context: dict | None = None, suffix='', base_dir: str | None = None):
