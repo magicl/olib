@@ -102,7 +102,7 @@ def _implement(defaultRoot=True):
 
                 click.echo('Granted permissions for user to database')
 
-                for ext in ctx.obj.postgres_extensions:
+                for ext in ctx.obj.meta.postgres_extensions:
                     q(f"""CREATE EXTENSION IF NOT EXISTS {ext};""")
 
                 # Create a kubernetes secret for postgres in the target namespace
