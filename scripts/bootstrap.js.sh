@@ -16,8 +16,10 @@ wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 # Init NVM
 . $LOCAL_DIR/bootstrap.env.sh
 
-# For now, just install latest
-nvm install node
+# For now, just install latest LTS
+nvm install --lts
+nvm use --lts
+
 nvm install-latest-npm
 
 # Faster npm alternative
