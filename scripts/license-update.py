@@ -68,6 +68,8 @@ def get_headers(use_apache=False):
             'targets': [
                 '**/*.js',
                 '**/*.jsx',
+                '**/*.ts',
+                '**/*.tsx',
                 '**/*.css',
                 '**/*.scss',
                 '**/*.c',
