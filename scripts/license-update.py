@@ -17,6 +17,7 @@ def get_headers(use_apache=False):
         '.*node_modules/.*',
         '.*ansible/library/gsetting.py',  # Separate Apache 2.0 license
         '.*olib/.*',  # Prevent updating licenses in olib from outside project
+        '.*next-env.d.ts',  # Next.js type definitions. Next.js will overwrite this
     ]
 
     # License text starts with Copyright and ends with ~ to make it easy to update later. Keep all old license texts in this
