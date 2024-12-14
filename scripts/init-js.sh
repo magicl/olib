@@ -10,7 +10,7 @@ trap "exit 1" ERR
 LOCAL_DIR=$(dirname "$(realpath "$0")")
 
 if [ ! -e $HOME/.nvm ]; then
-. $LOCAL_DIR/bootstrap.js.sh
+	. $LOCAL_DIR/bootstrap.js.sh
 fi
 
 # Install packages in current dir and child dirs that have a package.json
