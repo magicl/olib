@@ -63,7 +63,7 @@ def images_push(cls, ctx, images=None):
             '-c',
             f'''
             docker image tag {image_name}:latest {inst['pck_registry']}/{meta.build_category}/{meta.build_name}/{image_name}:latest
-            docker --tlscacert ~/.infrabase/root-ca.pem image push {inst['pck_registry']}/{meta.build_category}/{meta.build_name}/{image_name}:latest
+            docker --tlscacert $KNOX/infrabase/root-ca.pem image push {inst['pck_registry']}/{meta.build_category}/{meta.build_name}/{image_name}:latest
             ''',
             _fg=True,
         )

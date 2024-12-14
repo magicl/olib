@@ -27,7 +27,7 @@ def infisical_convert_name(ctx):
 
 def infisical_creds(ctx) -> tuple[str, str]:
     """Returns client_id, client_secret. Invalidates previous client_secret"""
-    cli_client_id, cli_client_secret = readFileSecretSplit('~/.infrabase/secrets/infra/infisical-cli.txt')
+    cli_client_id, cli_client_secret = readFileSecretSplit('$KNOX/infrabase/secrets/infra/infisical-cli.txt')
 
     return Infisical(client_id=cli_client_id, client_secret=cli_client_secret).create_client_secret(
         ctx.obj.inst['infisical_identity_id'], ctx.obj.inst['name']

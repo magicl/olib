@@ -29,7 +29,7 @@ def redis_convert_name(ctx):
 
 def redis_creds(ctx, root=None):
     # Always using root secret for redis
-    pwd = readFileSecret('~/.infrabase/secrets/infra/redis-root.txt')
+    pwd = readFileSecret('$KNOX/infrabase/secrets/infra/redis-root.txt')
 
     if root:
         database = None

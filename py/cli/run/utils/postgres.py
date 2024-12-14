@@ -44,7 +44,7 @@ def postgres_creds(ctx, root=False, use_db: bool | None = None):
 
     if root:
         user = 'postgres'
-        pwd = readFileSecret('~/.infrabase/secrets/infra/postgres-root.txt')
+        pwd = readFileSecret('$KNOX/infrabase/secrets/infra/postgres-root.txt')
 
         if use_db:
             _, database, _ = postgres_convert_name(ctx)
