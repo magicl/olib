@@ -42,12 +42,6 @@ def register(config):
 
         @js.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        # @click.option(
-        #    '--quiet',
-        #    default=False,
-        #    is_flag=True,
-        #    help="Only display messages. Don't display score",
-        # )
         @click.pass_context
         def lint(ctx, files):
             """Run eslint in all package.js directories in scope"""
@@ -84,6 +78,38 @@ def register(config):
                     _env=os.environ,
                     _cwd=dir,
                 )
+
+        @js.command()
+        @click.pass_context
+        def test_unit(ctx):
+            # Keep it simple for now
+            dir = 'frontend'
+
+            sh.bash(
+                '-c',
+                """
+                nice npm run test
+                """,
+                _fg=True,
+                _env=os.environ,
+                _cwd=dir,
+            )
+
+        @js.command()
+        @click.pass_context
+        def test_integration(ctx):
+            # Keep it simple for now
+            dir = 'frontend'
+
+            sh.bash(
+                '-c',
+                """
+                nice npm run test:playwright
+                """,
+                _fg=True,
+                _env=os.environ,
+                _cwd=dir,
+            )
 
     if len(js.commands):
         config.meta.commandGroups.append(('js', js))

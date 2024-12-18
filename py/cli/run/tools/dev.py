@@ -30,7 +30,11 @@ def register(config):
             ]
 
         if 'javascript' in config.tools:
-            to_run += [('js', 'lint')]
+            to_run += [
+                ('js', 'lint'),
+                ('js', 'test_unit'),
+                ('js', 'test_integration'),
+            ]
 
         # Find all commands and run
         commands = {}
