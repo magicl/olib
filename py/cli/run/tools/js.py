@@ -80,10 +80,15 @@ def register(config):
                 )
 
         @js.command()
+        @click.option('--no-ui', default=False, is_flag=True)
         @click.pass_context
-        def test_unit(ctx):
+        def test_unit(ctx, no_ui):
             # Keep it simple for now
             dir = 'frontend'
+
+            env = {**os.environ}
+            if no_ui:
+                env['CI'] = '1'
 
             sh.bash(
                 '-c',
@@ -91,15 +96,20 @@ def register(config):
                 nice npm run test
                 """,
                 _fg=True,
-                _env=os.environ,
+                _env=env,
                 _cwd=dir,
             )
 
         @js.command()
+        @click.option('--no-ui', default=False, is_flag=True)
         @click.pass_context
-        def test_integration(ctx):
+        def test_integration(ctx, no_ui):
             # Keep it simple for now
             dir = 'frontend'
+
+            env = {**os.environ}
+            if no_ui:
+                env['CI'] = '1'
 
             sh.bash(
                 '-c',
@@ -107,7 +117,7 @@ def register(config):
                 nice npm run test:playwright
                 """,
                 _fg=True,
-                _env=os.environ,
+                _env=env,
                 _cwd=dir,
             )
 
