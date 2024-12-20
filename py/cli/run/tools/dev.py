@@ -19,7 +19,7 @@ def register(config):
     def test_all(ctx, files):
         """Run all available tests that make sense"""
 
-        to_run = []
+        to_run: list[tuple] = []
 
         if 'python' in config.tools:
             to_run += [
@@ -32,6 +32,7 @@ def register(config):
         if 'javascript' in config.tools:
             to_run += [
                 ('js', 'lint'),
+                ('js', 'tsc'),
                 ('js', 'test_unit', '--no-ui'),
                 ('js', 'test_integration', '--no-ui'),
             ]
