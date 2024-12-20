@@ -33,8 +33,8 @@ def register(config):
             to_run += [
                 ('js', 'lint'),
                 ('js', 'tsc'),
-                ('js', 'test_unit', '--no-ui'),
-                ('js', 'test_integration', '--no-ui'),
+                ('js', 'test-unit', {'no_ui': True}),
+                ('js', 'test-integration', {'no_ui': True}),
             ]
 
         # Find all commands and run
@@ -45,14 +45,19 @@ def register(config):
                     commands[(group_name, cmd_name)] = cmd
 
         failed = []
-        for group_name, cmd_name in to_run:
+        for group_name, cmd_name, *cmd_args in to_run:
             click.echo(f"Running {group_name}:{cmd_name}")
 
             # Pass in file arg if command needs it
             args = {}
             key = (group_name, cmd_name)
+
             if any(arg.name == 'files' for arg in commands[key].params):
                 args['files'] = files
+
+            if cmd_args:
+                for k, v in cmd_args[0].items():
+                    args[k] = v
 
             try:
                 ctx.invoke(commands[key], **args)
