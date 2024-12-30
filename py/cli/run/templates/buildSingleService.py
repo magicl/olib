@@ -5,6 +5,7 @@
 
 import shutil
 import sys
+import signal
 
 import click
 import parproc as pp
@@ -267,14 +268,24 @@ def docker_compose(cls, ctx, no_build=False):
         raise Exception('buildSingleService.compose not defined')
 
     # echo "Mounted on http://127.0.0.1:{meta.build_localMountPort}\n---"
-    build_str = '' if no_build else '--build'
-    sh.bash(
-        '-c',
-        f"""
-    docker compose -f {meta.build_compose} up {build_str} --abort-on-container-exit
-    """,
-        _fg=True,
-    )
+
+    #Temporarily mask SIGINT from python. We only want docker compose to handle it
+    original_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        build_str = '' if no_build else '--build'
+        sh.bash(
+            '-c',
+            f"""
+        docker compose -f {meta.build_compose} up {build_str} --abort-on-container-exit --remove-orphans
+        """,
+            _fg=True,
+        )
+    except sh.ErrorReturnCode as e:
+        #Error most likely due to SIGINT. Ignore it
+        pass
+    finally:
+        # Restore original SIGINT handler
+        signal.signal(signal.SIGINT, original_sigint)
 
 
 def docker_shell(cls, ctx):
