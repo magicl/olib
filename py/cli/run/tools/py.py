@@ -74,7 +74,6 @@ def register(config):
                 by_dir = {False: files}
 
             for have_django, files_ in by_dir.items():
-                #click.echo(f'{have_django=}, {files_=}', err=True)
                 config = render_template(
                     ctx, 'config/pylintrc', {'have_django': have_django}, suffix='.django' if have_django else ''
                 )

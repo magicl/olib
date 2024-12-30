@@ -126,6 +126,7 @@ def django(settings, manage_py='./manage.py', django_working_dir=None):
 
         # Ensure correct django settings have been configurated
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings)
+        os.environ['PYTHONPATH'] = f'{os.environ.get("PYTHONPATH", "")}:{cls.meta.django_working_dir}'
 
         for f in (app_create_superuser_post,):
             if not hasattr(cls, f.__name__):
