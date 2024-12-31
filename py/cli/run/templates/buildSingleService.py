@@ -277,6 +277,7 @@ def docker_compose(cls, ctx, no_build=False):
             '-c',
             f"""
         docker compose -f {meta.build_compose} up {build_str} --abort-on-container-exit --remove-orphans
+        docker compose -f {meta.build_compose} down
         """,
             _fg=True,
         )
