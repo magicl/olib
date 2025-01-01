@@ -63,8 +63,13 @@ fi
 #Load env vars
 source .envrc
 
+requirementsPath="."
+if [ -e backend/requirements.txt ]; then
+    requirementsPath="backend"
+fi
+
 pyRequirements=""
-for f in requirements*.txt; do
+for f in $requirementsPath/requirements*.txt; do
     pyRequirements+="-r $f "
 done
 

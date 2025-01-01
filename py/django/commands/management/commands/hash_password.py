@@ -9,13 +9,13 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Creates a hashed password based on a password string based on current settings'
+    help = 'Updates permission groups based on a JSON file'
 
     def add_arguments(self, parser):
         parser.add_argument('password', help='Password to hash')
 
     def handle(self, *args, **options):
-        if not settings.DEBUG:
-            return
+        
+
 
         self.stdout.write(make_password(options['password']))

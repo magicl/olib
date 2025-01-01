@@ -119,6 +119,7 @@ if KB_POD_IP:
     ALLOWED_HOSTS.append(KB_POD_IP)
 
 CSRF_TRUSTED_ORIGINS: list[str] = env.list('CSRF_TRUSTED_ORIGINS', default=['http://127.0.0.1'])
+CORS_ALLOWED_ORIGINS: list[str] = env.list('CORS_ALLOWED_ORIGINS', default=['http://127.0.0.1'])
 
 SECRET_KEY = env.str(
     'DJANGO_SECRET',
@@ -129,6 +130,8 @@ SECRET_KEY = env.str(
 SESSION_COOKIE_HTTPONLY = True     #Make session cookie http-only, to prevent JS from sniffing it
 SESSION_COOKIE_SECURE = not DEBUG  #Only serve session cookie over https
 CSRF_COOKIE_SECURE = not DEBUG     #Only serve csrf cookie over https
+
+#CORS_ALLOW_CREDENTIALS = True      #Allow cookies to be sent with requests
 
 SECURE_CONTENT_TYPE_NOSNIFF = True #Pevent browser from trying to guess content type
 
@@ -166,12 +169,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
 ]
 
 if DEBUG:
     INSTALLED_APPS += ['olib.py.django.commands']
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django_middleware_global_request.middleware.GlobalRequestMiddleware',  # Set up global request variable
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

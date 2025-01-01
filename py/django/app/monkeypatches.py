@@ -35,7 +35,7 @@ def applyDjangoMigrationPatch():
         # )
 
     # Apply monkeypatch for django
-    earlyInfo('Applying monkeypatch for django migrations')
+    #earlyInfo('Applying monkeypatch for django migrations')
     django.db.backends.base.schema._related_non_m2m_objects = _related_non_m2m_objects
 
     # pylint: enable=protected-access

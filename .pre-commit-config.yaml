@@ -102,5 +102,11 @@ repos:
         language: system
         types_or: [javascript, jsx, ts, tsx]
         args: ['-c', 'python -m ${OLIB_MODULE} js lint $@', '--']
+      #- id: tsc
+      #  name: tsc
+      #  entry: bash
+      #  language: system
+      #  types_or: [javascript, jsx, ts, tsx]
+      #  args: ['-c', 'python -m ${OLIB_MODULE} js tsc $@', '--']
 default_language_version:
   python: python3.12
