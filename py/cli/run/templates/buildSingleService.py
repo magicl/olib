@@ -4,8 +4,8 @@
 # ~
 
 import shutil
-import sys
 import signal
+import sys
 
 import click
 import parproc as pp
@@ -269,7 +269,7 @@ def docker_compose(cls, ctx, no_build=False):
 
     # echo "Mounted on http://127.0.0.1:{meta.build_localMountPort}\n---"
 
-    #Temporarily mask SIGINT from python. We only want docker compose to handle it
+    # Temporarily mask SIGINT from python. We only want docker compose to handle it
     original_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         build_str = '' if no_build else '--build'
@@ -281,8 +281,8 @@ def docker_compose(cls, ctx, no_build=False):
         """,
             _fg=True,
         )
-    except sh.ErrorReturnCode as e:
-        #Error most likely due to SIGINT. Ignore it
+    except sh.ErrorReturnCode:
+        # Error most likely due to SIGINT. Ignore it
         pass
     finally:
         # Restore original SIGINT handler

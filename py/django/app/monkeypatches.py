@@ -3,7 +3,6 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
-from olib.py.utils.earlylogging import earlyInfo
 from olib.py.utils.execenv import isEnvProduction
 
 
@@ -35,7 +34,7 @@ def applyDjangoMigrationPatch():
         # )
 
     # Apply monkeypatch for django
-    #earlyInfo('Applying monkeypatch for django migrations')
+    # earlyInfo('Applying monkeypatch for django migrations')
     django.db.backends.base.schema._related_non_m2m_objects = _related_non_m2m_objects
 
     # pylint: enable=protected-access
