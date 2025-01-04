@@ -3,6 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 import os
+import time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,6 +23,8 @@ class Command(BaseCommand):
         if not settings.DEBUG:
             return
 
+        time_start = time.time()
+
         User = get_user_model()
 
         if options['no_input']:
@@ -33,3 +36,6 @@ class Command(BaseCommand):
             User.objects.create_superuser(
                 username=options['username'], email=options['email'], password=options['password']
             )
+
+        time_end = time.time()
+        print(f'... done in {time_end - time_start:.2f} seconds')
