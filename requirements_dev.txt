@@ -18,6 +18,7 @@ coverage
 covdefaults
 ansible
 yamllint
+uuid7
 
 #olib dependencies
 sh==2.0.7 # 2.1.0 gives pylint warnings
