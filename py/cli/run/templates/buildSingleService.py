@@ -3,6 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+import os
 import shutil
 import signal
 import sys
@@ -280,6 +281,7 @@ def docker_compose(cls, ctx, no_build=False):
         docker compose -f {meta.build_compose} down
         """,
             _fg=True,
+            _env={'UID': str(os.getuid()), 'GID': str(os.getgid()), **os.environ},
         )
     except sh.ErrorReturnCode:
         # Error most likely due to SIGINT. Ignore it
