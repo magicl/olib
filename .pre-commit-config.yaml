@@ -21,11 +21,10 @@ repos:
       - id: trailing-whitespace
       - id: double-quote-string-fixer #Does the same as unify, but unify is lagging
   - repo: https://github.com/google/yamlfmt
-    rev: v0.14.0
+    rev: v0.15.0
     hooks:
       - id: yamlfmt
         exclude: '/templates/'
-
   # Only checks styles.. Does not fix them, so too much work :)
   # - repo: https://github.com/openstack/bashate
   #   rev: 2.1.1
@@ -102,11 +101,11 @@ repos:
         language: system
         types_or: [javascript, jsx, ts, tsx]
         args: ['-c', 'python -m ${OLIB_MODULE} js lint $@', '--']
-      #- id: tsc
-      #  name: tsc
-      #  entry: bash
-      #  language: system
-      #  types_or: [javascript, jsx, ts, tsx]
-      #  args: ['-c', 'python -m ${OLIB_MODULE} js tsc $@', '--']
+        #- id: tsc
+        #  name: tsc
+        #  entry: bash
+        #  language: system
+        #  types_or: [javascript, jsx, ts, tsx]
+        #  args: ['-c', 'python -m ${OLIB_MODULE} js tsc $@', '--']
 default_language_version:
   python: python3.12
