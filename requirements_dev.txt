@@ -19,6 +19,7 @@ covdefaults
 ansible
 yamllint
 uuid7
+python-dotenv
 
 #olib dependencies
 sh==2.0.7 # 2.1.0 gives pylint warnings

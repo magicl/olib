@@ -155,6 +155,29 @@ def _implement(defaultRoot=True):
                 click.echo('Deleted postgres secret from kubernetes')
 
         @postgresGroup.command()
+        @click.pass_context
+        def app_clear_db(ctx):
+            """Clear database for a given app"""
+            click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+            click.echo('This will delete all data in the database for the given app')
+
+            if input('Re-type the app name to continue: ') != ctx.obj.k8sAppName:
+                click.echo('Wrong name entered. Aborting', err=True)
+                sys.exit(1)
+
+            with postgres_connect(ctx, root=True, use_db=True) as db:
+                q = partial(postgres_query, db)
+                _, database, username = postgres_convert_name(ctx)
+
+                q("""DROP SCHEMA IF EXISTS public CASCADE;""")
+                q("""CREATE SCHEMA public;""")
+                q(f"""GRANT USAGE, CREATE ON SCHEMA public TO {username};""")
+                q(f"""GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON ALL TABLES IN SCHEMA public TO {username};""")
+                q(f"""GRANT USAGE, SELECT, UPDATE ON ALL TABLES IN SCHEMA public TO {username};""")
+
+                click.echo(f'Cleared database "{database}"')
+
+        @postgresGroup.command()
         @click.argument('filename')
         @click.option(
             '--dryrun',

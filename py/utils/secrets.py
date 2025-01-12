@@ -27,6 +27,7 @@ def readFileSecretSplit(filename) -> list[str]:
 
 def readFileSecret(filename) -> str:
     filename = os.path.expanduser(filename)
+    filename = os.path.expandvars(filename)
 
     if os.path.exists(filename):
         # Verify file permissions set correctly, to ensure other users of computer cannot access
