@@ -58,6 +58,21 @@ def k8s_secret_create(name: str, namespace: str, context: str, data: dict):
     )
 
 
+def k8s_secret_update(name: str, namespace: str, context: str, data: dict):
+    from kubernetes import client, config
+
+    config.load_kube_config(context=context)
+    v1 = client.CoreV1Api()
+    v1.replace_namespaced_secret(name=name, namespace=namespace, body=client.V1Secret(data=data))
+
+
+def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict):
+    if k8s_secret_exists(name, namespace, context):
+        k8s_secret_update(name, namespace, context, data)
+    else:
+        k8s_secret_create(name, namespace, context, data)
+
+
 def k8s_secret_delete(name: str, namespace: str, context: str):
     from kubernetes import client, config
 

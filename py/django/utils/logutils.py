@@ -40,7 +40,7 @@ class Formatter(logging.Formatter):
         request = self.getRequest()
         if request is not None:
             # Could do this more properly using: https://django-request-id.readthedocs.io/en/latest/
-            if self.notReprLog:
+            if self.notReprLog and hasattr(request, 'session'):
                 sessKey = request.session.session_key
                 record.__dict__.update(
                     req_id=f"R{str(id(request))}",

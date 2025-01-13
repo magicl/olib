@@ -3,6 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+import glob
 import os
 import shutil
 import signal
@@ -13,7 +14,11 @@ import parproc as pp
 import sh
 from dotenv import dotenv_values
 
-from ....utils.kubernetes import k8s_job_wait_for_completion, k8s_namespace_create
+from ....utils.kubernetes import (
+    k8s_job_wait_for_completion,
+    k8s_namespace_create,
+    k8s_secret_create_or_update,
+)
 from .base import prep_config
 
 
@@ -146,6 +151,23 @@ def k8s_push_config(cls, ctx):
             _out=sys.stdout,
             _err=sys.stderr,
         )
+
+
+def k8s_push_secrets(cls, ctx):
+    click.echo('Pushing Secrets to Kubernetes...')
+    inst = ctx.obj.inst
+
+    for secret_file_glob_ in inst.get('secret_files', []):
+        secret_file_glob = os.path.expandvars(secret_file_glob_)
+
+        secret_files = glob.glob(secret_file_glob)
+        for secret_file in secret_files:
+            # Secret files have a config-file format, with key=value pairs
+            env_vars = dotenv_values(secret_file)
+
+            # Store k8s secrets with the name of the secret file
+            secret_name = os.path.basename(secret_file)
+            k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, env_vars)
 
 
 def k8s_migrate(cls, ctx, break_on_error=False):
@@ -358,6 +380,18 @@ def _implementApp():
         pass
 
     @appGroup.command()
+    @click.pass_context
+    def push_secrets(ctx):
+        """Push secrets to Kubernetes"""
+        ctx.obj.config.k8s_push_secrets(ctx)
+
+    @appGroup.command()
+    @click.pass_context
+    def push_config(ctx):
+        """Push config to Kubernetes"""
+        ctx.obj.config.k8s_push_config(ctx)
+
+    @appGroup.command()
     @click.option('--images', help='Comma separated list of image names. All if empty', type=str)
     @click.option(
         '--deployments',
@@ -473,6 +507,7 @@ def buildSingleService(
             images_push,
             images_analyze,
             k8s_push_config,
+            k8s_push_secrets,
             k8s_migrate,
             k8s_deploy,
             k8s_uninstall,
