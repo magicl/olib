@@ -14,7 +14,11 @@ fi
 
 #UV (pip / pyenv alternative)
 if [ -d $HOME/.cargo ]; then
+	echo "Initializing uv"
 	. "$HOME/.cargo/env"
+elif [ -f $HOME/.local/bin/env ]; then
+	#Uses this dir on Jenkins.. Perhaps new dir..?
+	. "$HOME/.local/bin/env"
 fi
 
 

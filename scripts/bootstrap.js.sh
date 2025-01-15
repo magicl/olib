@@ -17,8 +17,9 @@ wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 . $LOCAL_DIR/bootstrap.env.sh
 
 # For now, just install latest LTS
-nvm install --lts
-nvm use --lts
+# Update: --lts = v22 had some issues on Jenkins
+nvm install 20 #--lts
+nvm use 20 #--lts
 
 nvm install-latest-npm
 
