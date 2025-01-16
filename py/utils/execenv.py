@@ -43,6 +43,7 @@ class ExecContext(Enum):
     migration = 7
     celery_worker = 8
     celery_beat = 9
+    django_command = 10
     unknown = 99
 
 
@@ -189,6 +190,7 @@ def _getManagePyContext():
             return {ExecContext.test}
         if sys.argv[1] == 'migrate':
             return {ExecContext.migration}
+        return {ExecContext.django_command}
     return set()
 
 

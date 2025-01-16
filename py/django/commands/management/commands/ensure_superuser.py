@@ -23,7 +23,7 @@ class Command(BaseCommand):
         if not settings.DEBUG:
             return
 
-        time_start = time.time()
+        # time_start = time.time()
 
         User = get_user_model()
 
@@ -37,5 +37,5 @@ class Command(BaseCommand):
                 username=options['username'], email=options['email'], password=options['password']
             )
 
-        time_end = time.time()
-        print(f'... done in {time_end - time_start:.2f} seconds')
+        # time_end = time.time()
+        # print(f'... done in {time_end - time_start:.2f} seconds')

@@ -170,10 +170,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'olib.py.django.commands',
 ]
-
-if DEBUG:
-    INSTALLED_APPS += ['olib.py.django.commands']
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
