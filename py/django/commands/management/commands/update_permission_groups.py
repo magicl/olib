@@ -18,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('file', help='JSON file with permission groups')
 
     def handle(self, *args, **options):
-        time_start = time.time()
+        # time_start = time.time()
 
         with open(options['file'], encoding='utf-8') as f:
             permission_groups = json.load(f)
@@ -45,5 +45,5 @@ class Command(BaseCommand):
 
                 group.permissions.set(permissions)
 
-        time_end = time.time()
-        print(f'... done in {time_end - time_start:.2f} seconds')
+        # time_end = time.time()
+        # print(f'... done in {time_end - time_start:.2f} seconds')
