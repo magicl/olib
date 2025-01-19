@@ -6,9 +6,9 @@ import re
 from collections import defaultdict
 
 
-def _split_env_files_content(env_contents: tuple[str, str]) -> dict[str, dict[str, str]]:
+def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, dict[str, str]]:
 
-    grouped_vars = defaultdict(dict)
+    grouped_vars: dict[str, dict[str, str]] = defaultdict(dict)
     errors = []
 
     for env_file, content in env_contents:
@@ -32,6 +32,10 @@ def _split_env_files_content(env_contents: tuple[str, str]) -> dict[str, dict[st
 
             try:
                 key, value = line.split('=', 1)
+
+                if current_group is None:
+                    raise ValueError(f'No group found for {env_file}: {line}')
+
                 grouped_vars[current_group][key] = value
                 # print(f'  values: {key}={value} for group {current_group}')
             except ValueError:

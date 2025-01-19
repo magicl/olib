@@ -115,18 +115,6 @@ def k8s_push_config(cls, ctx):
 
     # Create env configmap
     if inst['env_configmaps']:
-        # Pre-process env-files in order to remove duplicates (k8s does not like them)
-        # TODO: This merge is no longer necessary once config has been split into groups
-        # TODO: Also split into one config per deployment
-        # env_vars = {}
-        # for env_file in inst['env_files']:
-        #     env_vars.update(dotenv_values(env_file))
-
-        # k8s_env_file = f'.output/k8s.{ctx.obj.meta.build_name}.env'
-        # with open(k8s_env_file, 'w', encoding='utf-8') as f:
-        #     for k, v in env_vars.items():
-        #         f.write(f'{k}={v}\n')
-
         # Ensure namespace exists
         k8s_namespace_create(ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
