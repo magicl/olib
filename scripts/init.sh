@@ -122,7 +122,11 @@ fi
 #Setup remaining stuff
 #pip install wheel setuptools pip ipdb parproc -U
 #pip install $pyRequirements -U
-pip install uv
+
+
+#if ! which uv > /dev/null 2>&1; then
+#    pip install uv
+#fi
 uv pip install $pyRequirements
 
 #Ensure pre-commit is installed (git hooks)
