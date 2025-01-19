@@ -103,6 +103,9 @@ LOGGING: dict[str, Any] = {
         'django.utils.autoreload': {
             'level': 'INFO',  # At DEBUG, very noisy
         },
+        'asyncio': {
+            'level': 'INFO',  # At DEBUG, very noisy
+        },
     },
 }
 # Configure logging

@@ -75,12 +75,21 @@ def _implement():
             ctx.obj.meta.django_manage_py, 'hash_password', password, _bg=True, _cwd=ctx.obj.meta.django_working_dir
         ).strip()
 
+        user_table = sh.python3(
+            ctx.obj.meta.django_manage_py,
+            'shell',
+            '-c',
+            'from django.contrib.auth import get_user_model; print(get_user_model()._meta.db_table)',
+            _bg=True,
+            _cwd=ctx.obj.meta.django_working_dir,
+        ).strip()
+
         if ctx.obj.meta.mysql:
             with mysql_connect(ctx, root=False) as db:
                 q = partial(mysql_query, db)
 
                 q(
-                    f"""INSERT INTO auth_user (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values ('{username}', '{email}', '{password_hash}', '{fname}', "", true, true, true, now());""",  # nosec
+                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values ('{username}', '{email}', '{password_hash}', '{fname}', "", true, true, true, now());""",  # nosec
                 )
 
         elif ctx.obj.meta.postgres:
@@ -88,7 +97,7 @@ def _implement():
                 q = partial(postgres_query, db)
 
                 q(
-                    """INSERT INTO auth_user (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s, true, true, true, now());""",
+                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s, true, true, true, now());""",
                     (username, email, password_hash, fname, ''),
                 )
 
@@ -126,7 +135,7 @@ def django(settings, manage_py='./manage.py', django_working_dir=None):
 
         # Ensure correct django settings have been configurated
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings)
-        os.environ['PYTHONPATH'] = f'{os.environ.get("PYTHONPATH", "")}:{cls.meta.django_working_dir}'
+        os.environ['PYTHONPATH'] = f'{os.environ.get('PYTHONPATH', '')}:{cls.meta.django_working_dir}'
 
         for f in (app_create_superuser_post,):
             if not hasattr(cls, f.__name__):
