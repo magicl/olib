@@ -8,6 +8,7 @@ import os
 import sys
 
 import click
+import parproc as pp
 import sh
 
 from ...utils.execenv import cliEnv
@@ -48,8 +49,11 @@ def create_cli(config=None):
         help='Name or alias of inst to apply command to. Default inst is used if none applied',
     )
     @click.option('--cluster', '-c', help='Cluster of inst to apply command to. Can be used in place of --inst')
+    @click.option('--debug', '-d', help='Debug mode', is_flag=True)
     @click.pass_context
-    def cli(ctx, inst, cluster):
+    def cli(ctx, inst, cluster, debug):
+        if debug:
+            pp.set_options(dynamic=False, parallel=1)
         ctx.obj = RunContext(config, inst, cluster)
 
     @cli.command()

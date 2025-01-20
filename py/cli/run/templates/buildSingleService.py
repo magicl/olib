@@ -373,6 +373,12 @@ def _implementApp():
 
     @appGroup.command()
     @click.pass_context
+    def pre_build(ctx):
+        """Pre-build step"""
+        run_images_build_pre(ctx.obj.config, ctx)
+
+    @appGroup.command()
+    @click.pass_context
     def push_secrets(ctx):
         """Push secrets to Kubernetes"""
         ctx.obj.config.k8s_push_secrets(ctx)
