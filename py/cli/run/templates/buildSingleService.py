@@ -30,15 +30,15 @@ def images_build_pre(cls, ctx):
     click.echo('  None')
 
 
-def run_images_build_pre(cls, ctx):
+def run_images_build_pre(cls, ctx, k8s=False):
     click.echo('Pre-build Steps For Image...')
     cls.images_build_pre(ctx)
     pp.wait_clear(exception_on_failure=True)  # type: ignore
 
 
-def images_build(cls, ctx, images=None, debug=False, no_pre_build=False, force=False):
+def images_build(cls, ctx, images=None, debug=False, no_pre_build=False, force=False, k8s=False):
     if not no_pre_build:
-        run_images_build_pre(cls, ctx)
+        run_images_build_pre(cls, ctx, k8s=k8s)
 
     click.echo('Building Image...')
     meta = ctx.obj.config.meta
@@ -343,7 +343,7 @@ def _implementImage():
     @click.pass_context
     def build(ctx, images, debug, no_pre_build, force):
         """Build container"""
-        ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build, force=force)
+        ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build, force=force, k8s=True)
 
     @imageGroup.command()
     @click.option('--images', help='Comma separated list of image names. All if empty', type=str)
@@ -352,7 +352,7 @@ def _implementImage():
     @click.pass_context
     def push(ctx, images, debug, no_pre_build):
         """Push container to registry"""
-        ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build)
+        ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build, k8s=True)
         ctx.obj.config.images_push(ctx, images=images)
 
     @imageGroup.command()
@@ -375,7 +375,7 @@ def _implementApp():
     @click.pass_context
     def pre_build(ctx):
         """Pre-build step"""
-        run_images_build_pre(ctx.obj.config, ctx)
+        run_images_build_pre(ctx.obj.config, ctx, k8s=True)
 
     @appGroup.command()
     @click.pass_context
@@ -403,7 +403,7 @@ def _implementApp():
     def deploy(ctx, images, deployments, no_migrate, no_build, no_pre_build):
         """Deploy container"""
         if not no_build:
-            ctx.obj.config.images_build(ctx, images=images, no_pre_build=no_pre_build)
+            ctx.obj.config.images_build(ctx, images=images, no_pre_build=no_pre_build, k8s=True)
             ctx.obj.config.images_push(ctx, images=images)
         ctx.obj.config.k8s_push_config(ctx)
         if ctx.obj.meta.django and not no_migrate:
@@ -451,7 +451,7 @@ def _implementDocker():
     def compose(ctx, no_build, no_pre_build):
         """Run container in docker"""
         if not no_pre_build:
-            run_images_build_pre(ctx.obj.config, ctx)
+            run_images_build_pre(ctx.obj.config, ctx, k8s=False)
         ctx.obj.config.docker_compose(ctx, no_build=no_build)
 
     @dockerGroup.command('shell')
