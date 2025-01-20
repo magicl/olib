@@ -63,7 +63,14 @@ def k8s_secret_update(name: str, namespace: str, context: str, data: dict):
 
     config.load_kube_config(context=context)
     v1 = client.CoreV1Api()
-    v1.replace_namespaced_secret(name=name, namespace=namespace, body=client.V1Secret(data=data))
+    v1.replace_namespaced_secret(
+        name=name,
+        namespace=namespace,
+        body=client.V1Secret(
+            metadata=client.V1ObjectMeta(name=name),
+            data={k: base64.b64encode(v.encode('utf-8')).decode('utf-8') for k, v in data.items()},
+        ),
+    )
 
 
 def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict):
