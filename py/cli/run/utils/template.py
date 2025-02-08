@@ -17,7 +17,7 @@ def _render(ctx, filename, out_filename, base_dir: str, extra_context: dict | No
 
 def render_template(ctx, filename, extra_context: dict | None = None, suffix='', base_dir: str | None = None):
     """
-    Applies template to targe file, and returns a path to the new file to use. The new file is only updated if necessary
+    Applies template to target file, and returns a path to the new file to use. The new file is only updated if necessary
     :param suffix: Optional suffix to add to output filename to allow different output versions
     """
     out_filename = f".output/tmpl/{filename}{suffix}"
