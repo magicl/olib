@@ -55,8 +55,8 @@ def register(config):
                         if f.is_dir()
                         and not f.name.startswith('.')
                         and f.name != 'olib'
-                        and dir_has_files(f.name, '*.js')
-                    ] + ['*.js']
+                        and dir_has_files(f.name, '*.js', '*.ts', '*.tsx', '*.mjs')
+                    ] + ['*.js', '*.ts', '*.tsx', '*.mjs']
 
             # For each file, find closest package.json, so we can run lint in that scope
             by_dir = groupByValue(files, keyFunc=find_package_json_dir)
@@ -67,7 +67,7 @@ def register(config):
 
                 # files = [f.removeprefix(dir).removeprefix('/') or '.' for f in files]
                 # print(files)
-                # print(dir)
+                # print(f'Linting {dir}')
 
                 sh.bash(
                     '-c',

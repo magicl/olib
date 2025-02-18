@@ -40,9 +40,9 @@ def acceptableFilename(name, lower=True):
     return name
 
 
-def dir_has_files(directory, match):
+def dir_has_files(directory, *match):
     for _, _, files in os.walk(directory):
         for file in files:
-            if fnmatch.fnmatch(file, match):
+            if any(fnmatch.fnmatch(file, m) for m in match):
                 return True
     return False
