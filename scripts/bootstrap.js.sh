@@ -24,4 +24,5 @@ nvm use 20 #--lts
 nvm install-latest-npm
 
 # Faster npm alternative
-npm install -g pnpm
+npm install --global corepack@latest
+corepack enable pnpm
