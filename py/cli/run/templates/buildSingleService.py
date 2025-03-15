@@ -295,6 +295,13 @@ def docker_compose(cls, ctx, no_build=False):
 
     # echo "Mounted on http://127.0.0.1:{meta.build_localMountPort}\n---"
 
+    env = {
+        'UID': str(os.getuid()),
+        'GID': str(os.getgid()),
+        'COMPOSE_BAKE': 'true',  # Use new, faster compose engine
+        **os.environ,
+    }
+
     # Temporarily mask SIGINT from python. We only want docker compose to handle it
     original_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
@@ -306,7 +313,7 @@ def docker_compose(cls, ctx, no_build=False):
         docker compose -f {meta.build_compose} down
         """,
             _fg=True,
-            _env={'UID': str(os.getuid()), 'GID': str(os.getgid()), **os.environ},
+            _env=env,
         )
     except sh.ErrorReturnCode:
         # Error most likely due to SIGINT. Ignore it

@@ -46,6 +46,7 @@ def register(config):
 
         failed = []
         for group_name, cmd_name, *cmd_args in to_run:
+            click.echo('###############################################')
             click.echo(f"Running {group_name}:{cmd_name}")
 
             # Pass in file arg if command needs it
