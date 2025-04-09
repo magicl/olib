@@ -134,38 +134,40 @@ class ConfigMixin:
         super().__init__(*args, **kwargs)
 
 
-class FixtureFixupMixin:
-    # def localFixtures(self, *fixtures):
-    #     print('add check verifying that this is not OTestCase.. in those, faster to do all fixtures globally')
+# class FixtureFixupMixin:
+#     # def localFixtures(self, *fixtures):
+#     #     print('add check verifying that this is not OTestCase.. in those, faster to do all fixtures globally')
 
-    #     call_command('loaddata', *fixtures, **{'verbosity': 0})
+#     #     call_command('loaddata', *fixtures, **{'verbosity': 0})
 
-    def _fixture_setup(self):
-        with measure_runtime('fixtureSetup'):
-            # Get fixture overrides for the individual test
-            testCase = getattr(self, self._testMethodName)  # type: ignore[attr-defined]
-            fixtureOvr: list[str] | None = getattr(testCase, '_ovr_fixtures', None)
+#     @classmethod
+#     def _fixture_setup(cls):
+#         with measure_runtime('fixtureSetup'):
+#             # Get fixture overrides for the individual test
+#             testCase = getattr(cls, cls._testMethodName)  # type: ignore[attr-defined]
+#             fixtureOvr: list[str] | None = getattr(testCase, '_ovr_fixtures', None)
 
-            if fixtureOvr:
-                remove = set()
-                for f in fixtureOvr:
-                    if f.startswith('tea-master'):
-                        remove.add('tea-master')  # remove any other fixtures starting with tea-master
+#             if fixtureOvr:
+#                 remove = set()
+#                 for f in fixtureOvr:
+#                     if f.startswith('tea-master'):
+#                         remove.add('tea-master')  # remove any other fixtures starting with tea-master
 
-                fixtures = [f for f in self.fixtures if not any(f.startswith(r) for r in remove)] + fixtureOvr  # type: ignore[has-type]
-                fixturesCls = self.fixtures  # type: ignore[has-type]
-                try:
-                    self.fixtures = fixtures
-                    super()._fixture_setup()  # type: ignore[misc]
-                finally:
-                    self.fixtures = fixturesCls
+#                 fixtures = [f for f in cls.fixtures if not any(f.startswith(r) for r in remove)] + fixtureOvr  # type: ignore[has-type]
+#                 fixturesCls = cls.fixtures  # type: ignore[has-type]
+#                 try:
+#                     cls.fixtures = fixtures
+#                     super()._fixture_setup()  # type: ignore[misc]
+#                 finally:
+#                     cls.fixtures = fixturesCls
 
-            else:
-                super()._fixture_setup()  # type: ignore[misc]
+#             else:
+#                 super()._fixture_setup()  # type: ignore[misc]
 
-    def _fixture_teardown(self):
-        with measure_runtime('fixtureTeardown'):
-            super()._fixture_teardown()  # type: ignore[misc]
+#     @classmethod
+#     def _fixture_teardown(cls):
+#         with measure_runtime('fixtureTeardown'):
+#             super()._fixture_teardown()  # type: ignore[misc]
 
 
 # class MockCleanupMixin():
@@ -415,7 +417,6 @@ class OStaticLiveServerTestCase(
     LiveServerMixin,
     AssertHelper,
     ConfigMixin,
-    FixtureFixupMixin,
     TestTimingMixin,
     LogMonitorMixin,
     MemDebugMixin,
@@ -428,7 +429,6 @@ class OLiveServerTestCase(
     LiveServerMixin,
     AssertHelper,
     ConfigMixin,
-    FixtureFixupMixin,
     TestTimingMixin,
     LogMonitorMixin,
     MemDebugMixin,
@@ -440,7 +440,6 @@ class OLiveServerTestCase(
 class OTestCase(
     AssertHelper,
     ConfigMixin,
-    FixtureFixupMixin,
     TestTimingMixin,
     LogMonitorMixin,
     MemDebugMixin,
@@ -452,7 +451,6 @@ class OTestCase(
 class OTransactionTestCase(
     AssertHelper,
     ConfigMixin,
-    FixtureFixupMixin,
     TestTimingMixin,
     LogMonitorMixin,
     MemDebugMixin,
