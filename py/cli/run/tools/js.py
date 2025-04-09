@@ -137,5 +137,21 @@ def register(config):
                 _cwd=dir,
             )
 
+        @js.command()
+        @click.pass_context
+        def chromatic(ctx):
+            # Keep it simple for now
+            dir = 'frontend'
+
+            sh.bash(
+                '-c',
+                """
+                nice npm run chromatic
+                """,
+                _fg=True,
+                _env=os.environ,
+                _cwd=dir,
+            )
+
     if len(js.commands):
         config.meta.commandGroups.append(('js', js))

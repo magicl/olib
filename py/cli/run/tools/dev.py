@@ -35,6 +35,7 @@ def register(config):
                 ('js', 'tsc'),
                 ('js', 'test-unit', {'no_ui': True}),
                 ('js', 'test-integration', {'no_ui': True}),
+                ('js', 'chromatic'),
             ]
 
         # Find all commands and run
