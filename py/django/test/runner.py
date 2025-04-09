@@ -423,6 +423,9 @@ class OTestRunner(DiscoverRunner):
             failedTestsOutput = ' '.join(
                 f"{test.__class__.__module__}.{test.__class__.__name__}.{test._testMethodName}"  # pylint: disable=protected-access
                 for test in set(failedTests)
+                # pylint: disable=protected-access
+                if not isinstance(test, unittest.suite._ErrorHolder)  # type: ignore[attr-defined]
+                # pylint: enable=protected-access
             )
 
             print(f"\nFailed Tests:\n{failedTestsOutput}")

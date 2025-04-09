@@ -17,7 +17,6 @@ from django.test.utils import override_settings
 from pympler import tracker
 
 from olib.py.django.test.debug import breakOnError, breakOnErrorCheckpoint
-from olib.py.django.test.runner import measure_runtime
 from olib.py.utils.mem import procMaxMemUsage
 
 logger = logging.getLogger('tests.cases')
@@ -39,7 +38,7 @@ class TestTimingMixin:
     def __init__(self, *args, **kwargs):
         self.tTestStart = 0.0
         self.tRealStart = 0.0
-        self.tEnd = 0.0
+        # self.tEnd = 0.0
         self.mRssMaxPre = 0
         self.prevTest = None
 
@@ -50,7 +49,7 @@ class TestTimingMixin:
 
         super().__init__(*args, **kwargs)
 
-    def _pre_setup(self):
+    def setUp(self):
         """Not called for parallel testcases"""
         self.tRealStart = time.time()
         self.mRssMaxPre = procMaxMemUsage()
@@ -59,66 +58,30 @@ class TestTimingMixin:
         self.prevTest = prevTest
         prevTest = self
 
-        super()._pre_setup()  # type: ignore[misc]
+        super().setUp()  # type: ignore[misc]
 
         self.tTestStart = time.time()
 
-    def _post_teardown(self):
+    def tearDown(self):
         """Called after 'addSuccess', so can't capture end-time here"""
-        super()._post_teardown()  # type: ignore[misc]
+        super().tearDown()  # type: ignore[misc]
         self.tEnd = time.time()
-
-
-class LiveCheckoutTimeoutMixin:
-    """In case of live tests, wait 5 min between each to prevent throttling by e.g. bold (bold checkout will stop working)"""
-
-    def __init__(self, *args, **kwargs):
-        self._checkoutHits = []
-        super().__init__(*args, **kwargs)
-
-    def _pre_setup(self):
-        self._checkoutHits = []
-        super()._pre_setup()  # type: ignore[misc]
-
-    def _post_teardown(self):
-        super()._post_teardown()  # type: ignore[misc]
-        self.checkoutThrottle()
-
-    def checkoutThrottle(self):
-        if settings.TEST_LIVE and self._checkoutHits:
-            # Calculate time to sleep
-            lastCheckout = max(self._checkoutHits)
-            waitTimeLeft = settings.TEST_LIVE_INTER_TEST_DELAY - (time.time() - lastCheckout)
-
-            if waitTimeLeft > 0:
-                print(
-                    f"waiting to avoid throttling.. {waitTimeLeft:.0f} / {settings.TEST_LIVE_INTER_TEST_DELAY} seconds"
-                )
-                with measure_runtime('checkoutThrottle'):
-                    time.sleep(waitTimeLeft)
-
-        self._checkoutHits = []
-
-    def checkoutHit(self):
-        self._checkoutHits.append(time.time())
-        if len(self._checkoutHits) > 1:
-            logger.error('Called checkout multiple times without calling checkoutThrottle')
 
 
 class MemDebugMixin:
     memTracker = None
 
-    def _pre_setup(self):
+    def setUp(self):
         """Not called for parallel testcases"""
         cls = type(self)
         if settings.TEST_DEBUG_MEM and cls.memTracker is None:
             cls.memTracker = tracker.SummaryTracker()
 
-        super()._pre_setup()  # type: ignore[misc]
+        super().setUp()  # type: ignore[misc]
 
-    def _post_teardown(self):
+    def tearDown(self):
         """Called after 'addSuccess', so can't capture end-time here"""
-        super()._post_teardown()  # type: ignore[misc]
+        super().tearDown()  # type: ignore[misc]
 
         # Also do log monitoring here
         cls = type(self)
@@ -132,91 +95,6 @@ class ConfigMixin:
         # No restriction on length of diffs
         self.maxDiff = None
         super().__init__(*args, **kwargs)
-
-
-# class FixtureFixupMixin:
-#     # def localFixtures(self, *fixtures):
-#     #     print('add check verifying that this is not OTestCase.. in those, faster to do all fixtures globally')
-
-#     #     call_command('loaddata', *fixtures, **{'verbosity': 0})
-
-#     @classmethod
-#     def _fixture_setup(cls):
-#         with measure_runtime('fixtureSetup'):
-#             # Get fixture overrides for the individual test
-#             testCase = getattr(cls, cls._testMethodName)  # type: ignore[attr-defined]
-#             fixtureOvr: list[str] | None = getattr(testCase, '_ovr_fixtures', None)
-
-#             if fixtureOvr:
-#                 remove = set()
-#                 for f in fixtureOvr:
-#                     if f.startswith('tea-master'):
-#                         remove.add('tea-master')  # remove any other fixtures starting with tea-master
-
-#                 fixtures = [f for f in cls.fixtures if not any(f.startswith(r) for r in remove)] + fixtureOvr  # type: ignore[has-type]
-#                 fixturesCls = cls.fixtures  # type: ignore[has-type]
-#                 try:
-#                     cls.fixtures = fixtures
-#                     super()._fixture_setup()  # type: ignore[misc]
-#                 finally:
-#                     cls.fixtures = fixturesCls
-
-#             else:
-#                 super()._fixture_setup()  # type: ignore[misc]
-
-#     @classmethod
-#     def _fixture_teardown(cls):
-#         with measure_runtime('fixtureTeardown'):
-#             super()._fixture_teardown()  # type: ignore[misc]
-
-
-# class MockCleanupMixin():
-#     gCachesDirty = None
-
-#     def setUp(self):
-#         from tests.mockservers.mock_bold import MockBold
-#         from tests.mockservers.mock_contentful import MockContentful
-#         from tests.mockservers.mock_desktopshipper import MockDesktopShipper
-#         from tests.mockservers.mock_facebook import MockFacebook
-#         from tests.mockservers.mock_klaviyo import MockKlaviyo
-#         from tests.mockservers.mock_plasmic import MockPlasmic
-#         from tests.mockservers.mock_shipstation import MockShipStation
-#         from tests.mockservers.mock_shopify import MockShopify
-#         from tests.mockservers.mock_taxjar import MockTaxJar
-
-#         if MockCleanupMixin.gCachesDirty:
-#             #Reset caches so next test can pass
-#             resetCaches()
-#             MockCleanupMixin.gCachesDirty = None
-#             raise Exception(f'Caches are dirty. Did tearDown not get called in previous test? {MockCleanupMixin.gCachesDirty}')
-
-#         MockCleanupMixin.gCachesDirty = type(self).__name__
-
-#         #In case any mocks are still alive from previous test, due to e.g. test failing, reset those mocks here
-#         for inst in [
-#                 MockShopify.getInst('main', raiseOnMissing=False),
-#                 MockShopify.getInst('gift', raiseOnMissing=False),
-#                 MockBold.getInstIfLive(),
-#                 MockShipStation.getInstIfLive(),
-#                 MockKlaviyo.getInst(),
-#                 MockTaxJar.getInstIfLive(),
-#                 MockFacebook.getInst(),
-#                 MockContentful.getInstIfLive(),
-#                 MockPlasmic.getInstIfLive(),
-#                 MockDesktopShipper.getInstIfLive(),
-#         ]:
-#             if inst is not None and not inst.isSoftStopped():
-#                 logger.error(f'Mock server {type(inst)} was not properly shut down at end of test')
-#                 inst.reset()
-
-#         super().setUp()
-
-
-#     def tearDown(self):
-#         resetCaches()
-#         MockCleanupMixin.gCachesDirty = None
-
-#         super().tearDown()
 
 
 class LogMonitorMixin:
