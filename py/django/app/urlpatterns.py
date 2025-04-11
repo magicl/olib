@@ -20,7 +20,7 @@ def serve_inmemory_file(request, path):
 
 
 def debug_file_urlpatterns():
-    if settings.DEBUG or isEnvTest():
+    if not (settings.DEBUG or isEnvTest()):
         raise Exception('Only include these in DEBUG or TEST mode')
 
     using_inmemory_storage = settings.DEFAULT_FILE_STORAGE == 'django.core.files.storage.InMemoryStorage'

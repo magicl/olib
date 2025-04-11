@@ -197,13 +197,15 @@ class AssertHelper:
         with breakOnError():
             super().assertIsNot(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertIsNone(self, *args, **kwargs):
+    def assertIsNone(self, obj: object, msg: str | None = None) -> None:
         with breakOnError():
-            super().assertIsNone(*args, **kwargs)  # type: ignore # pylint: disable=no-member
+            super().assertIsNone(obj, msg)  # type: ignore # pylint: disable=no-member
+        assert obj is None  # Help mypy understand the constraint # nosec: assert_used
 
-    def assertIsNotNone(self, *args, **kwargs):
+    def assertIsNotNone(self, obj: object, msg: str | None = None) -> None:
         with breakOnError():
-            super().assertIsNotNone(*args, **kwargs)  # type: ignore # pylint: disable=no-member
+            super().assertIsNotNone(obj, msg)  # type: ignore # pylint: disable=no-member
+        assert obj is not None  # Help mypy understand the constraint # nosec: assert_used
 
     def assertAlmostEqual(self, *args, **kwargs):
         with breakOnError():
