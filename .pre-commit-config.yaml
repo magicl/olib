@@ -49,6 +49,7 @@ repos:
         args: ['-c', '$OLIB_PATH/scripts/license-update.py --license $(python -m ${OLIB_MODULE} get --license)']
         language: system
         types_or: [python, sh, javascript, jsx, css, scss, c, c++]
+        pass_filenames: false
       - id: pylint
         name: pylint
         entry: bash
@@ -100,7 +101,14 @@ repos:
         entry: bash
         language: system
         types_or: [javascript, jsx, ts, tsx]
-        args: ['-c', 'python -m ${OLIB_MODULE} js lint $@', '--']
+        args: ['-c', 'python -m ${OLIB_MODULE} js lint']
+      - id: tsc
+        name: tsc
+        entry: bash
+        language: system
+        types_or: [javascript, jsx, ts, tsx]
+        args: ['-c', 'python -m ${OLIB_MODULE} js tsc']
+        pass_filenames: false
         #- id: tsc
         #  name: tsc
         #  entry: bash
