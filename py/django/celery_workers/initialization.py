@@ -6,6 +6,7 @@
 import os
 import sys
 from importlib import import_module
+from typing import Any
 
 import django
 from celery import Celery
@@ -14,7 +15,7 @@ from celery.security import disable_untrusted_serializers
 from django.conf import settings
 from kombu import Exchange, Queue
 
-_noInitSendTask = None
+_noInitSendTask: Any = None
 
 
 def _sendTaskInit(app):

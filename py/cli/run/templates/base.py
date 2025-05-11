@@ -19,12 +19,12 @@ class ConfigMeta:
 
     # Options
     django = False
-    django_settings = None
+    django_settings: str | None = None
 
     # Remote
-    remote_target = None  # Set by 'remote' command group
+    remote_target: str | None = None  # Set by 'remote' command group
     remote_hosts: dict[str, 'RemoteHost'] = {}
-    remote_default_host = None
+    remote_default_host: str | None = None
 
     # Databases
     mysql = False

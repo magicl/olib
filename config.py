@@ -5,6 +5,7 @@
 
 import os
 import sys
+from typing import Any
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 os.environ['PYTHONPATH'] = ':'.join(sys.path)
@@ -18,6 +19,6 @@ from olib.py.cli.run.templates import django, mysql, postgres, redis
 @django(settings='olib.py.django._app.settings', manage_py='py/django/_app/manage.py', django_working_dir='.')
 class Config:
     displayName = 'OLIB'
-    clusters = None
+    insts: list[dict[str, Any]] | None = None
     tools = ['python']
     license = 'apache'

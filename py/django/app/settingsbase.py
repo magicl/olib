@@ -66,7 +66,7 @@ logLevelLog = fileLogLevel()
 LOG_DEBUG_ENABLED = logging.DEBUG in (logLevelConsole, logLevelLog)
 
 
-LOGGING_CONFIG = None  # Disable django default logging config
+LOGGING_CONFIG: None = None  # Disable django default logging config
 
 LOGGING: dict[str, Any] = {
     'version': 1,

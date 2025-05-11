@@ -11,7 +11,7 @@ import numpy as np
 import pytz
 from django.utils import timezone
 
-defaultTimezoneTimezone = None
+defaultTimezoneTimezone: str | None = None
 
 
 # Returns current season as string: 'summer', 'spring', 'fall' or 'winger'

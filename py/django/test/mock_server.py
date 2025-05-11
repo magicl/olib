@@ -840,7 +840,9 @@ class MockServer(
 
 
 class MockMultiServer(MockServerUtils):
-    instance = None  # Each sub-class gets a copy of this as long as it is accessed through cls
+    instance: 'MockMultiServer' | None = (
+        None  # Each sub-class gets a copy of this as long as it is accessed through cls
+    )
 
     """Allows servies that expose servers through multiple URLs / IP addresses (bold is an example)"""
 

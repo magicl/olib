@@ -8,8 +8,8 @@ import logging
 import os
 import sys
 
-cliLevel = None  # Set via cli -vvv or -v3, or LOG_LEVEL env variable
-fileLevel = None  # Defaults to DEBUG. Set via LOG_LEVEL env variable
+cliLevel: int | None = None  # Set via cli -vvv or -v3, or LOG_LEVEL env variable
+fileLevel: int | None = None  # Defaults to DEBUG. Set via LOG_LEVEL env variable
 
 _levels = {'debug': logging.DEBUG, 'info': logging.INFO, 'warning': logging.WARNING, 'error': logging.ERROR}
 

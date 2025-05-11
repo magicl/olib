@@ -21,7 +21,7 @@ from olib.py.utils.mem import procMaxMemUsage
 
 logger = logging.getLogger('tests.cases')
 
-prevTest = None
+prevTest: TestCase | None = None
 
 
 def testFixtures(*names):
@@ -69,7 +69,7 @@ class TestTimingMixin:
 
 
 class MemDebugMixin:
-    memTracker = None
+    memTracker: tracker.SummaryTracker | None = None
 
     def setUp(self):
         """Not called for parallel testcases"""
