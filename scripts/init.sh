@@ -8,7 +8,7 @@ set -euo pipefail
 shopt -s nullglob #prevent glob from expanding to glob itself when no files are found
 trap "exit 1" ERR
 
-PYTHON_VERSION=3.12.6
+PYTHON_VERSION=3.12.10
 CUR_DIR=${PWD##*/}
 VENV_NAME=$CUR_DIR
 #VENV_PATH=~/.pyenv/versions/${VENV_NAME}

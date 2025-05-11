@@ -7,7 +7,7 @@ import json
 # from compressor.contrib.jinja2ext import CompressorExtension
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
-from django.utils.timezone import template_localtime  # type: ignore #Cannot find import
+from django.utils.timezone import template_localtime
 from jinja2 import Environment
 
 from olib.py.utils.execenv import isEnvLocal

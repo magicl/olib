@@ -33,7 +33,7 @@ def images_build_pre(cls, ctx, k8s=False):
 def run_images_build_pre(cls, ctx, k8s=False):
     click.echo('Pre-build Steps For Image...')
     cls.images_build_pre(ctx, k8s=k8s)
-    pp.wait_clear(exception_on_failure=True)  # type: ignore
+    pp.wait_clear(exception_on_failure=True)
 
 
 def images_build(cls, ctx, images=None, debug=False, no_pre_build=False, force=False, k8s=False):
@@ -522,7 +522,7 @@ def buildSingleService(
             docker_compose,
         ):
             if not hasattr(cls, f.__name__):
-                setattr(cls, f.__name__, classmethod(f))  # type: ignore
+                setattr(cls, f.__name__, classmethod(f))
 
         return cls
 

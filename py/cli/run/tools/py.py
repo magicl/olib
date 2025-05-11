@@ -169,7 +169,7 @@ def register(config):
                 return
 
             # Make sure db is up to date
-            @pp.Proc(now=True)  # type: ignore
+            @pp.Proc(now=True)
             def migrate(context):
                 sh.python3(ctx.obj.meta.django_manage_py, 'migrate', _cwd=ctx.obj.meta.django_working_dir)
 
@@ -178,7 +178,7 @@ def register(config):
             #     sh.python3('./sm.py', 'admin-create', 'admin', '', '', '', 'superuser', 'nimda', '--if-no-user')
 
             # Process / copy all static images etc
-            @pp.Proc(now=True)  # type: ignore
+            @pp.Proc(now=True)
             def collect_static(context):
                 sh.python3(
                     ctx.obj.meta.django_manage_py,
@@ -204,7 +204,7 @@ def register(config):
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
 
             _djangoSetupTasks(ctx, fast)
-            pp.wait_clear(exception_on_failure=True)  # type: ignore
+            pp.wait_clear(exception_on_failure=True)
 
             cmd = sh.python3.bake(
                 ctx.obj.meta.django_manage_py,
@@ -243,7 +243,7 @@ def register(config):
 
             # pp.setOptions(dynamic=sys.stdout.isatty())
             _djangoSetupTasks(ctx, fast)
-            pp.wait_clear(exception_on_failure=True)  # type: ignore
+            pp.wait_clear(exception_on_failure=True)
 
             # if fast:
             #    args = (*args, '--keepdb')

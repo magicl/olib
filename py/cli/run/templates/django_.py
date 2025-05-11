@@ -139,7 +139,7 @@ def django(settings, manage_py='./manage.py', django_working_dir=None):
 
         for f in (app_create_superuser_post,):
             if not hasattr(cls, f.__name__):
-                setattr(cls, f.__name__, classmethod(f))  # type: ignore
+                setattr(cls, f.__name__, classmethod(f))
 
         return cls
 

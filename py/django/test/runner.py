@@ -117,19 +117,19 @@ class OTextResult(unittest.TextTestResult):
 
         threadStr = f" @{self.xTestThreadId}" if self.xTestThreadId is not None else ''
 
-        self.stream.writeln(f"{'ok':.>6}{tStr} {testType}{mStr}{threadStr}")  # type: ignore[attr-defined]
+        self.stream.writeln(f"{'ok':.>6}{tStr} {testType}{mStr}{threadStr}")
 
     def addError(self, test, err):
         super().addError(test, err)
-        self.stream.writeln(f"{'ERROR':.>6}")  # type: ignore[attr-defined]
+        self.stream.writeln(f"{'ERROR':.>6}")
 
     def addFailure(self, test, err):
         super().addFailure(test, err)
-        self.stream.writeln(f"{'FAIL':.>6}")  # type: ignore[attr-defined]
+        self.stream.writeln(f"{'FAIL':.>6}")
 
     def addSkip(self, test, reason):
         super().addSkip(test, reason)
-        self.stream.writeln(f"{'skip!':.>6}")  # type: ignore[attr-defined]
+        self.stream.writeln(f"{'skip!':.>6}")
 
 
 class OTextTestRunner(unittest.TextTestRunner):
