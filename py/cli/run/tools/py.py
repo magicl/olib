@@ -90,8 +90,9 @@ def register(config):
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
         @click.option('--no-install-types', default=False, is_flag=True)
+        @click.option('--daemon', '-d', default=False, is_flag=True)
         @click.pass_context
-        def mypy(ctx, files, no_install_types):
+        def mypy(ctx, files, no_install_types, daemon):
             """Run mypy"""
             if not files:
                 if ctx.obj.meta.isOlib:
@@ -108,11 +109,12 @@ def register(config):
                     ] + ['*.py']
 
             config = render_template(ctx, 'config/mypy')
+            cmd = 'dmypy start --' if daemon else 'nice mypy'
 
             sh.bash(
                 '-c',
                 f"""
-                nice mypy --config-file={config} {'--install-types --non-interactive' if not no_install_types else ''} {' '.join(files)}
+                {cmd} --config-file={config} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {' '.join(files)}
                 """,
                 _fg=True,
                 _env=os.environ,

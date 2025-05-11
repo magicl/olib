@@ -1,12 +1,12 @@
 [mypy]
 python_version = 3.12
 warn_unused_configs = True
-follow_imports = silent
+#follow_imports = silent
 ignore_missing_imports = True
 show_error_codes = True
 check_untyped_defs = True
 strict_equality = True
-local_partial_types = True
+#local_partial_types = True
 #warn_unused_ignores = True
 #disallow_incomplete_defs = True
 plugins = strawberry.ext.mypy_plugin
