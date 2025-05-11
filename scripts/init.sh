@@ -16,7 +16,7 @@ VENV_PATH=$CUR_DIR/.pyenv
 dev='true'
 force='false'
 havegit='true'
-
+upgrade='false'
 showHelp() {
     echo "Usage: $0 [options]"
     echo ""
@@ -25,6 +25,7 @@ showHelp() {
     echo "  --nodev             Disable dev mode, i.e. not enabling pre-commit"
     echo "  --help              Display this help message and exit."
     echo "  --force             Allow init also in directories without a .git folder"
+    echo "  --upgrade           Allow dependency upgrades"
     echo ""
 }
 
@@ -34,6 +35,7 @@ while [[ "$#" -gt 0 ]]; do
         --dev) dev="$2"; shift ;;
         --nodev) dev='false' ;;
         --force) force='true' ;;
+        --upgrade) upgrade='true' ;;
         --help) showHelp  ; exit 1 ;;
         -h) showHelp ; exit 1 ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
@@ -127,7 +129,15 @@ fi
 #if ! which uv > /dev/null 2>&1; then
 #    pip install uv
 #fi
-uv pip install $pyRequirements
+
+extraArgs=""
+if [[ "$upgrade" == true ]]; then
+    echo "Upgrading dependencies"
+    extraArgs="--upgrade"
+fi
+
+echo "Installing dependencies"
+uv pip install $pyRequirements $extraArgs
 
 #Ensure pre-commit is installed (git hooks)
 if [[ "$dev" == true && "$havegit" == true ]]; then

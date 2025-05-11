@@ -56,10 +56,11 @@ def create_cli(config=None):
             pp.set_options(dynamic=False, parallel=1)
         ctx.obj = RunContext(config, inst, cluster)
 
-    @cli.command()
+    @cli.command(context_settings={'ignore_unknown_options': True, 'help_option_names': []})
+    @click.argument('args', nargs=-1)
     @click.pass_context
-    def init(ctx):
-        sh.bash('-c', f"{ctx.obj.meta.olib_path}/scripts/init.sh", _fg=True)
+    def init(ctx, args):
+        sh.bash('-c', f"{ctx.obj.meta.olib_path}/scripts/init.sh {' '.join(args)}", _fg=True)
 
     @cli.command()
     @click.option('--tool', type=click.Choice(['python', 'javascript']))
