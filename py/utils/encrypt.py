@@ -8,7 +8,7 @@ import hashlib
 import hmac
 import os
 from hashlib import pbkdf2_hmac
-
+from typing import Any
 from Crypto import (
     Random,  # nosec(B413:blacklist) # Incorrectly detected as pyCrypto, but we are using pycryptodome
 )
@@ -17,25 +17,25 @@ from Crypto.Cipher import (
 )
 
 
-def sha256hex(pt, normalize=True):
+def sha256hex(pt: str, normalize: bool = True) -> str:
     """Returns hexdigest of a sha256 function on a string. Matches google and facebook requirements for hashing emails, etc..."""
     if normalize:
         pt = pt.strip().lower()
     return hashlib.sha256(pt.encode()).hexdigest()
 
 
-def sha512Signature(bdata, key, returnHex=False):
+def sha512Signature(bdata: bytes, key: str | bytes, returnHex: bool = False) -> bytes | str:
     key = key.encode('utf-8') if isinstance(key, str) else key
     calc = hmac.new(key, bdata, hashlib.sha512)
     return calc.hexdigest() if returnHex else calc.digest()
 
 
-def sha1Signature(bdata, key):
+def sha1Signature(bdata: bytes, key: str | bytes) -> bytes:
     key = key.encode('utf-8') if isinstance(key, str) else key
     return hmac.new(key, bdata, hashlib.sha1).digest()
 
 
-def aesEncrypt(plaintext: str | bytes, key: str | bytes, sign=True) -> bytes:
+def aesEncrypt(plaintext: str | bytes, key: str | bytes, sign: bool = True) -> bytes:
     """
     :param key: if string, base64 is assumed
     """
@@ -72,7 +72,7 @@ def aesDecrypt(ciphertext: bytes, key: str | bytes, signed=True) -> bytes:
     return cipher.decrypt(ciphertext)[len(iv) :]
 
 
-def hmacEncode(data: bytes, secret: str, algo=hashlib.sha256, b64=True):
+def hmacEncode(data: bytes, secret: str, algo: Any = hashlib.sha256, b64: bool = True) -> str:
     hash_ = hmac.new(secret.encode('utf-8'), data, algo)
 
     if b64:
@@ -80,11 +80,11 @@ def hmacEncode(data: bytes, secret: str, algo=hashlib.sha256, b64=True):
     return hash_.hexdigest()
 
 
-def hmacIsValid(data: bytes, hmacExp: str, secret: str, algo=hashlib.sha256, b64=True):
+def hmacIsValid(data: bytes, hmacExp: str, secret: str, algo: Any = hashlib.sha256, b64: bool = True) -> bool:
     return hmacEncode(data, secret, algo, b64=b64) == hmacExp
 
 
-def keygen(password: str | bytes | None = None, key_length=32, iter=500000) -> bytes:
+def keygen(password: str | bytes | None = None, key_length: int = 32, iter: int = 500000) -> bytes:
     """Create a key based on the password, or get a random key if no password is present"""
     if password is None:
         return os.urandom(key_length)

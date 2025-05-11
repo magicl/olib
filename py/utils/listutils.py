@@ -5,7 +5,7 @@
 import datetime
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Any, TypeVar
+from typing import Any, Callable, TypeVar
 
 from django.utils import timezone
 
@@ -19,7 +19,7 @@ def removeDuplicates(seq: Iterable[T]) -> list[T]:
     return [v for v in seq if not (v in seen or seenAdd(v))]
 
 
-def extendUnique(seq0: list, *other):
+def extendUnique(seq0: Iterable[T], *other: Iterable[T]) -> list[T]:
     """Extend first sequence with new items from second sequence. Items in other can be None"""
     seen = set(seq0)
     ret = list(seq0)
@@ -33,7 +33,7 @@ def extendUnique(seq0: list, *other):
     return ret
 
 
-def dropDuplicates(seq: list[Any], uniqueFunc=None):
+def dropDuplicates(seq: Iterable[T], uniqueFunc: Callable[[T], Any] | None = None) -> list[T]:
     """Remove duplicate items in list"""
     seen: set[Any] = set()
     ret = []
@@ -46,7 +46,7 @@ def dropDuplicates(seq: list[Any], uniqueFunc=None):
     return ret
 
 
-def chunks(l: Iterable[Any], n: int):
+def chunks(l: Iterable[T], n: int) -> Iterable[list[T]]:
     """Yield successive n-sized chunks from l."""
     # Need list/tuple to slice
     lst = list(l) if not isinstance(l, (list, tuple)) else l
@@ -55,12 +55,12 @@ def chunks(l: Iterable[Any], n: int):
         yield lst[i : i + n]
 
 
-def chunkByMeasure(l: Iterable[Any], n: int, measureFunc):
+def chunkByMeasure(l: Iterable[T], n: int, measureFunc: Callable[[T], int]) -> Iterable[list[T]]:
     """Chunks, but instead of counting each list item as value 1, each list item is counted as the  value returned by measureFunc when applied on the list item. If any one item
     is larger than n, then it is output in its own chunk, and that chunk can exceed n"""
     lst = list(l) if not isinstance(l, (list, tuple)) else l
 
-    out: list[Any] = []
+    out: list[T] = []
     outSize = 0
     for v in lst:
         size = measureFunc(v)
@@ -79,7 +79,7 @@ def chunkByMeasure(l: Iterable[Any], n: int, measureFunc):
 
 
 # Adds defeults to list if the list does not currently have those items
-def applyListDefaults(lst, defaults):
+def applyListDefaults(lst: list[T], defaults: list[T]) -> list[T]:
     if len(lst) < len(defaults):
         lst += defaults[len(lst) :]
 
@@ -90,7 +90,7 @@ def applyListDefaults(lst, defaults):
     return lst
 
 
-def groupByValue(lst, keyFunc=None, valFunc=None, unique=False, sort=False, sortKey=None):
+def groupByValue(lst: Iterable[T], keyFunc: Callable[[T], Any] | None = None, valFunc: Callable[[T], Any] | None = None, unique: bool = False, sort: bool = False, sortKey: Callable[[Any], Any] | None = None) -> dict[Any, list[T]]:
     ret = defaultdict(list)
 
     if keyFunc is None:
@@ -114,11 +114,11 @@ def groupByValue(lst, keyFunc=None, valFunc=None, unique=False, sort=False, sort
     return ret
 
 
-def groupByValueMaintainingOrder(lst, keyFunc, valFunc=None):
+def groupByValueMaintainingOrder(lst: Iterable[T], keyFunc: Callable[[T], Any], valFunc: Callable[[T], Any] | None = None) -> list[tuple[Any, list[T]]]:
     """Returns a list of groupings ensuring the overall order is still the same"""
-    ret = []  # outer list
-    sub = []  # current sub-list
-    curKey = None
+    ret: list[tuple[Any, list[T]]] = []  # outer list
+    sub: list[T] = []  # current sub-list
+    curKey: Any | None = None
 
     for v in lst:
         key = keyFunc(v)
@@ -142,7 +142,7 @@ def groupByValueMaintainingOrder(lst, keyFunc, valFunc=None):
 
 
 # Group items by month
-def groupByMonth(items, key='created_at', dayDelta=0):
+def groupByMonth(items: Iterable[T], key: str = 'created_at', dayDelta: int = 0) -> list[int]:
     from ..utils.date import defaultTimezone
 
     commonStartDate = defaultTimezone(datetime.datetime(2017, 1, 1))
@@ -160,10 +160,10 @@ def groupByMonth(items, key='created_at', dayDelta=0):
     return monthItems
 
 
-def splitList(lst, cond):
+def splitList(lst: Iterable[T], cond: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """Returns two lists, the first one for any items where condition is true, and the second for any false condition items"""
-    trueVals = []
-    falseVals = []
+    trueVals: list[T] = []
+    falseVals: list[T] = []
     for v in lst:
         if cond(v):
             trueVals.append(v)
@@ -173,14 +173,14 @@ def splitList(lst, cond):
     return trueVals, falseVals
 
 
-def firstOrDefault(lst, default):
+def firstOrDefault(lst: Iterable[T], default: T) -> T:
     """Returns first element if list is not empty. Else returns default"""
     if lst:
         return lst[0]
     return default
 
 
-def grouped(iterable, n):
+def grouped(iterable: Iterable[T], n: int) -> Iterable[tuple[T, ...]]:
     """
     s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ...
 

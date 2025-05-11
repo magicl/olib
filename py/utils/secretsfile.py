@@ -21,7 +21,7 @@ class SecretsFile:
         self,
         file_path: str,
         secret_provider: SecretProvider | None = None,
-        separator='||',
+        separator: str = '||',
     ):
         self.file_path = os.path.expanduser(file_path)
         self.secret_provider = secret_provider if secret_provider is not None else LocalSharedFileSecret()
@@ -35,10 +35,10 @@ class SecretsFile:
                     f"Secrets file exists, but does not have correct permissions ({mode:o}) != ({self.EXPECTED_FILE_MODE:o}), so will not be used"
                 )
 
-    def _token_map_read(self):
+    def _token_map_read(self) -> dict[str, str]:
         if os.path.exists(self.file_path):
             try:
-                token_map = {}
+                token_map: dict[str, str] = {}
                 with open(self.file_path, encoding='utf-8') as f:
                     # Each line consists of key:value, where value is an encrypted, then base64-encoded string.
                     for line in f:
@@ -55,7 +55,7 @@ class SecretsFile:
 
         return {}
 
-    def _token_map_write(self, token_map):
+    def _token_map_write(self, token_map: dict[str, str]) -> None:
         # Create dir and file
         os.makedirs(os.path.dirname(self.file_path), mode=self.EXPECTED_FILE_MODE, exist_ok=True)
         if os.path.dirname(self.file_path).rsplit('/', 1)[1] not in (
@@ -78,7 +78,7 @@ class SecretsFile:
                 f"Token file created, but with wrong mode. Actual vs expected: {mode:o} vs {self.EXPECTED_FILE_MODE:o}"
             )
 
-    def get_secret(self, key):
+    def get_secret(self, key: str) -> str | None:
         """Returns None if secret is not present"""
         token_map = self._token_map_read()
 
@@ -87,14 +87,14 @@ class SecretsFile:
 
         return aesDecrypt(b64decode(token_map[key]), self.secret_provider.get_secret(), signed=False).decode('utf-8')
 
-    def save_secret(self, key, data):
+    def save_secret(self, key: str, data: str) -> None:
         token_map = self._token_map_read()
 
         token_map[key] = b64encode(aesEncrypt(data, self.secret_provider.get_secret(), sign=False)).decode('utf-8')
 
         self._token_map_write(token_map)
 
-    def delete_secret(self, key):
+    def delete_secret(self, key: str) -> bool:
         """
         Delete secret
         :returns: False if secret was not present
@@ -110,9 +110,9 @@ class SecretsFile:
 
         return present
 
-    def list_keys(self):
+    def list_keys(self) -> list[str]:
         token_map = self._token_map_read()
         return list(token_map.keys())
 
-    def clear_secrets(self):
+    def clear_secrets(self) -> None:
         self._token_map_write({})

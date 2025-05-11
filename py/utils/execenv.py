@@ -158,7 +158,7 @@ def _isVagrant():
     return os.path.isfile('/var/log/inside_vagrant')
 
 
-def _pickOne(what: str, *options: tuple[Any, Callable], default=None):
+def _pickOne(what: str, *options: tuple[Any, Callable], default: str | None = None) -> Any:
     result = set()
     for val, func in options:
         if val is None:

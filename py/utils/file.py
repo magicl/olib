@@ -8,12 +8,12 @@ import logging
 import os
 import re
 from contextlib import contextmanager
-
+from typing import Any, Generator
 logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def openOrPassthrough(filenameOrFile: str | bytes | io.IOBase | os.PathLike, mode: str, *args, storage=None, **kwargs):
+def openOrPassthrough(filenameOrFile: str | bytes | io.IOBase | os.PathLike, mode: str, *args, storage: Any | None = None, **kwargs) -> Generator[io.IOBase, None, None]:
     """If a string object is received, opens the file. Else, treats it as an in-memory or previously opened file, and passes it through"""
     if isinstance(filenameOrFile, (str, os.PathLike)):
         if storage is None:
@@ -30,7 +30,7 @@ def openOrPassthrough(filenameOrFile: str | bytes | io.IOBase | os.PathLike, mod
         yield filenameOrFile
 
 
-def acceptableFilename(name, lower=True):
+def acceptableFilename(name: str, lower: bool = True) -> str:
     """Returns an acceptable filename from a string. Removes special characters etc"""
     if lower:
         name = name.lower()
@@ -40,7 +40,7 @@ def acceptableFilename(name, lower=True):
     return name
 
 
-def dir_has_files(directory, *match):
+def dir_has_files(directory: str, *match: str) -> bool:
     for _, _, files in os.walk(directory):
         for file in files:
             if any(fnmatch.fnmatch(file, m) for m in match):

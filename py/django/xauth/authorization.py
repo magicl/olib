@@ -8,7 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import contextmanager
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable, Generator, Sequence
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -41,7 +41,7 @@ else:
     User = get_user_model()
 
 
-def redirectToLogin(request, login_url: str | None = None, redirect_field_name=None):
+def redirectToLogin(request, login_url: str | None = None, redirect_field_name=None) -> HttpResponse:
     """Returns response to redirect to login for authentication, with a redirect back to current page"""
     login_url = login_url or 'admin:login'
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
@@ -58,7 +58,7 @@ def redirectToLogin(request, login_url: str | None = None, redirect_field_name=N
     return redirect_to_login(path, resolved_login_url, redirect_field_name)
 
 
-def checkAccExists(accessName):
+def checkAccExists(accessName: str) -> bool:
     permissions = getattr(settings, 'XAUTH_PERMISSIONS')
     return permissions.get(accessName) is not None
 
@@ -69,8 +69,8 @@ def checkAccess(
     request: HttpRequest | None = None,
     viewName: str = '',
     returnBool: bool = False,
-    simpleMessage=False,
-):
+    simpleMessage: bool = False,
+) -> bool:
     """Checks for blanket (non-object-based) access to a given resource"""
     acc, user = _getAccAndUser(accessName, user=user, request=request)
 
@@ -96,8 +96,8 @@ def checkAccess(
 def checkAccesses(
     user: User | AnonymousUser | None = None,
     request: HttpRequest | None = None,
-    returnBool=True,
-):
+    returnBool: bool = True,
+) -> Generator[Callable[[str | Sequence[str]], bool], None, None]:
     """Context manager returning a function that can be used for cached validation of access for a single entity, useful if a large number of individual permissions need to be checked"""
     accessResult: dict[str, bool] = {}
 
@@ -124,7 +124,7 @@ def checkAccesses(
 
 
 @contextmanager
-def assumeAdminLoggedIn(users: Iterable[User]):
+def assumeAdminLoggedIn(users: Iterable[User]) -> None:
     """Marks user as logged in. Use in cases where it is desirable to check whether a user would have access if logged in. Will clear status after end of section"""
     oldBackends = [getattr(u, 'backend', 'NONE') for u in users]
     for u in users:
@@ -141,7 +141,7 @@ def assumeAdminLoggedIn(users: Iterable[User]):
 
 
 @contextmanager
-def assumeUserAdminLoggedIn(users: Iterable[User]):
+def assumeUserAdminLoggedIn(users: Iterable[User]) -> None:
     """Marks user as logged in. Use in cases where it is desirable to check whether a user would have access if logged in. Will clear status after end of section"""
     oldBackends = [getattr(u, 'backend', 'NONE') for u in users]
     for u in users:
@@ -165,7 +165,7 @@ def applyObjectAccessFilter(
     request: HttpRequest | None = None,
     viewName: str = '',
     returnBool: bool = False,
-):
+) -> QuerySet:
     qFilter, qAnnotate = objectAccessFilter(
         accessName,
         model,
@@ -177,7 +177,7 @@ def applyObjectAccessFilter(
     return querySet.filter(qFilter).annotate(**qAnnotate)
 
 
-def objectAccessFilter(accessName, model, user=None, request=None, viewName='', returnBool=False):
+def objectAccessFilter(accessName: str, model: Model, user: User | AnonymousUser | None = None, request: HttpRequest | None = None, viewName: str = '', returnBool: bool = False) -> tuple[QuerySet, dict[str, Any]]:
     """Only checks for object-specific access. 'checkAccess' must also be run to ensure user-specific access is checked. Returns both filter
     and necessary annotations"""
     acc, user = _getAccAndUser(accessName, user=user, request=request)
@@ -188,7 +188,7 @@ def objectAccessFilter(accessName, model, user=None, request=None, viewName='', 
     return _objectAccessFilter(acc, user, model, request), _objectAccessAnnotate(acc, model)
 
 
-def objectAccessAnnotate(accessName, model, user=None, request=None, viewName='', returnBool=False):
+def objectAccessAnnotate(accessName: str, model: Model, user: User | AnonymousUser | None = None, request: HttpRequest | None = None, viewName: str = '', returnBool: bool = False) -> dict[str, Any]:
     acc, user = _getAccAndUser(accessName, user=user, request=request)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
         return False  # _getAccAndUser throws for us if returnBool=False
@@ -202,7 +202,7 @@ def filteredReason(
     obj: object | None = None,
     model: Model | None = None,
     request: HttpRequest | None = None,
-):
+) -> str:
     """Use this for reason messages to ensure that internal details don't leak"""
     reason = accObj.reason(user, obj, model, request=request)
 
@@ -226,11 +226,11 @@ def objectAccessValidate(
     accessName,
     model=None,
     user=None,
-    request=None,
-    viewName='',
-    returnBool=False,
-    returnError=False,
-):
+    request: HttpRequest | None = None,
+    viewName: str = '',
+    returnBool: bool = False,
+    returnError: bool = False,
+) -> list[object]:
     acc, user = _getAccAndUser(accessName, user=user, request=request)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
         return False  # _getAccAndUser throws for us if returnBool=False
@@ -253,7 +253,7 @@ def objectAccessValidate(
     return ret
 
 
-def getFieldFilters(accessName: str, fieldNames: list[str]):
+def getFieldFilters(accessName: str, fieldNames: list[str]) -> dict[str, list[Any]]:
     """Returns list of filters which should be gated, along with a list of associated permission objects for each, as a tuple"""
 
     acc, _ = _getAccAndUser(accessName, user=None, request=None)
@@ -305,8 +305,8 @@ def checkFieldFilters(
     model,
     user=None,
     request=None,
-    returnBool=False,
-):
+    returnBool: bool = False,
+) -> bool:
     """Check permissions for a field generated by 'getFieldFilters'"""
     acc, user = _getAccAndUser(accessName, user=user, request=request)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
@@ -327,7 +327,7 @@ def checkFieldFilters(
     return True
 
 
-def containsObjectCheck(accessName):
+def containsObjectCheck(accessName: str) -> bool:
     """Checks if the access check requires an object check"""
     acc, _ = _getAccAndUser(accessName, user=None, request=None)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
@@ -336,7 +336,7 @@ def containsObjectCheck(accessName):
     return acc.isObjectCheck()
 
 
-def request_passes_test(test_func: Callable, login_url: str | None = None, redirect_field_name=None):
+def request_passes_test(test_func: Callable, login_url: str | None = None, redirect_field_name: str | None = None) -> Callable:
     """
     Modified version of Django's user_passes_test, passing request to test_func instead of sending user
     """
@@ -353,7 +353,7 @@ def request_passes_test(test_func: Callable, login_url: str | None = None, redir
     return decorator
 
 
-def viewAccess(accessName, formatArgs=None, redirect=True):
+def viewAccess(accessName: str, formatArgs: Any | None = None, redirect: bool = True) -> Callable:
     """
     Returns view decorator
     :param formatArgs: pass in function with request as argument, providing format args to accessName
@@ -391,7 +391,7 @@ def viewAccess(accessName, formatArgs=None, redirect=True):
     return decorator
 
 
-def userIdentStr(user=None, request=None) -> str:
+def userIdentStr(user: User | AnonymousUser | None = None, request: HttpRequest | None = None) -> str:
     user = user if user is not None else request.user if request is not None else None
     return (
         '<null>'

@@ -5,13 +5,13 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Generator, Iterable
 
 from olib.py.utils.obj import rgetattr, rsetattr
 
 
 @contextmanager
-def patchObjectsValues(objs, tupleList: Iterator[tuple[str, Any]]):
+def patchObjectsValues(objs: Iterable[object], tupleList: Iterator[tuple[str, Any]]) -> Generator[None, None, None]:
     """Will change the values of the given objects properties, and restore them before returning"""
     allOld = []
     for obj in objs:
@@ -31,7 +31,7 @@ def patchObjectsValues(objs, tupleList: Iterator[tuple[str, Any]]):
 
 
 @contextmanager
-def patchAddObjectAttr(obj, attrName, value):
+def patchAddObjectAttr(obj: object, attrName: str, value: Any) -> Generator[None, None, None]:
     """Adds an attribute to the object, and deletes it when done"""
     assert not hasattr(obj, attrName)  # nosec: assert_used
 

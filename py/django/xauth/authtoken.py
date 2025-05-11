@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.backends import ModelBackend
+from django.http import Request
 
 from olib.py.django.xauth.models.token import Token
 from olib.py.exceptions import UserError
@@ -20,7 +21,7 @@ else:
     User = get_user_model()
 
 
-def auth_token_get(username: str, password: str, request=None):
+def auth_token_get(username: str, password: str, request: Request | None = None) -> str:
     if not (username and password):
         raise UserError('Both username and password must be provided to create a token')
 
@@ -31,7 +32,7 @@ def auth_token_get(username: str, password: str, request=None):
     return token.key
 
 
-def auth_token_delete(user: User):
+def auth_token_delete(user: User) -> None:
     token = Token.objects.get(user=user)
     token.delete()
 
@@ -42,7 +43,7 @@ class AuthTokenBackend(ModelBackend):
     NOTE: Still requires the user to log in, but the login can be done using the token
     """
 
-    def authenticate(self, request, username=None, password=None, **kwargs) -> User | None:
+    def authenticate(self, request: Request, username: str | None = None, password: str | None = None, **kwargs) -> User | None:
         if request is None:
             return None
 

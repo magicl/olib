@@ -4,7 +4,7 @@
 # ~
 
 
-def str_to_long_int(v: str):
+def str_to_long_int(v: str) -> int:
     """Convert a 7 bit string to a long int"""
     ret = 0
     for c in v:
@@ -13,7 +13,7 @@ def str_to_long_int(v: str):
     return ret
 
 
-def long_int_to_str(v: int):
+def long_int_to_str(v: int) -> str:
     """Convert a long int to a string"""
     ret = []
     while v > 0:

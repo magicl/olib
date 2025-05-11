@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import connection
 from django.db.models import F, Model, Q
 from django.http import HttpRequest
+from typing import Any
 
 from ...utils.execenv import isEnvProduction, isEnvTest
 from ...utils.listutils import removeDuplicates
@@ -49,23 +50,23 @@ def _getAccAndUser(
     return acc, user
 
 
-def _checkAccess(acc: 'AccessBase', user: 'User', request: HttpRequest | None = None):
+def _checkAccess(acc: 'AccessBase', user: 'User', request: HttpRequest | None = None) -> bool:
     return acc.checkUser(user, request)
 
 
-def _objectAccessValidation(obj, acc, user, model, request=None):
+def _objectAccessValidation(obj: object, acc: 'AccessBase', user: 'User', model: Model, request: HttpRequest | None = None) -> bool:
     return acc.checkObject(user, obj, model, request)
 
 
-def _objectAccessFilter(acc, user, model, request=None):
+def _objectAccessFilter(acc: 'AccessBase', user: 'User', model: Model, request: HttpRequest | None = None) -> Q:
     return acc.querySetFilter(user, model, request)
 
 
-def _objectAccessAnnotate(acc, model):
+def _objectAccessAnnotate(acc: 'AccessBase', model: Model) -> dict[str, Any]:
     return acc.querySetAnnotate(model)
 
 
-def objectAccessAttributes(accessName, model):
+def objectAccessAttributes(accessName: str, model: Model) -> list[str]:
     """Returns object attributes to be queried to determine permissions. Useful for making sure these are prefetched"""
     acc, _ = _getAccAndUser(accessName)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
@@ -75,23 +76,23 @@ def objectAccessAttributes(accessName, model):
 
 
 class AccessBase:
-    def checkRequest(self, request: HttpRequest):
+    def checkRequest(self, request: HttpRequest) -> bool:
         """Convenience alias for checkUser"""
         return self.checkUser(getattr(request, 'user', None), request)
 
-    def isPrivilegeCheck(self):
+    def isPrivilegeCheck(self) -> bool:
         """Returns true if test checks for whether user is client, staff, etc. One of these MUST be present for every priv list"""
         return False
 
-    def isUserCheck(self):
+    def isUserCheck(self) -> bool:
         """Returns true if this is a user check"""
         return False
 
-    def isObjectCheck(self):
+    def isObjectCheck(self) -> bool:
         """Returns true if this is an object check"""
         return False
 
-    def checkUser(self, user: Optional['User'], request: HttpRequest | None = None):
+    def checkUser(self, user: Optional['User'], request: HttpRequest | None = None) -> bool:
         """Returns true if user has sufficient privileges to access resource. Some privileges require context/request and will fail unless provided"""
         return True
 
@@ -101,23 +102,23 @@ class AccessBase:
         obj: object,
         model: Model,
         request: HttpRequest | None = None,
-    ):
+    ) -> bool:
         """For object-level permissions, returns queryset filter for checking permissions. Both this and checkObject should be implemented if one is"""
         return True
 
-    def querySetFilter(self, user: Optional['User'], model: Model, request: HttpRequest | None = None):
+    def querySetFilter(self, user: Optional['User'], model: Model, request: HttpRequest | None = None) -> Q:
         """For object-level permissions, returns queryset filter for checking permissions. Both this and checkObject should be implemented if one is"""
         return ~Q(id=None)  # Q() does not work
 
-    def querySetAnnotate(self, model: Model):
+    def querySetAnnotate(self, model: Model) -> dict[str, Any]:
         """Returns a dict of annotations. Ensures that sufficient data is available for 'checkObject'"""
         return {}
 
-    def getFieldExcludeFilters(self):
-        return ()
+    def getFieldExcludeFilters(self) -> list:
+        return []
 
-    def getFieldOnlyFilters(self):
-        return ()
+    def getFieldOnlyFilters(self) -> list:
+        return []
 
     def reason(
         self,
@@ -125,17 +126,17 @@ class AccessBase:
         obj=None,
         model: Model | None = None,
         request: HttpRequest | None = None,
-    ):
+    ) -> str:
         """Default-reason simply gives the name of the access class that failed"""
         return self.__class__.__name__
 
-    def getUserId(self, user, userIdField):
+    def getUserId(self, user: 'User', userIdField: str) -> int | None:
         if userIdField == 'user':
             return user.id if user is not None else None
 
         raise PermissionConfigurationException('Invalid userIdField. Choose one of user, ...')
 
-    def _getFieldValue(self, obj, fieldName, expType=None):
+    def _getFieldValue(self, obj: object, fieldName: str, expType: type | None = None) -> Any:
         """Field name has format xx__yy, and relies on prefetch. If prefetched value is not present. do regular lookup of permission, which
         will be significantly slower"""
 
@@ -162,7 +163,7 @@ class AccessBase:
 
         return fieldObj
 
-    def getObjectAccessAttributes(self, model):
+    def getObjectAccessAttributes(self, model: Model) -> list:
         """Returns object attributes to be interrogated"""
         return []
 

@@ -8,7 +8,7 @@ import sys
 from typing import Any
 
 
-def testArg(options: dict[str, Any], keep=False):
+def testArg(options: dict[str, Any], keep: bool = False) -> Any | bool:
     """
     Checks for special arg, and deletes it to avoid errors from manage.py
     :param keep: Set to not remove param from sys.argv. By default it is removed

@@ -9,10 +9,10 @@ import signal
 import sys
 import time
 from contextlib import contextmanager
-
+from typing import Generator
 import click
 import sh
-
+import psycopg
 from ....utils.kubernetes import k8s_secret_read
 from ....utils.secrets import readFileSecret
 
@@ -20,7 +20,7 @@ from ....utils.secrets import readFileSecret
 # pylint: disable=duplicate-code
 
 
-def postgres_convert_name(ctx):
+def postgres_convert_name(ctx: click.Context) -> tuple[str, str, str]:
     name = ctx.obj.k8sAppName
 
     if any(name.startswith(prefix) for prefix in ['root', 'localroot', 'postgres']):
@@ -36,7 +36,7 @@ def postgres_convert_name(ctx):
     return secret_name, database, username
 
 
-def postgres_creds(ctx, root=False, use_db: bool | None = None):
+def postgres_creds(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> tuple[str, str, str | None]:
     if use_db is None:
         use_db = not root
 
@@ -60,7 +60,7 @@ def postgres_creds(ctx, root=False, use_db: bool | None = None):
 
 
 @contextmanager
-def postgres_shell_connect_args(ctx, root=False, quiet=False, use_db: bool | None = None):
+def postgres_shell_connect_args(ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None) -> Generator[tuple[list[str], dict[str, str]], None, None]:
     """Opens port, creates a credentials file, and composes arguments for postgres shell"""
     if use_db is None:
         use_db = not root
@@ -118,7 +118,7 @@ def postgres_port_forward(quiet=False):
 
 
 @contextmanager
-def postgres_connect(ctx, root=False, use_db: bool | None = None):
+def postgres_connect(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> Generator[psycopg.Cursor, None, None]:
     import psycopg
 
     if use_db is None:
@@ -143,7 +143,7 @@ def postgres_connect(ctx, root=False, use_db: bool | None = None):
 
 
 @contextmanager
-def postgres_pipe(ctx, root=False, quiet=False, queue_size=1024):
+def postgres_pipe(ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024) -> Generator[tuple[queue.Queue, sh.Command], None, None]:
     """Open a pipe into postgres. Useful for e.g. restoring backups"""
     with postgres_shell_connect_args(ctx, root, quiet=quiet) as args:
         postgresIn: queue.Queue = queue.Queue(maxsize=queue_size)

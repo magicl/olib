@@ -3,7 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 import re
-
+from typing import Callable
 from django.utils.functional import SimpleLazyObject, empty, lazy
 
 
@@ -15,11 +15,11 @@ class LazyRe(SimpleLazyObject):
         return self._wrapped
 
 
-def lazyReCompile(pattern: str | bytes, flags: int = 0):
+def lazyReCompile(pattern: str | bytes, flags: int = 0) -> re.Pattern:
     return LazyRe(lambda: re.compile(pattern, flags))
 
 
-def lazySettingsStr(func):
+def lazySettingsStr(func: Callable) -> Callable:
     """Lazy string generation which is fed the django settings object. Evaluated on each invocation"""
 
     def wrap():

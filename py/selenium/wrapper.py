@@ -11,7 +11,7 @@ from collections.abc import Callable
 from contextlib import contextmanager
 from enum import Enum
 from io import BytesIO
-from typing import NamedTuple, Union
+from typing import Generator, NamedTuple, Union
 
 import sh
 from django.utils.http import urlencode
@@ -280,9 +280,9 @@ class SeleniumWrapper:
     def setResolution(
         self,
         resolution: Res | BrowserRes | tuple[int, int] | None = None,
-        setSizeOfViewport=True,
-        setTestDefault=False,
-    ):
+        setSizeOfViewport: bool = True,
+        setTestDefault: bool = False,
+    ) -> None:
         """
         By default sets the viewport size, pass setSizeOfViewport=False to set window size.
         When in non-headless mode, the minimum size settable might be restricted.
@@ -337,7 +337,7 @@ class SeleniumWrapper:
         devtools=False,
         maximized=False,
         userProfile=False,
-    ):
+    ) -> None:
         self._selenium, self.downloadDir = SeleniumBrowser.getBrowser(
             browserName,
             blockUrls=blockUrls,
@@ -427,11 +427,11 @@ class SeleniumWrapper:
         id=None,  # pylint: disable=redefined-builtin
         linkText=None,
         parent=None,
-        condition: Union[Callable, 'WaitCondition', list[Union[Callable, 'WaitCondition']]] | None = None,
-        raiseOnNotFound=True,
-        disableBreakOnError=False,
-        maxItems=-1,
-    ):
+        condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
+        raiseOnNotFound: bool = True,
+        disableBreakOnError: bool = False,
+        maxItems: int = -1,
+    ) -> list[OWebElement]:
         """Get elements by optional method. At least one of the parameters of the function must be used"""
         if self.debugDelay:
             time.sleep(self.debugDelay)
@@ -600,12 +600,12 @@ class SeleniumWrapper:
         xpath=None,
         id=None,
         parent=None,
-        condition: Union[Callable, 'WaitCondition', list[Union[Callable, 'WaitCondition']]] | None = None,
+        condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
         errorMsg='',
         waitDelay=None,
         extraDelay=None,
-        raiseOnNotFound=True,
-    ):
+        raiseOnNotFound: bool = True,
+    ) -> OWebElement | None:
         """Waits for element to have a condition. Same syntax as SeleniumBase.element(..)
         condition: 'presence', 'selected', 'clickable'
         """
@@ -939,7 +939,7 @@ class SeleniumWrapper:
         return screenshot
 
     @contextmanager
-    def switchToFrame(self, element: OWebElement):
+    def switchToFrame(self, element: OWebElement) -> Generator[None, None, None]:
         self.selenium.switch_to.frame(element._element)  # pylint: disable=protected-access
 
         yield
@@ -947,7 +947,7 @@ class SeleniumWrapper:
         self.selenium.switch_to.default_content()
 
     @contextmanager
-    def switchToTab(self, index):
+    def switchToTab(self, index: int) -> Generator[None, None, None]    :
         windows = self.selenium.window_handles
         if index >= len(windows):
             # Wait for tab to appear

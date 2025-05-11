@@ -7,7 +7,7 @@ import csv
 import io
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -147,7 +147,7 @@ class CSVRow:
             raise Exception(f"Value expected for column {name} in row {self.rowNum}")
         return val
 
-    def tOption(self, name, allowed: Iterable[Any], cast=None, requireKey=True):
+    def tOption(self, name: str, allowed: Iterable[Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True) -> Any:
         val = self.tOpt(name, '', requireKey=requireKey)
         if cast is not None:
             val = cast(val)
@@ -155,17 +155,17 @@ class CSVRow:
             raise Exception(f"Column {name} must have one of the following values: {allowed}. Found: {val}")
         return val
 
-    def tOptionMap(self, name, allowed: dict[Any, Any], cast=None, requireKey=True):
+    def tOptionMap(self, name: str, allowed: dict[Any, Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True) -> Any:
         val = self.tOption(name, allowed.keys(), cast, requireKey)
         return allowed[val]
 
-    def getDict(self):
+    def getDict(self) -> dict[str, Any]:
         return {k: _cellValue(self.row[i]) for k, i in self.keys.items()}
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> Any:
         return self.tVal(k, True)
 
 
-def _cellValue(cell):
+def _cellValue(cell: Any) -> Any:
     # CSV reader has simple string values. XLS reader has Cell objects with a value method
     return cell if isinstance(cell, str) else cell.value

@@ -10,8 +10,13 @@ import time
 
 from urllib3.exceptions import MaxRetryError
 
+from typing import TYPE_CHECKING
 
-def k8s_namespace_exists(name: str, context: str):
+if TYPE_CHECKING:
+    from kubernetes import client
+
+
+def k8s_namespace_exists(name: str, context: str) -> bool:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -28,7 +33,7 @@ def k8s_namespace_exists(name: str, context: str):
     return False
 
 
-def k8s_namespace_create(name: str, context: str, exist_ok=True):
+def k8s_namespace_create(name: str, context: str, exist_ok: bool = True) -> None:
     from kubernetes import client, config
 
     if k8s_namespace_exists(name, context=context):
@@ -44,7 +49,7 @@ def k8s_namespace_create(name: str, context: str, exist_ok=True):
     v1.create_namespace(namespace)
 
 
-def k8s_secret_create(name: str, namespace: str, context: str, data: dict):
+def k8s_secret_create(name: str, namespace: str, context: str, data: dict) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -58,7 +63,7 @@ def k8s_secret_create(name: str, namespace: str, context: str, data: dict):
     )
 
 
-def k8s_secret_update(name: str, namespace: str, context: str, data: dict):
+def k8s_secret_update(name: str, namespace: str, context: str, data: dict) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -73,14 +78,14 @@ def k8s_secret_update(name: str, namespace: str, context: str, data: dict):
     )
 
 
-def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict):
+def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict) -> None:
     if k8s_secret_exists(name, namespace, context):
         k8s_secret_update(name, namespace, context, data)
     else:
         k8s_secret_create(name, namespace, context, data)
 
 
-def k8s_secret_delete(name: str, namespace: str, context: str):
+def k8s_secret_delete(name: str, namespace: str, context: str) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -88,7 +93,7 @@ def k8s_secret_delete(name: str, namespace: str, context: str):
     v1.delete_namespaced_secret(name=name, namespace=namespace)
 
 
-def k8s_secret_read(name: str, namespace: str, context: str, exit_on_missing=True):
+def k8s_secret_read(name: str, namespace: str, context: str, exit_on_missing: bool = True) -> dict[str, str]:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -105,7 +110,7 @@ def k8s_secret_read(name: str, namespace: str, context: str, exit_on_missing=Tru
     return {k: base64.b64decode(v).decode('utf-8') for k, v in secret.data.items()}
 
 
-def k8s_secret_read_single(name: str, namespace: str, context: str, *keys: str):
+def k8s_secret_read_single(name: str, namespace: str, context: str, *keys: str) -> str:
     """Read a single key, however multiple name versions are allowed"""
     secrets = k8s_secret_read(name, namespace, context)
 
@@ -118,7 +123,7 @@ def k8s_secret_read_single(name: str, namespace: str, context: str, *keys: str):
     )
 
 
-def k8s_secret_exists(name: str, namespace: str, context: str):
+def k8s_secret_exists(name: str, namespace: str, context: str) -> bool:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -132,7 +137,7 @@ def k8s_secret_exists(name: str, namespace: str, context: str):
     return True
 
 
-def k8s_job_create(image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name=None):
+def k8s_job_create(image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name: str | None = None) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -162,7 +167,7 @@ def k8s_job_create(image: str, command: list[str], jobName: str, namespace: str,
     )
 
 
-def k8s_pod_get_log(v1, podName: str, namespace: str, prev_log=None):
+def k8s_pod_get_log(v1: 'client.CoreV1Api', podName: str, namespace: str, prev_log: str | None = None) -> str:
     """Returns log from job. If prev_log is provided, only log contents past prev_log is returned"""
     from kubernetes import client
 
@@ -177,7 +182,7 @@ def k8s_pod_get_log(v1, podName: str, namespace: str, prev_log=None):
         return ''
 
 
-def k8s_job_wait_for_completion(jobName: str, namespace: str, context: str | None = None):
+def k8s_job_wait_for_completion(jobName: str, namespace: str, context: str | None = None) -> bool:
     """Rneturns true on success, false on error"""
     from kubernetes import client, config, watch
 

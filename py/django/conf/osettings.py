@@ -8,7 +8,7 @@ import time
 from typing import Any, NamedTuple
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Max, Subquery
+from django.db.models import Max, QuerySet, Subquery
 
 from olib.py.django.conf.models import OnlineSetting
 from olib.py.exceptions import UserError
@@ -145,7 +145,7 @@ class OnlineSettingsAccess:
         values: list[Any] | None = None,
         load_group: str | None = None,
         cache_timeout_seconds: int | None = None,
-    ):
+    ) -> None:
         if name in self.settings:
             raise Exception(f"Setting {name} already defined")
 
@@ -155,7 +155,7 @@ class OnlineSettingsAccess:
         self.settings[name] = OnlineSettingDef(name, type, default, cache_timeout_seconds, values, load_group)
 
     @staticmethod
-    def cast(name, v) -> Any:
+    def cast(name: str, v: Any) -> Any:
         # Cast
         cast_to = osettings.settings[name].type
         val: Any
@@ -290,7 +290,7 @@ class OnlineSettingsAccess:
         return osettings.settings[name]
 
     @staticmethod
-    def write(name: str, value: Any, *, invalidateCache: bool = False, forceUpdate=False):
+    def write(name: str, value: Any, *, invalidateCache: bool = False, forceUpdate: bool = False) -> OnlineSetting:
         """
         Update a setting
         :param invalidateCache: Use in testcases only to invalidate cache
@@ -317,7 +317,7 @@ class OnlineSettingsAccess:
         return ret
 
     @staticmethod
-    def set(name: str, key: str, value: Any, *, invalidateCache: bool = False):
+    def set(name: str, key: str, value: Any, *, invalidateCache: bool = False) -> OnlineSetting:
         """
         Add a key/value to a setting
         :param invalidateCache: Use in testcases only to invalidate cache
@@ -351,7 +351,7 @@ class OnlineSettingsAccess:
         return ret
 
     @staticmethod
-    def add(name: str, value: str, *, invalidateCache: bool = False):
+    def add(name: str, value: str, *, invalidateCache: bool = False) -> OnlineSetting:
         """
         Add a value to a setting
         :param invalidateCache: Use in testcases only to invalidate cache
@@ -388,7 +388,7 @@ class OnlineSettingsAccess:
         return ret
 
     @staticmethod
-    def clr(name: str, key: str, *, invalidateCache: bool = False):
+    def clr(name: str, key: str, *, invalidateCache: bool = False) -> OnlineSetting:
         """
         Remove a key
         :param invalidateCache: Use in testcases only to invalidate cache
@@ -428,7 +428,7 @@ class OnlineSettingsAccess:
         return ret
 
     @staticmethod
-    def get_latest_query():
+    def get_latest_query() -> QuerySet[OnlineSetting]:
         """
         Returns a query fetching the latest settings. Note that some settings might not be present if
         they have not yet been written. Default value must in that case be retried from the SETTINGS struct

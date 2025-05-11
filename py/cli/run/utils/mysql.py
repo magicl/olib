@@ -10,18 +10,22 @@ import sys
 import tempfile
 import time
 from contextlib import contextmanager
+from typing import Any, Iterator, TYPE_CHECKING
 
 import click
 import sh
-
+import pandas as pd
 from ....utils.kubernetes import k8s_secret_read
 from ....utils.secrets import readFileSecret
+
+if TYPE_CHECKING:
+    from MySQLdb import _mysql
 
 # Shares a lot of code with postgres template
 # pylint: disable=duplicate-code
 
 
-def mysql_convert_name(ctx):
+def mysql_convert_name(ctx: click.Context) -> tuple[str, str, str]:
     name = ctx.obj.k8sAppName
 
     if any(name.startswith(prefix) for prefix in ['root', 'localroot', 'mysql']):
@@ -35,7 +39,7 @@ def mysql_convert_name(ctx):
     return secret_name, database, username
 
 
-def mysql_creds(ctx, root=False, use_db: bool | None = None):
+def mysql_creds(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> tuple[str, str, str | None]:
     if use_db is None:
         use_db = not root
 
@@ -58,7 +62,7 @@ def mysql_creds(ctx, root=False, use_db: bool | None = None):
 
 
 @contextmanager
-def mysql_shell_connect_args(ctx, root=False, quiet=False, use_db: bool | None = None):
+def mysql_shell_connect_args(ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None) -> Iterator[list[str]]:
     """Opens port, creates a credentials file, and composes arguments for mysql shell"""
     if use_db is None:
         use_db = not root
@@ -84,7 +88,7 @@ def mysql_shell_connect_args(ctx, root=False, quiet=False, use_db: bool | None =
 
 
 @contextmanager
-def mysqlsh_shell_connect_args(ctx, root=False, use_db: bool | None = None):
+def mysqlsh_shell_connect_args(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> Iterator[list[str]]:
     """
     Opens port, and composes arguments for mysql shell
     """
@@ -105,7 +109,7 @@ def mysqlsh_shell_connect_args(ctx, root=False, use_db: bool | None = None):
 
 
 @contextmanager
-def mysql_port_forward(quiet=False):
+def mysql_port_forward(quiet: bool = False) -> Iterator[int]:
     port = None
 
     def func(s):
@@ -138,7 +142,7 @@ def mysql_port_forward(quiet=False):
 
 
 @contextmanager
-def mysql_connect(ctx, root=False, use_db: bool | None = None):
+def mysql_connect(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> Iterator[Any]:
     from MySQLdb import _mysql
     from MySQLdb.constants import FIELD_TYPE
 
@@ -174,7 +178,7 @@ def mysql_connect(ctx, root=False, use_db: bool | None = None):
 
 
 @contextmanager
-def mysql_pipe(ctx, root=False, quiet=False, queue_size=1024):
+def mysql_pipe(ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024) -> Iterator[tuple[queue.Queue, sh.Command]]:
     """Open a pipe into mysql. Useful for e.g. restoring backups"""
     with mysql_shell_connect_args(ctx, root, quiet=quiet) as args:
         mysqlIn: queue.Queue = queue.Queue(maxsize=queue_size)
@@ -192,7 +196,7 @@ def mysql_pipe(ctx, root=False, quiet=False, queue_size=1024):
             print('MySQL statements complete')
 
 
-def mysql_escape(s: str):
+def mysql_escape(s: str) -> str:
     """Note, even though escaped, this is not fully safe, and should only be used by superusers on good input"""
     from MySQLdb._mysql import escape_string
 
@@ -204,13 +208,13 @@ def mysql_escape(s: str):
 #     return _mysql_result(db, table)
 
 
-def mysql_query(db, q, table=True):
+def mysql_query(db: '_mysql.Connection', q: str, table: bool = True) -> pd.DataFrame | list[Any]:
     """Prefer mysqlExec over mysql_query, as mysqlExec handles query parameters in a safer way"""
     db.query(q)
     return _mysql_result(db, table)
 
 
-def _mysql_result(db, table=True):
+def _mysql_result(db, table: bool = True) -> pd.DataFrame | list[Any] | None:
     import pandas as pd
 
     r = db.store_result()

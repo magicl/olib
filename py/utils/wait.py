@@ -5,7 +5,7 @@
 import logging
 import time
 from collections.abc import Callable
-
+from typing import Any
 from olib.py.django.test.debug import breakOnError
 
 logger = logging.getLogger(__name__)
@@ -25,8 +25,8 @@ def waitFor(
     delay=0.1,
     info: Callable | str = '',
     raiseOnFailure=True,
-    description='',
-):
+    description: str = '',
+) -> Any:
     """Waits until func returns True. Ok for function to raise in waiting period"""
     logger.info(f"waitfor start: {description}")
     # timeout = timeout #if not settings.TEST_SELENIUM_TIMEOUT_DISABLE else 36000
