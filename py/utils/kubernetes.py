@@ -7,10 +7,9 @@
 import base64
 import sys
 import time
+from typing import TYPE_CHECKING
 
 from urllib3.exceptions import MaxRetryError
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from kubernetes import client
@@ -137,7 +136,9 @@ def k8s_secret_exists(name: str, namespace: str, context: str) -> bool:
     return True
 
 
-def k8s_job_create(image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name: str | None = None) -> None:
+def k8s_job_create(
+    image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name: str | None = None
+) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)

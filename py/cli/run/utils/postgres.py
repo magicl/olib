@@ -8,13 +8,18 @@ import re
 import signal
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
+from typing import TYPE_CHECKING
+
 import click
 import sh
-import psycopg
+
 from ....utils.kubernetes import k8s_secret_read
 from ....utils.secrets import readFileSecret
+
+if TYPE_CHECKING:
+    import psycopg
 
 # Shares a lot of code with mysql template
 # pylint: disable=duplicate-code
@@ -60,7 +65,9 @@ def postgres_creds(ctx: click.Context, root: bool = False, use_db: bool | None =
 
 
 @contextmanager
-def postgres_shell_connect_args(ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None) -> Generator[tuple[list[str], dict[str, str]], None, None]:
+def postgres_shell_connect_args(
+    ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None
+) -> Generator[tuple[list[str], dict[str, str]], None, None]:
     """Opens port, creates a credentials file, and composes arguments for postgres shell"""
     if use_db is None:
         use_db = not root
@@ -118,7 +125,9 @@ def postgres_port_forward(quiet=False):
 
 
 @contextmanager
-def postgres_connect(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> Generator[psycopg.Cursor, None, None]:
+def postgres_connect(
+    ctx: click.Context, root: bool = False, use_db: bool | None = None
+) -> Generator['psycopg.Cursor', None, None]:
     import psycopg
 
     if use_db is None:
@@ -143,7 +152,9 @@ def postgres_connect(ctx: click.Context, root: bool = False, use_db: bool | None
 
 
 @contextmanager
-def postgres_pipe(ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024) -> Generator[tuple[queue.Queue, sh.Command], None, None]:
+def postgres_pipe(
+    ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024
+) -> Generator[tuple[queue.Queue, sh.Command], None, None]:
     """Open a pipe into postgres. Useful for e.g. restoring backups"""
     with postgres_shell_connect_args(ctx, root, quiet=quiet) as args:
         postgresIn: queue.Queue = queue.Queue(maxsize=queue_size)

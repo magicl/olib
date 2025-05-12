@@ -11,7 +11,7 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from enum import Enum
 from io import BytesIO
-from typing import NamedTuple
+from typing import NamedTuple, Union
 
 import sh
 from django.utils.http import urlencode
@@ -427,7 +427,7 @@ class SeleniumWrapper:
         id: str | None = None,  # pylint: disable=redefined-builtin
         linkText: str | None = None,
         parent: OWebElement | None = None,
-        condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
+        condition: Union[Callable, 'WaitCondition', list[Union[Callable, 'WaitCondition']], None] = None,
         raiseOnNotFound: bool = True,
         disableBreakOnError: bool = False,
         maxItems: int = -1,
@@ -602,7 +602,7 @@ class SeleniumWrapper:
         xpath: str | None = None,
         id: str | None = None,
         parent: OWebElement | None = None,
-        condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
+        condition: Union[Callable, 'WaitCondition', list[Union[Callable, 'WaitCondition']], None] = None,
         errorMsg: str = '',
         waitDelay: float | None = None,
         extraDelay: float | None = None,

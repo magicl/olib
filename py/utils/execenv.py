@@ -10,7 +10,7 @@ import sys
 from collections.abc import Callable
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TypeVar
 
 T = TypeVar('T')
 

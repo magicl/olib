@@ -14,9 +14,8 @@ import tempfile
 import time
 import uuid
 from collections import defaultdict, deque
-from pathlib import Path
-from typing import IO
 from collections.abc import Callable
+from pathlib import Path
 
 import sh
 

@@ -16,6 +16,7 @@ from collections.abc import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from threading import Event, Lock, Thread
+from typing import Union
 from urllib.parse import parse_qs
 
 import requests
@@ -840,7 +841,7 @@ class MockServer(
 
 
 class MockMultiServer(MockServerUtils):
-    instance: 'MockMultiServer' | None = (
+    instance: Union['MockMultiServer', None] = (
         None  # Each sub-class gets a copy of this as long as it is accessed through cls
     )
 

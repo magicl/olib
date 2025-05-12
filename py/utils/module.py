@@ -7,6 +7,7 @@ import importlib.util
 import sys
 from types import ModuleType
 
+
 def importModuleFromPath(path: str) -> ModuleType:
     # Extract module name from the path
     module_name = path.split('/')[-1].rstrip('.py')

@@ -5,9 +5,10 @@
 
 # pylint: disable=duplicate-code
 
+import sys
+
 import click
 import sh
-import sys
 
 from ....utils.kubernetes import (
     k8s_namespace_create,
@@ -65,10 +66,7 @@ def _implement(defaultRoot=True):
             """Check if app exists"""
             secretName, *_ = redis_convert_name(ctx)
 
-            exists = k8s_secret_exists(
-                secretName,
-                ctx.obj.k8sNamespace,
-                ctx.obj.k8sContext)
+            exists = k8s_secret_exists(secretName, ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
             sys.exit(0 if exists else 1)
 

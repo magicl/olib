@@ -3,7 +3,8 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 import re
-from typing import Callable
+from collections.abc import Callable
+
 from django.utils.functional import SimpleLazyObject, empty, lazy
 
 

@@ -9,9 +9,9 @@ import signal
 import sys
 import tempfile
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
-from collections.abc import Iterator
 
 import click
 import pandas as pd
@@ -223,7 +223,6 @@ def mysql_query(db: '_mysql.Connection', q: str, table: bool = True) -> pd.DataF
 
 
 def _mysql_result(db: '_mysql.Connection', table: bool = True) -> pd.DataFrame | list[Any] | None:
-    import pandas as pd
 
     r = db.store_result()
     if r is None:
