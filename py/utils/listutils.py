@@ -5,7 +5,8 @@
 import datetime
 from collections import defaultdict
 from collections.abc import Iterable
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
+from collections.abc import Callable
 
 from django.utils import timezone
 
@@ -90,7 +91,14 @@ def applyListDefaults(lst: list[T], defaults: list[T]) -> list[T]:
     return lst
 
 
-def groupByValue(lst: Iterable[T], keyFunc: Callable[[T], Any] | None = None, valFunc: Callable[[T], Any] | None = None, unique: bool = False, sort: bool = False, sortKey: Callable[[Any], Any] | None = None) -> dict[Any, list[T]]:
+def groupByValue(
+    lst: Iterable[T],
+    keyFunc: Callable[[T], Any] | None = None,
+    valFunc: Callable[[T], Any] | None = None,
+    unique: bool = False,
+    sort: bool = False,
+    sortKey: Callable[[Any], Any] | None = None,
+) -> dict[Any, list[T]]:
     ret = defaultdict(list)
 
     if keyFunc is None:
@@ -114,7 +122,9 @@ def groupByValue(lst: Iterable[T], keyFunc: Callable[[T], Any] | None = None, va
     return ret
 
 
-def groupByValueMaintainingOrder(lst: Iterable[T], keyFunc: Callable[[T], Any], valFunc: Callable[[T], Any] | None = None) -> list[tuple[Any, list[T]]]:
+def groupByValueMaintainingOrder(
+    lst: Iterable[T], keyFunc: Callable[[T], Any], valFunc: Callable[[T], Any] | None = None
+) -> list[tuple[Any, list[T]]]:
     """Returns a list of groupings ensuring the overall order is still the same"""
     ret: list[tuple[Any, list[T]]] = []  # outer list
     sub: list[T] = []  # current sub-list
@@ -173,7 +183,7 @@ def splitList(lst: Iterable[T], cond: Callable[[T], bool]) -> tuple[list[T], lis
     return trueVals, falseVals
 
 
-def firstOrDefault(lst: Iterable[T], default: T) -> T:
+def firstOrDefault(lst: list[T], default: T) -> T:
     """Returns first element if list is not empty. Else returns default"""
     if lst:
         return lst[0]

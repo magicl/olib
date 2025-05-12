@@ -8,12 +8,16 @@ import logging
 import os
 import re
 from contextlib import contextmanager
-from typing import Any, Generator
+from typing import IO, Any
+from collections.abc import Generator
+
 logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def openOrPassthrough(filenameOrFile: str | bytes | io.IOBase | os.PathLike, mode: str, *args, storage: Any | None = None, **kwargs) -> Generator[io.IOBase, None, None]:
+def openOrPassthrough(
+    filenameOrFile: str | io.IOBase | os.PathLike, mode: str, *args: Any, storage: Any | None = None, **kwargs: Any
+) -> Generator[IO[Any] | io.IOBase | bytes, None, None]:
     """If a string object is received, opens the file. Else, treats it as an in-memory or previously opened file, and passes it through"""
     if isinstance(filenameOrFile, (str, os.PathLike)):
         if storage is None:

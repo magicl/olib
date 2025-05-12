@@ -80,10 +80,10 @@ class Infisical(Requester):
         self,
         project_slug: str,
         environment: str,
-        secret_path='/',
-        recursive=False,
-        include_imports=False,  # nosec: hardcoded_password_default
-    ):
+        secret_path: str = '/',
+        recursive: bool = False,
+        include_imports: bool = False,  # nosec: hardcoded_password_default
+    ) -> dict[str, str]:
         try:
             ret = self.request(
                 'GET',

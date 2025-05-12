@@ -9,6 +9,7 @@ import hmac
 import os
 from hashlib import pbkdf2_hmac
 from typing import Any
+
 from Crypto import (
     Random,  # nosec(B413:blacklist) # Incorrectly detected as pyCrypto, but we are using pycryptodome
 )
@@ -53,7 +54,7 @@ def aesEncrypt(plaintext: str | bytes, key: str | bytes, sign: bool = True) -> b
     return msg
 
 
-def aesDecrypt(ciphertext: bytes, key: str | bytes, signed=True) -> bytes:
+def aesDecrypt(ciphertext: bytes, key: str | bytes, signed: bool = True) -> bytes:
     """
     :param key: if string, base64 is assumed
     """

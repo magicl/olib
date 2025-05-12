@@ -73,7 +73,7 @@ class CLIHttpError(Exception):
         )  # pylint: disable=unsubscriptable-object
 
 
-def con(ctx) -> 'RemoteConnection':
+def con(ctx: click.Context) -> 'RemoteConnection':
     """Returns a cached connection for the given context"""
     target = ctx.obj.meta.remote_target
     hosts = ctx.obj.meta.remote_hosts
@@ -113,9 +113,9 @@ class RemoteConnection:
         login_user: str | None = None,
         login_token: str | None = None,
         login_pwd: str | None = None,
-        basic_auth_user='',
-        basic_auth_pwd='',  # nosec: hardcoded_password_default
-        interactive=True,
+        basic_auth_user: str = '',
+        basic_auth_pwd: str = '',  # nosec: hardcoded_password_default
+        interactive: bool = True,
     ):
         self.host = host
 

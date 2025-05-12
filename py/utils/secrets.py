@@ -20,12 +20,12 @@ class SecretFilePermissionsError(Exception):
     pass
 
 
-def readFileSecretSplit(filename) -> list[str]:
+def readFileSecretSplit(filename: str) -> list[str]:
     value = readFileSecret(filename)
     return [v.strip() for v in re.split('\n| ', value)]
 
 
-def readFileSecret(filename) -> str:
+def readFileSecret(filename: str) -> str:
     filename = os.path.expanduser(filename)
     filename = os.path.expandvars(filename)
 

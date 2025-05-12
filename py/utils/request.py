@@ -25,7 +25,7 @@ def base_request(
     data: dict[str, Any] | None = None,
     params: dict[str, str] | None = None,
     headers: dict[str, str] | None = None,
-    timeout=10,
+    timeout: int = 10,
     session: Any = None,
 ):
     if params is None:

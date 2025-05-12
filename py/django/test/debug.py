@@ -34,7 +34,7 @@ def breakOnError():
             raise
 
 
-def breakOnErrorCheckpoint(exception=None, reason: str | None = None):
+def breakOnErrorCheckpoint(exception: Exception | None = None, reason: str | None = None) -> bool:
     if not _breakOnErrorEnabled:
         return False
 

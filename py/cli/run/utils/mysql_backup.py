@@ -15,13 +15,17 @@ import time
 import uuid
 from collections import defaultdict, deque
 from pathlib import Path
+from typing import IO
+from collections.abc import Callable
 
 import sh
 
 logger = logging.getLogger(__name__)
 
 
-def mysql_backup_import(create_pipe, database: str, filename: str, decrypt_pwd: str, debug_lookback=128):
+def mysql_backup_import(
+    create_pipe: Callable, database: str, filename: str, decrypt_pwd: str, debug_lookback: int = 128
+) -> None:
     """
     Apply a mysql backup to a database
 

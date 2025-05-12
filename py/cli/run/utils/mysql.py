@@ -10,11 +10,13 @@ import sys
 import tempfile
 import time
 from contextlib import contextmanager
-from typing import Any, Iterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterator
 
 import click
-import sh
 import pandas as pd
+import sh
+
 from ....utils.kubernetes import k8s_secret_read
 from ....utils.secrets import readFileSecret
 
@@ -62,7 +64,9 @@ def mysql_creds(ctx: click.Context, root: bool = False, use_db: bool | None = No
 
 
 @contextmanager
-def mysql_shell_connect_args(ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None) -> Iterator[list[str]]:
+def mysql_shell_connect_args(
+    ctx: click.Context, root: bool = False, quiet: bool = False, use_db: bool | None = None
+) -> Iterator[list[str]]:
     """Opens port, creates a credentials file, and composes arguments for mysql shell"""
     if use_db is None:
         use_db = not root
@@ -88,7 +92,9 @@ def mysql_shell_connect_args(ctx: click.Context, root: bool = False, quiet: bool
 
 
 @contextmanager
-def mysqlsh_shell_connect_args(ctx: click.Context, root: bool = False, use_db: bool | None = None) -> Iterator[list[str]]:
+def mysqlsh_shell_connect_args(
+    ctx: click.Context, root: bool = False, use_db: bool | None = None
+) -> Iterator[list[str]]:
     """
     Opens port, and composes arguments for mysql shell
     """
@@ -178,7 +184,9 @@ def mysql_connect(ctx: click.Context, root: bool = False, use_db: bool | None = 
 
 
 @contextmanager
-def mysql_pipe(ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024) -> Iterator[tuple[queue.Queue, sh.Command]]:
+def mysql_pipe(
+    ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024
+) -> Iterator[tuple[queue.Queue, sh.Command]]:
     """Open a pipe into mysql. Useful for e.g. restoring backups"""
     with mysql_shell_connect_args(ctx, root, quiet=quiet) as args:
         mysqlIn: queue.Queue = queue.Queue(maxsize=queue_size)
@@ -214,7 +222,7 @@ def mysql_query(db: '_mysql.Connection', q: str, table: bool = True) -> pd.DataF
     return _mysql_result(db, table)
 
 
-def _mysql_result(db, table: bool = True) -> pd.DataFrame | list[Any] | None:
+def _mysql_result(db: '_mysql.Connection', table: bool = True) -> pd.DataFrame | list[Any] | None:
     import pandas as pd
 
     r = db.store_result()

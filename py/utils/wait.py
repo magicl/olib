@@ -6,6 +6,7 @@ import logging
 import time
 from collections.abc import Callable
 from typing import Any
+
 from olib.py.django.test.debug import breakOnError
 
 logger = logging.getLogger(__name__)
@@ -16,15 +17,15 @@ class WaitForException(Exception):
 
 
 def waitFor(
-    func,
+    func: Callable,
     *,
-    equals=None,
-    condition=None,
-    timeout=10,
-    extraDelay=None,
-    delay=0.1,
+    equals: Any | None = None,
+    condition: Callable | None = None,
+    timeout: int = 10,
+    extraDelay: Any | None = None,
+    delay: float = 0.1,
     info: Callable | str = '',
-    raiseOnFailure=True,
+    raiseOnFailure: bool = True,
     description: str = '',
 ) -> Any:
     """Waits until func returns True. Ok for function to raise in waiting period"""

@@ -5,6 +5,7 @@
 import calendar
 import datetime
 import os
+from typing import overload
 
 import dateutil.parser
 import numpy as np
@@ -43,7 +44,7 @@ def getSeasonMonths(season):
     raise Exception(f"invalid season: `{season}`")
 
 
-def getYearSeasonDates(year, season):
+def getYearSeasonDates(year: int, season: str) -> tuple[datetime.datetime, datetime.datetime]:
     months = getSeasonMonths(season)
     startDate = datetime.datetime(year, months[0], 1, 0, 0, 0, 0)
 
@@ -54,7 +55,7 @@ def getYearSeasonDates(year, season):
     return startDate, endDate
 
 
-def getMonthCode(date):
+def getMonthCode(date: datetime.datetime) -> str:
     """Two-letter code for month"""
     return {
         1: 'JN',
@@ -72,7 +73,7 @@ def getMonthCode(date):
     }[date.month]
 
 
-def getDefaultTimezone():
+def getDefaultTimezone() -> str:
     global defaultTimezoneTimezone  # pylint: disable=global-statement
 
     if defaultTimezoneTimezone is None:
@@ -81,7 +82,15 @@ def getDefaultTimezone():
     return defaultTimezoneTimezone
 
 
-def defaultTimezone(dt):
+@overload
+def defaultTimezone(dt: datetime.datetime) -> datetime.datetime: ...
+
+
+@overload
+def defaultTimezone(dt: None) -> None: ...
+
+
+def defaultTimezone(dt: datetime.datetime | None) -> datetime.datetime | None:
     """Add timezone info to datetime. Does not change the date/time itself"""
     if dt is None:
         return None
@@ -93,28 +102,28 @@ localTimezone = defaultTimezone
 
 
 # Adds UTC timezone to datetime
-def utcTimezone(dt):
+def utcTimezone(dt: datetime.datetime) -> datetime.datetime:
     """Sets timezone. Does not mess with the time"""
     return pytz.utc.localize(dt)
 
 
-def toLocalTimezone(dt):
+def toLocalTimezone(dt: datetime.datetime) -> datetime.datetime:
     """Changes time to match target timezone"""
     # logging.info('++++ default timezone: {}'.format(timezone.get_default_timezone_name()))
     return dt.astimezone(pytz.timezone(timezone.get_default_timezone_name()))
 
 
-def toUtcTimezone(dt):
+def toUtcTimezone(dt: datetime.datetime) -> datetime.datetime:
     """Changes time to match target timezone"""
     return dt.astimezone(pytz.utc)
 
 
-def toGmtTimezone(dt):
+def toGmtTimezone(dt: datetime.datetime) -> datetime.datetime:
     """Changes time to match target timezone"""
     return dt.astimezone(pytz.timezone('GMT'))
 
 
-def utcDateFromStr(s, changeTime=False):
+def utcDateFromStr(s: str, changeTime: bool = False) -> datetime.datetime:
     if ':' in s:
         dt = datetime.datetime.strptime(s, '%Y-%m-%d %H:%M:%S')
     else:
@@ -126,7 +135,7 @@ def utcDateFromStr(s, changeTime=False):
     return utcTimezone(dt)
 
 
-def localDateFromStr(s, changeTime=False):
+def localDateFromStr(s: str, changeTime: bool = False) -> datetime.datetime:
     if ':' in s:
         try:
             dt = datetime.datetime.strptime(s, '%Y-%m-%d %H:%M:%S')
@@ -141,13 +150,13 @@ def localDateFromStr(s, changeTime=False):
     return defaultTimezone(dt)
 
 
-def toLocalRemoveTz(dt):
+def toLocalRemoveTz(dt: datetime.datetime) -> datetime.datetime:
     """Moves datetime to local time and removes timezone"""
     return dt.astimezone(pytz.timezone(timezone.get_default_timezone_name())).replace(tzinfo=None)
 
 
 # Increment month value of datetime and return new datetime. Day, hour, etc are cleared
-def incrMonth(dt: datetime.date, incr: int):
+def incrMonth(dt: datetime.date, incr: int) -> datetime.datetime:
     month = dt.month + incr
 
     return defaultTimezone(
@@ -163,12 +172,12 @@ def incrMonth(dt: datetime.date, incr: int):
     )
 
 
-def incrDateMonth(dt: datetime.date, incr: int):
+def incrDateMonth(dt: datetime.date, incr: int) -> datetime.datetime:
     month = dt.month + incr
     return datetime.date(year=dt.year + (month - 1) // 12, month=(month - 1) % 12 + 1, day=1)
 
 
-def incrMonthNoTz(dt: datetime.datetime, incr: int):
+def incrMonthNoTz(dt: datetime.datetime, incr: int) -> datetime.datetime:
     month = dt.month + incr
 
     return datetime.datetime(
@@ -182,7 +191,7 @@ def incrMonthNoTz(dt: datetime.datetime, incr: int):
     )
 
 
-def incrMonthKeep(dt, incr):
+def incrMonthKeep(dt: datetime.datetime, incr: int) -> datetime.datetime:
     """Increment month. Keep all other data, but cap date if it gets too far out"""
     month = dt.month + incr
     newMonth = (month - 1) % 12 + 1
@@ -204,7 +213,7 @@ def incrMonthKeep(dt, incr):
     return datetime.date(year=newYear, month=newMonth, day=min(dt.day, lastDayOfMonth))
 
 
-def fileModifiedTime(path):
+def fileModifiedTime(path: str) -> float:
     try:
         return os.path.getmtime(path)
     except OSError:
@@ -213,7 +222,7 @@ def fileModifiedTime(path):
 
 # Returns expected ship date for an order created at the given time.
 # Returns tuple containing (expectedShipDate, certain), where certain is False if we are not certain we will meet the date
-def getOrderExpectedShipDate(orderCreatedDate):
+def getOrderExpectedShipDate(orderCreatedDate: datetime.datetime) -> tuple[datetime.datetime, bool]:
     if orderCreatedDate.day > 25 or orderCreatedDate.day < 7:
         # May be able to ship this order ahead of time. Not certain
         return (
@@ -226,7 +235,7 @@ def getOrderExpectedShipDate(orderCreatedDate):
     return (incrMonth(orderCreatedDate, 1).replace(day=1, hour=14), True)
 
 
-def getNextMajorShipDate(date):
+def getNextMajorShipDate(date: datetime.datetime) -> datetime.datetime:
     return incrMonth(date, 1).replace(day=1, hour=14)  # First of next month, always
 
 
@@ -264,7 +273,9 @@ def getNextMajorShipDate(date):
 # Cluster dates by consecutive range (in seconds), and return tuples of start- and end-dates covering the given input dates
 # Dates will be shuffled to make proper groups
 # returns: [(begin, end, indiceCount), ...]
-def clusterDates(dates, threshold):
+def clusterDates(
+    dates: list[datetime.datetime], threshold: int
+) -> list[tuple[datetime.datetime, datetime.datetime, int]]:
     if not dates:
         return []
     if len(dates) == 1:
@@ -329,7 +340,7 @@ def clusterDates(dates, threshold):
     return ret
 
 
-def tsRangeToText(startDate=None, endDate=None):
+def tsRangeToText(startDate: float | None = None, endDate: float | None = None) -> str:
     """
     Convert date range to text
     if only startDate: 'after {startDate}'
@@ -351,7 +362,7 @@ def tsRangeToText(startDate=None, endDate=None):
     return 'at any time'
 
 
-def secondsToNamedPeriod(secondsOrTimedelta, roundTo=1):
+def secondsToNamedPeriod(secondsOrTimedelta: float | datetime.timedelta, roundTo: int = 1) -> str:
     """Converts seconds to a string ending in 's', 'm', 'h' or 'd' depending on timespan"""
     if not isinstance(secondsOrTimedelta, (int, float)):
         seconds = secondsOrTimedelta.total_seconds()
@@ -371,7 +382,7 @@ def secondsToNamedPeriod(secondsOrTimedelta, roundTo=1):
     return f"{round(seconds/(3600*24), roundTo)} d"
 
 
-def parseShopifyDateStr(val):
+def parseShopifyDateStr(val: str) -> datetime.datetime | None:
     """Parses a shopify date string and returns a timezone-enabled datetime. Shopify timezone is CST (configured in Admin API)"""
     val = dateutil.parser.parse(val)
     if val.tzinfo is None or val.tzinfo.utcoffset(val) is None:  # If not timezone aware.. add it
@@ -380,7 +391,7 @@ def parseShopifyDateStr(val):
     return val
 
 
-def genShopifyDateStr(val):
+def genShopifyDateStr(val: datetime.datetime | None) -> str | None:
     """Generates a shopify date-string from value"""
     if val is None:
         return None
@@ -397,7 +408,7 @@ parseContentfulDateStr = parseShopifyDateStr
 genContentfulDateStr = genShopifyDateStr
 
 
-def parseBoldDateTimeStr(val):
+def parseBoldDateTimeStr(val: str) -> datetime.datetime | None:
     """Bold time is in UTC"""
 
     # Bold will sometimes throw us dates 0000-00-00. We store these as 'no date' aka None
@@ -411,7 +422,7 @@ def parseBoldDateTimeStr(val):
     return val
 
 
-def genBoldDateTimeStr(val):
+def genBoldDateTimeStr(val: datetime.datetime | datetime.date | None) -> str | None:
     """Generates a shopify date-string from value"""
     if val is None:
         return None

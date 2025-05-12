@@ -4,7 +4,7 @@
 # ~
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -43,7 +43,9 @@ class AuthTokenBackend(ModelBackend):
     NOTE: Still requires the user to log in, but the login can be done using the token
     """
 
-    def authenticate(self, request: Request, username: str | None = None, password: str | None = None, **kwargs) -> User | None:
+    def authenticate(
+        self, request: Request, username: str | None = None, password: str | None = None, **kwargs: Any
+    ) -> User | None:
         if request is None:
             return None
 

@@ -10,7 +10,9 @@ import sys
 from collections.abc import Callable
 from contextlib import contextmanager
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
+
+T = TypeVar('T')
 
 
 class SanityCheckError(Exception):
@@ -158,7 +160,7 @@ def _isVagrant():
     return os.path.isfile('/var/log/inside_vagrant')
 
 
-def _pickOne(what: str, *options: tuple[Any, Callable], default: str | None = None) -> Any:
+def _pickOne(what: str, *options: tuple[T | None, Callable], default: T | None = None) -> T:
     result = set()
     for val, func in options:
         if val is None:

@@ -5,17 +5,20 @@
 
 import os
 
+import click
 from jinja2 import Environment, FileSystemLoader
 
 
-def _render(ctx, filename, out_filename, base_dir: str, extra_context: dict | None = None):
+def _render(ctx: click.Context, filename: str, out_filename: str, base_dir: str, extra_context: dict | None = None):
     env = Environment(loader=FileSystemLoader(base_dir))  # nosec
     template = env.get_template(filename)
     with open(out_filename, 'w', encoding='utf-8') as f:
         f.write(template.render(ctx=ctx, meta=ctx.obj.meta, extra_context=extra_context, inst=ctx.obj.inst_or_none))
 
 
-def render_template(ctx, filename, extra_context: dict | None = None, suffix='', base_dir: str | None = None):
+def render_template(
+    ctx: click.Context, filename: str, extra_context: dict | None = None, suffix: str = '', base_dir: str | None = None
+) -> str:
     """
     Applies template to target file, and returns a path to the new file to use. The new file is only updated if necessary
     :param suffix: Optional suffix to add to output filename to allow different output versions
