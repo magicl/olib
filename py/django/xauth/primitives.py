@@ -4,13 +4,12 @@
 # ~
 
 import logging
-from typing import TYPE_CHECKING, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 
 from django.conf import settings
 from django.db import connection
 from django.db.models import F, Model, Q
 from django.http import HttpRequest
-from typing import Any
 
 from ...utils.execenv import isEnvProduction, isEnvTest
 from ...utils.listutils import removeDuplicates
@@ -29,7 +28,7 @@ def _getAccAndUser(
     accessName: str,
     user: Union['User', 'AnonymousUser', None] = None,
     request: HttpRequest | None = None,
-):
+) -> tuple[Union['AccessBase', 'User', 'AnonymousUser', None], Union['User', 'AnonymousUser', None]]:
     permissions = getattr(settings, 'XAUTH_PERMISSIONS')
 
     acc = permissions.get(accessName, None)
@@ -54,7 +53,9 @@ def _checkAccess(acc: 'AccessBase', user: 'User', request: HttpRequest | None = 
     return acc.checkUser(user, request)
 
 
-def _objectAccessValidation(obj: object, acc: 'AccessBase', user: 'User', model: Model, request: HttpRequest | None = None) -> bool:
+def _objectAccessValidation(
+    obj: object, acc: 'AccessBase', user: 'User', model: Model, request: HttpRequest | None = None
+) -> bool:
     return acc.checkObject(user, obj, model, request)
 
 
@@ -66,7 +67,7 @@ def _objectAccessAnnotate(acc: 'AccessBase', model: Model) -> dict[str, Any]:
     return acc.querySetAnnotate(model)
 
 
-def objectAccessAttributes(accessName: str, model: Model) -> list[str]:
+def objectAccessAttributes(accessName: str, model: Model) -> list[str] | bool:
     """Returns object attributes to be queried to determine permissions. Useful for making sure these are prefetched"""
     acc, _ = _getAccAndUser(accessName)
     if not acc:  # At least one permission MUST be present. Empty permissions are not acceptable
@@ -123,7 +124,7 @@ class AccessBase:
     def reason(
         self,
         user: Union['User', 'AnonymousUser', None],
-        obj=None,
+        obj: object | None = None,
         model: Model | None = None,
         request: HttpRequest | None = None,
     ) -> str:

@@ -8,6 +8,8 @@ import os
 import shutil
 import signal
 import sys
+from collections.abc import Callable
+from typing import Any
 
 import click
 import parproc as pp
@@ -472,16 +474,16 @@ def _implementDocker():
 
 
 def buildSingleService(
-    name,
-    category,
-    servicePort,
-    localMountPort,
-    deployments=None,
+    name: str,
+    category: str,
+    servicePort: int,
+    localMountPort: int,
+    deployments: list[str] | None = None,
     containers: dict | None = None,
     helm_deploy: str | None = None,
     helm_migrate: str | None = None,
     compose: str | None = None,
-):
+) -> Callable[[Any], Any]:
     """
     Injects functions into service Config for building, deploying etc.
 

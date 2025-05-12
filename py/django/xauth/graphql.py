@@ -20,7 +20,7 @@ class AuthTokenResponse:
 class Query:
 
     @strawberry.field
-    async def auth_authenticated(self, info) -> bool:
+    async def auth_authenticated(self, info: strawberry.Info) -> bool:
         """Returns true if authenticated"""
         user = await info.context.request.auser()
         return not user.is_anonymous
@@ -35,7 +35,7 @@ class Mutation:
         return AuthTokenResponse(token=auth_token_get(username, password))
 
     @strawberry_django.mutation(extensions=[IsAuthenticated()])
-    def auth_token_delete(self, info) -> OperationInfo:
+    def auth_token_delete(self, info: strawberry.Info) -> OperationInfo:
         """Delete auth token for the current user"""
         auth_token_delete(info.context.request.user)
 

@@ -7,8 +7,10 @@
 # pylint: disable=duplicate-code
 
 import sys
+from collections.abc import Callable
 from contextlib import nullcontext
 from functools import partial
+from typing import Any
 
 import click
 import sh
@@ -224,7 +226,7 @@ def _implement(defaultRoot=True):
     return postgresGroup
 
 
-def postgres(root=False, extensions: list[str] | None = None):
+def postgres(root: bool = False, extensions: list[str] | None = None) -> Callable[[Any], Any]:
     """
     Injects functions into service Config for managing postgres
 

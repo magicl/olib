@@ -4,9 +4,8 @@
 # ~
 import datetime
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Generator, Iterable
 from typing import Any, TypeVar
-from collections.abc import Callable
 
 from django.utils import timezone
 
@@ -47,7 +46,7 @@ def dropDuplicates(seq: Iterable[T], uniqueFunc: Callable[[T], Any] | None = Non
     return ret
 
 
-def chunks(l: Iterable[T], n: int) -> Iterable[list[T]]:
+def chunks(l: Iterable[T], n: int) -> Generator[Iterable[T], None, None]:
     """Yield successive n-sized chunks from l."""
     # Need list/tuple to slice
     lst = list(l) if not isinstance(l, (list, tuple)) else l
@@ -99,7 +98,8 @@ def groupByValue(
     sort: bool = False,
     sortKey: Callable[[Any], Any] | None = None,
 ) -> dict[Any, list[T]]:
-    ret = defaultdict(list)
+
+    ret: dict[Any, list[T]] = defaultdict(list)
 
     if keyFunc is None:
         keyFunc = lambda x: x
@@ -112,12 +112,12 @@ def groupByValue(
             ret[keyFunc(v)].append(valFunc(v))
 
     if unique:
-        for k, v in ret.items():
-            ret[k] = list(set(v))
+        for k, v in ret.items():  # type: ignore
+            ret[k] = list(set(v))  # type: ignore
 
     if sort:
-        for k, v in ret.items():
-            v.sort(key=sortKey)
+        for k, v in ret.items():  # type: ignore
+            v.sort(key=sortKey)  # type: ignore
 
     return ret
 

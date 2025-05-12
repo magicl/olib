@@ -486,7 +486,7 @@ class TestAccess(OTestCase):
                 try:
                     hasObjCheck = containsObjectCheck('access-name')
                 except PermissionException as e:
-                    hasObjCheck = str(e)
+                    hasObjCheck = str(e)  # type: ignore
 
                 self.assertEqual(hasObjCheck, expHasObjCheck, comment)
 
@@ -577,8 +577,8 @@ class TestAccess(OTestCase):
                 try:
                     objectsValidateUser = {
                         u.username if u else 'nn': [
-                            obj.id - offset
-                            for obj in objectAccessValidate(annotObjs, 'access-name', Obj, user=u if u else None)
+                            obj.id - offset  # type: ignore
+                            for obj in objectAccessValidate(annotObjs, 'access-name', Obj, user=u if u else None)  # type: ignore
                         ]
                         for u in users
                     }
@@ -589,7 +589,7 @@ class TestAccess(OTestCase):
                 try:
                     objectsValidateReq = {
                         u.username if u else 'nn': [
-                            obj.id - offset for obj in objectAccessValidate(annotObjs, 'access-name', Obj, request=r)
+                            obj.id - offset for obj in objectAccessValidate(annotObjs, 'access-name', Obj, request=r)  # type: ignore
                         ]
                         for u, r in zip(users, requests)
                     }
@@ -828,7 +828,7 @@ class TestAccess(OTestCase):
             getFieldFilters('foobar', ['1', '2'])
 
         with self.assertRaisesRegex(PermissionException, 'Permissions not defined for `foobar`'):
-            checkFieldFilters([], 'x', [], 'foobar', TestXAuthParentModel)
+            checkFieldFilters([], 'x', [], 'foobar', TestXAuthParentModel)  # type: ignore
 
         # Field filter on non-existing fields
         with override_settings(
@@ -1002,4 +1002,4 @@ class TestAccess(OTestCase):
             }
         ):
 
-            self.assertEqual(set(objectAccessAttributes('test1', User)), {'id', 'xx'})
+            self.assertEqual(set(objectAccessAttributes('test1', User)), {'id', 'xx'})  # type: ignore

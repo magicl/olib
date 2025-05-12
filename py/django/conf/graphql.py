@@ -3,17 +3,19 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
-from collections.abc import Iterable
+from collections.abc import Coroutine, Iterable
+from typing import Any
 
 import strawberry
 import strawberry_django
 from strawberry import relay
 from strawberry_django.permissions import HasPerm
 
+from .osettings import OnlineSetting as OnlineSettingModel
 from .osettings import OnlineSettingsAccess, osettings
 
 
-async def _read_online_settings(node_ids=None):
+async def _read_online_settings(node_ids: Iterable[str] | None = None) -> list[OnlineSettingModel]:
     # Fetch data from db
     query = OnlineSettingsAccess.get_latest_query()
     if node_ids is not None:
@@ -35,7 +37,9 @@ class OnlineSetting(relay.Node):
     type: str
 
     @classmethod
-    def resolve_nodes(cls, *, info: strawberry.Info, node_ids: Iterable[str], required: bool = False):
+    def resolve_nodes(
+        cls, *, info: strawberry.Info, node_ids: Iterable[str], required: bool = False
+    ) -> Coroutine[Any, Any, list[OnlineSettingModel]]:
         return _read_online_settings(node_ids)
 
     @staticmethod

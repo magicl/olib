@@ -9,7 +9,9 @@ import click
 from jinja2 import Environment, FileSystemLoader
 
 
-def _render(ctx: click.Context, filename: str, out_filename: str, base_dir: str, extra_context: dict | None = None):
+def _render(
+    ctx: click.Context, filename: str, out_filename: str, base_dir: str, extra_context: dict | None = None
+) -> None:
     env = Environment(loader=FileSystemLoader(base_dir))  # nosec
     template = env.get_template(filename)
     with open(out_filename, 'w', encoding='utf-8') as f:

@@ -17,8 +17,8 @@ from ....utils.kubernetes import (
     k8s_namespace_create,
     k8s_secret_create,
     k8s_secret_delete,
-    k8s_secret_read_single,
     k8s_secret_exists,
+    k8s_secret_read_single,
 )
 from ....utils.passwords import makePassword
 from ..utils.mysql import (
@@ -64,11 +64,11 @@ def _implement(defaultRoot=True):
                 secretName, database, username = mysql_convert_name(ctx)
                 password = makePassword()
 
-                if q('SHOW DATABASES;')['Database'].isin([database]).any():
+                if q('SHOW DATABASES;')['Database'].isin([database]).any():  # type: ignore
                     click.echo(f'Database "{database}" already exists', err=True)
                     sys.exit(1)
 
-                if q('SELECT User FROM mysql.user;')['User'].isin([username]).any():
+                if q('SELECT User FROM mysql.user;')['User'].isin([username]).any():  # type: ignore
                     click.echo(f'User "{username}" already exists', err=True)
                     sys.exit(1)
 
@@ -107,10 +107,7 @@ def _implement(defaultRoot=True):
             """Check if app exists"""
             secretName, *_ = mysql_convert_name(ctx)
 
-            exists = k8s_secret_exists(
-                secretName,
-                ctx.obj.k8sNamespace,
-                ctx.obj.k8sContext)
+            exists = k8s_secret_exists(secretName, ctx.obj.k8sNamespace, ctx.obj.k8sContext)
 
             sys.exit(0 if exists else 1)
 

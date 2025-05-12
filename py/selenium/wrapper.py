@@ -7,11 +7,11 @@ import os
 import re
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from enum import Enum
 from io import BytesIO
-from typing import Generator, NamedTuple, Union
+from typing import NamedTuple
 
 import sh
 from django.utils.http import urlencode
@@ -104,7 +104,7 @@ class WaitForPageLoad:
 
         if self.errors:
             logger.error(f"Got errors: {', '.join(self.errors)}")
-            breakOnErrorCheckpoint(self.errors)
+            breakOnErrorCheckpoint()
 
         with breakOnError():
             raise Exception(
@@ -331,12 +331,12 @@ class SeleniumWrapper:
 
     def setBrowser(
         self,
-        browserName=BrowserNames.CHROME,
-        blockUrls=True,
-        gui=True,
-        devtools=False,
-        maximized=False,
-        userProfile=False,
+        browserName: str = BrowserNames.CHROME,
+        blockUrls: bool = True,
+        gui: bool = True,
+        devtools: bool = False,
+        maximized: bool = False,
+        userProfile: bool = False,
     ) -> None:
         self._selenium, self.downloadDir = SeleniumBrowser.getBrowser(
             browserName,
@@ -420,13 +420,13 @@ class SeleniumWrapper:
 
     def elements(
         self,
-        selector=None,
-        name=None,
-        tag=None,
-        xpath=None,
-        id=None,  # pylint: disable=redefined-builtin
-        linkText=None,
-        parent=None,
+        selector: str | None = None,
+        name: str | None = None,
+        tag: str | None = None,
+        xpath: str | None = None,
+        id: str | None = None,  # pylint: disable=redefined-builtin
+        linkText: str | None = None,
+        parent: OWebElement | None = None,
         condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
         raiseOnNotFound: bool = True,
         disableBreakOnError: bool = False,
@@ -441,6 +441,8 @@ class SeleniumWrapper:
             parent = parent._element  # pylint: disable=protected-access
 
         elements = []
+
+        assert parent is not None  # Parent should be defined at this point # nosec
 
         try:
             if name is not None:
@@ -595,15 +597,15 @@ class SeleniumWrapper:
 
     def waitForElement(
         self,
-        selector=None,
-        name=None,
-        xpath=None,
-        id=None,
-        parent=None,
+        selector: str | None = None,
+        name: str | None = None,
+        xpath: str | None = None,
+        id: str | None = None,
+        parent: OWebElement | None = None,
         condition: Callable | 'WaitCondition' | list[Callable | 'WaitCondition'] | None = None,
-        errorMsg='',
-        waitDelay=None,
-        extraDelay=None,
+        errorMsg: str = '',
+        waitDelay: float | None = None,
+        extraDelay: float | None = None,
         raiseOnNotFound: bool = True,
     ) -> OWebElement | None:
         """Waits for element to have a condition. Same syntax as SeleniumBase.element(..)
@@ -947,7 +949,7 @@ class SeleniumWrapper:
         self.selenium.switch_to.default_content()
 
     @contextmanager
-    def switchToTab(self, index: int) -> Generator[None, None, None]    :
+    def switchToTab(self, index: int) -> Generator[None, None, None]:
         windows = self.selenium.window_handles
         if index >= len(windows):
             # Wait for tab to appear

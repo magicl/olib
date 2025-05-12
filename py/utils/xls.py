@@ -4,9 +4,13 @@
 # ~
 
 import datetime
+import io
 import logging
 import warnings
+from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -48,13 +52,13 @@ def openXLS(filenameOrFile, storage=None):
 
 @contextmanager
 def readXLS(
-    filenameOrFile,
+    filenameOrFile: str | bytes | Path | io.IOBase,
     sheet: str | None = None,
-    headerRowFirst=None,
-    skipRows=0,
-    storage=None,
-    yieldIterator=False,
-):
+    headerRowFirst: bool | None = None,
+    skipRows: int = 0,
+    storage: Any = None,
+    yieldIterator: bool = False,
+) -> Generator[Any, None, None]:
     """
     Read a single-sheet excel file
     :param sheet: if not specified, the first sheet is selected

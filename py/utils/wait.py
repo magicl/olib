@@ -21,7 +21,7 @@ def waitFor(
     *,
     equals: Any | None = None,
     condition: Callable | None = None,
-    timeout: int = 10,
+    timeout: int | float = 10,
     extraDelay: Any | None = None,
     delay: float = 0.1,
     info: Callable | str = '',

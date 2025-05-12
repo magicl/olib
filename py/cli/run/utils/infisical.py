@@ -11,7 +11,7 @@ from ....utils.clients.infisical import Infisical
 from ....utils.secrets import readFileSecretSplit
 
 
-def infisical_convert_name(ctx):
+def infisical_convert_name(ctx: click.Context) -> str:
     name = ctx.obj.k8sAppName
 
     if any(name.startswith(prefix) for prefix in ['root', 'localroot', 'infisical']):
@@ -25,7 +25,7 @@ def infisical_convert_name(ctx):
     return secret_name
 
 
-def infisical_creds(ctx) -> tuple[str, str]:
+def infisical_creds(ctx: click.Context) -> tuple[str, str]:
     """Returns client_id, client_secret. Invalidates previous client_secret"""
     cli_client_id, cli_client_secret = readFileSecretSplit('$KNOX/infrabase/secrets/infra/infisical-cli.txt')
 

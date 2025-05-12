@@ -172,7 +172,7 @@ def incrMonth(dt: datetime.date, incr: int) -> datetime.datetime:
     )
 
 
-def incrDateMonth(dt: datetime.date, incr: int) -> datetime.datetime:
+def incrDateMonth(dt: datetime.date, incr: int) -> datetime.date:
     month = dt.month + incr
     return datetime.date(year=dt.year + (month - 1) // 12, month=(month - 1) % 12 + 1, day=1)
 
@@ -384,11 +384,19 @@ def secondsToNamedPeriod(secondsOrTimedelta: float | datetime.timedelta, roundTo
 
 def parseShopifyDateStr(val: str) -> datetime.datetime | None:
     """Parses a shopify date string and returns a timezone-enabled datetime. Shopify timezone is CST (configured in Admin API)"""
-    val = dateutil.parser.parse(val)
-    if val.tzinfo is None or val.tzinfo.utcoffset(val) is None:  # If not timezone aware.. add it
-        val = defaultTimezone(val)
+    dval = dateutil.parser.parse(val)
+    if dval.tzinfo is None or dval.tzinfo.utcoffset(dval) is None:  # If not timezone aware.. add it
+        dval = defaultTimezone(dval)
 
-    return val
+    return dval
+
+
+@overload
+def genShopifyDateStr(val: None) -> None: ...
+
+
+@overload
+def genShopifyDateStr(val: datetime.datetime) -> str: ...
 
 
 def genShopifyDateStr(val: datetime.datetime | None) -> str | None:
@@ -415,11 +423,11 @@ def parseBoldDateTimeStr(val: str) -> datetime.datetime | None:
     if val.startswith('0000-00-00'):
         return None
 
-    val = dateutil.parser.parse(val)
-    if val.tzinfo is None or val.tzinfo.utcoffset(val) is None:  # If not timezone aware.. add it
-        val = utcTimezone(val)
+    dval = dateutil.parser.parse(val)
+    if dval.tzinfo is None or dval.tzinfo.utcoffset(dval) is None:  # If not timezone aware.. add it
+        dval = utcTimezone(dval)
 
-    return val
+    return dval
 
 
 def genBoldDateTimeStr(val: datetime.datetime | datetime.date | None) -> str | None:
