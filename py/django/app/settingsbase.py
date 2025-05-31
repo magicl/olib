@@ -134,7 +134,7 @@ SESSION_COOKIE_HTTPONLY = True     #Make session cookie http-only, to prevent JS
 SESSION_COOKIE_SECURE = not DEBUG  #Only serve session cookie over https
 CSRF_COOKIE_SECURE = not DEBUG     #Only serve csrf cookie over https
 
-#CORS_ALLOW_CREDENTIALS = True      #Allow cookies to be sent with requests
+CORS_ALLOW_CREDENTIALS = True      #Allow cookies to be sent with requests
 
 SECURE_CONTENT_TYPE_NOSNIFF = True #Pevent browser from trying to guess content type
 
