@@ -33,8 +33,9 @@ class ExecInv(Enum):
     pylint = 2
     celery = 3
     gunicorn = 4
-    cli = 5
-    strawberry = 6
+    uvicorn = 5
+    cli = 6
+    strawberry = 7
     unknown = 99
 
 
@@ -140,6 +141,10 @@ def _isGunicorn():
     return sys.argv[0].endswith('gunicorn')
 
 
+def _isUvicorn():
+    return sys.argv[0].endswith('uvicorn')
+
+
 def _isStrawberry():
     return sys.argv[0].endswith('strawberry')
 
@@ -236,6 +241,7 @@ def initExecEnv(execEnvOverride=None, execContextOverride=None, ignoreSanityChec
         (ExecInv.pylint, _isPylint),
         (ExecInv.celery, _isCelery),
         (ExecInv.gunicorn, _isGunicorn),
+        (ExecInv.uvicorn, _isUvicorn),
         (ExecInv.cli, isEnvCli),
         (ExecInv.strawberry, _isStrawberry),
     )
