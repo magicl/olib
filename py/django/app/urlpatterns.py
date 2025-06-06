@@ -19,18 +19,22 @@ def serve_inmemory_file(request, path):
         raise Http404(f"File not found: {path}") from e
 
 
-def debug_file_urlpatterns():
+def debug_file_urlpatterns(static: bool = True, media: bool = True):
     if not (settings.DEBUG or isEnvTest()):
         raise Exception('Only include these in DEBUG or TEST mode')
 
-    using_inmemory_storage = settings.DEFAULT_FILE_STORAGE == 'django.core.files.storage.InMemoryStorage'
+    urls = []
 
-    serve_media: list = (
-        [serve_inmemory_file] if using_inmemory_storage else [serve, {'document_root': settings.MEDIA_ROOT}]
-    )
-    serve_static: list = [serve, {'document_root': settings.STATIC_ROOT}]
+    if static:
+        serve_static: list = [serve, {'document_root': settings.STATIC_ROOT}]
+        urls.append(re_path(fr'^{settings.STATIC_URL.strip('/')}\/(?P<path>.*)$', *serve_static))
 
-    return [
-        re_path(fr'^{settings.MEDIA_URL.strip('/')}\/(?P<path>.*)$', *serve_media),
-        re_path(fr'^{settings.STATIC_URL.strip('/')}\/(?P<path>.*)$', *serve_static),
-    ]
+    if media:
+        using_inmemory_storage = settings.DEFAULT_FILE_STORAGE == 'django.core.files.storage.InMemoryStorage'
+
+        serve_media: list = (
+            [serve_inmemory_file] if using_inmemory_storage else [serve, {'document_root': settings.MEDIA_ROOT}]
+        )
+        urls.append(re_path(fr'^{settings.MEDIA_URL.strip('/')}\/(?P<path>.*)$', *serve_media))
+
+    return urls

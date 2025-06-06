@@ -23,6 +23,8 @@ from ....utils.kubernetes import (
 )
 from .base import prep_config
 
+HELM_BURST_LIMIT = 5
+
 
 def images_build_pre(cls, ctx, k8s=False):
     """
@@ -186,6 +188,7 @@ def k8s_migrate(cls, ctx, break_on_error=False):
             ctx.obj.k8sNamespace,
             f'--kube-context={ctx.obj.k8sContext}',
             '--create-namespace',
+            f'--burst-limit={HELM_BURST_LIMIT}',
             *helm_values,
             _fg=True,
         )
@@ -203,7 +206,15 @@ def k8s_migrate(cls, ctx, break_on_error=False):
             'delete', '-f', 'migration.yml', '-n', ctx.obj.k8sNamespace, f'--context={ctx.obj.k8sContext}', _fg=True
         )
     else:
-        sh.helm('uninstall', 'migration', '-n', ctx.obj.k8sNamespace, f'--kube-context={ctx.obj.k8sContext}', _fg=True)
+        sh.helm(
+            'uninstall',
+            'migration',
+            '-n',
+            ctx.obj.k8sNamespace,
+            f'--kube-context={ctx.obj.k8sContext}',
+            f'--burst-limit={HELM_BURST_LIMIT}',
+            _fg=True,
+        )
 
     if not success:
         click.echo('Migrations failed', err=True)
@@ -240,6 +251,7 @@ def k8s_deploy(cls, ctx, deployments):
             ctx.obj.k8sNamespace,
             f'--kube-context={ctx.obj.k8sContext}',
             '--create-namespace',
+            f'--burst-limit={HELM_BURST_LIMIT}',
             *helm_values,
             _fg=True,
         )
@@ -271,7 +283,13 @@ def k8s_uninstall(cls, ctx):
 
     else:
         sh.helm(
-            'uninstall', meta.build_name, '-n', ctx.obj.k8sNamespace, f'--kube-context={ctx.obj.k8sContext}', _fg=True
+            'uninstall',
+            meta.build_name,
+            '-n',
+            ctx.obj.k8sNamespace,
+            f'--kube-context={ctx.obj.k8sContext}',
+            f'--burst-limit={HELM_BURST_LIMIT}',
+            _fg=True,
         )
 
 
