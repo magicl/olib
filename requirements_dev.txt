@@ -21,6 +21,15 @@ yamllint
 uuid7
 python-dotenv
 
+# Type stubs
+django-stubs
+django-stubs-ext
+celery-types
+types-redis
+types-setuptools
+types-PyYAML
+types-oauthlib
+
 #olib dependencies
 sh==2.0.7 # 2.1.0 gives pylint warnings
 Django
