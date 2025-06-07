@@ -263,10 +263,10 @@ CACHES = {
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, env.str('STATIC_ROOT', default='.output/static'))
+STATIC_ROOT = env.str('STATIC_ROOT', default=os.path.join(BASE_DIR, '.output/static'))
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, env.str('MEDIA_ROOT', default='.output/media'))
+MEDIA_ROOT = env.str('MEDIA_ROOT', default=os.path.join(BASE_DIR, '.output/media'))
 
 
 DEFAULT_FILE_STORAGE = (
