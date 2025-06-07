@@ -216,13 +216,13 @@ def mysql_escape(s: str) -> str:
 #     return _mysql_result(db, table)
 
 
-def mysql_query(db: '_mysql.Connection', q: str, table: bool = True) -> pd.DataFrame | list[Any]:
+def mysql_query(db: '_mysql.connection', q: str, table: bool = True) -> pd.DataFrame | list[Any] | None:
     """Prefer mysqlExec over mysql_query, as mysqlExec handles query parameters in a safer way"""
     db.query(q)
     return _mysql_result(db, table)
 
 
-def _mysql_result(db: '_mysql.Connection', table: bool = True) -> pd.DataFrame | list[Any] | None:
+def _mysql_result(db: '_mysql.connection', table: bool = True) -> pd.DataFrame | list[Any] | None:
 
     r = db.store_result()
     if r is None:

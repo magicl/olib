@@ -2,6 +2,8 @@
 # Copyright 2024 Øivind Loe
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
+from typing import Any
+
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import FileResponse, Http404
@@ -19,7 +21,7 @@ def serve_inmemory_file(request, path):
         raise Http404(f"File not found: {path}") from e
 
 
-def debug_file_urlpatterns(static: bool = True, media: bool = True):
+def debug_file_urlpatterns(static: bool = True, media: bool = True) -> list[tuple[str, Any]]:
     if not (settings.DEBUG or isEnvTest()):
         raise Exception('Only include these in DEBUG or TEST mode')
 
