@@ -12,7 +12,7 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
     errors = []
 
     for env_file, content in env_contents:
-        current_group = None
+        current_groups: list[str] | None = None
 
         for line_ in content.splitlines():
             line = line_.strip()
@@ -24,20 +24,21 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
 
             # Match group headers like #[somename] and capture the name
             if line.startswith('#'):
-                group_match = re.match(r'^#\[([\w\-\.]+)\]$', line)
+                group_match = re.match(r'^#\[([\w\-\.,]+)\]$', line)
                 if group_match:
-                    current_group = group_match.group(1)
+                    current_groups = group_match.group(1).split(',')
                 # print('  continue')
                 continue
 
             try:
                 key, value = line.split('=', 1)
 
-                if current_group is None:
+                if current_groups is None:
                     raise ValueError(f'No group found for {env_file}: {line}')
 
-                grouped_vars[current_group][key] = value
-                # print(f'  values: {key}={value} for group {current_group}')
+                for group in current_groups:
+                    grouped_vars[group][key] = value
+                    # print(f'  values: {key}={value} for group {current_group}')
             except ValueError:
                 errors.append(f'{env_file}: {line}')
 
@@ -53,6 +54,18 @@ def split_env_files(env_files, output_prefix):
     to files under the output_prefix with ".groupname" as suffixes
 
     Vars in later files or later in files take priority in case there are duplicates
+
+    env file example:
+
+    [backend]
+    FOO=bar
+
+    [frontend]
+    FOO=baz
+
+    [frontend,frontend]
+    FOO=qux
+
     """
 
     contents = []
