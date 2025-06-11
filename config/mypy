@@ -5,7 +5,7 @@ python_version = 3.12
 #ignore_missing_imports = True
 #local_partial_types = True
 
-plugins = strawberry.ext.mypy_plugin
+plugins = strawberry.ext.mypy_plugin{% if extra_context.have_django %},mypy_django_plugin.main{% endif %}
 
 
 # THe above is the final version I want ^^
@@ -27,6 +27,11 @@ warn_redundant_casts = True
 #no_implicit_optional = True
 ; plugins = strawberry.ext.mypy_plugin
 
+
+{% if extra_context.have_django %}
+[mypy.plugins.django-stubs]
+django_settings_module = "{{ meta.django_settings }}"
+{% endif %}
 
 #Migrations may be missing type annotations..
 [mypy-*.migrations.*]

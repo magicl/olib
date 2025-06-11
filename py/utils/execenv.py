@@ -36,6 +36,7 @@ class ExecInv(Enum):
     uvicorn = 5
     cli = 6
     strawberry = 7
+    mypy = 8
     unknown = 99
 
 
@@ -153,6 +154,10 @@ def _isPylint():
     return sys.argv[0].endswith('pylint')
 
 
+def _isMypy():
+    return sys.argv[0].endswith('mypy')
+
+
 def _isCelery():
     return sys.argv[0].endswith('celery')
 
@@ -239,6 +244,7 @@ def initExecEnv(execEnvOverride=None, execContextOverride=None, ignoreSanityChec
         'execution invocation',
         (ExecInv.django, _isDjango),
         (ExecInv.pylint, _isPylint),
+        (ExecInv.mypy, _isMypy),
         (ExecInv.celery, _isCelery),
         (ExecInv.gunicorn, _isGunicorn),
         (ExecInv.uvicorn, _isUvicorn),

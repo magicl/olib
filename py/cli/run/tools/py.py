@@ -108,7 +108,7 @@ def register(config):
                         and dir_has_files(f.name, '*.py')
                     ] + ['*.py']
 
-            config = render_template(ctx, 'config/mypy')
+            config = render_template(ctx, 'config/mypy', {'have_django': ctx.obj.meta.django})
             cmd = 'dmypy start --' if daemon else 'nice mypy'
 
             sh.bash(
