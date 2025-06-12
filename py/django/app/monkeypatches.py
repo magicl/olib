@@ -14,7 +14,7 @@ def applyDjangoMigrationPatch():
     # FIX for weird migration issue in Django.
     # The original function below sometimes gets related_objects out of sync, and matches the wrong objects with eachother
     def _related_non_m2m_objects(old_field, new_field):
-        from django.db.backends.base.schema import _is_relevant_relation
+        from django.db.backends.base.schema import _is_relevant_relation  # type: ignore
 
         # Filter out m2m objects from reverse relations.
         # Return (old_relation, new_relation) tuples.
@@ -35,7 +35,7 @@ def applyDjangoMigrationPatch():
 
     # Apply monkeypatch for django
     # earlyInfo('Applying monkeypatch for django migrations')
-    django.db.backends.base.schema._related_non_m2m_objects = _related_non_m2m_objects
+    django.db.backends.base.schema._related_non_m2m_objects = _related_non_m2m_objects  # type: ignore
 
     # pylint: enable=protected-access
 
@@ -86,7 +86,7 @@ def applyDjangoBanNPlusOne():
         # Proceed normally
         return _DA_get_original(self, instance, cls)
 
-    DeferredAttribute.__get__ = _DeferredAttribute_get
+    DeferredAttribute.__get__ = _DeferredAttribute_get  # type: ignore
 
 
 applyDjangoMigrationPatch()

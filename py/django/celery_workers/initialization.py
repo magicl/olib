@@ -126,6 +126,6 @@ def initCelery(appName):
 
     # Celery does not itself bypass send_task when eager.
     _noInitSendTask = _sendTaskEager(app) if app.conf.task_always_eager else app.send_task
-    app.send_task = _sendTaskInit(app)
+    app.send_task = _sendTaskInit(app)  # type: ignore
 
     return app

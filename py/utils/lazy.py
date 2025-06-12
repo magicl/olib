@@ -11,12 +11,12 @@ from django.utils.functional import SimpleLazyObject, empty, lazy
 class LazyRe(SimpleLazyObject):
     @property
     def wrapped(self):
-        if self._wrapped is empty:
-            self._setup()
-        return self._wrapped
+        if self._wrapped is empty:  # type: ignore
+            self._setup()  # type: ignore
+        return self._wrapped  # type: ignore
 
 
-def lazyReCompile(pattern: str | bytes, flags: int = 0) -> re.Pattern:
+def lazyReCompile(pattern: str | bytes, flags: int = 0) -> LazyRe:
     return LazyRe(lambda: re.compile(pattern, flags))
 
 

@@ -29,7 +29,7 @@ class OnlineSetting(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # When new value was set
     # created_by = models.ForeignKey(User, on_delete=models.CASCADE) #Who set the value
 
-    _priv_fields = None
+    # _priv_fields = None
 
     class Meta:
         indexes = [models.Index(fields=['name', 'created_at'])]

@@ -111,10 +111,13 @@ def register(config):
             config = render_template(ctx, 'config/mypy', {'have_django': ctx.obj.meta.django})
             cmd = 'dmypy start --' if daemon else 'nice mypy'
 
+            # Never cross into olib. Do olib if we are already in it, but not if we are outside it
+            exclude = '--exclude=^.*/olib/.*$'
+
             sh.bash(
                 '-c',
                 f"""
-                {cmd} --config-file={config} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {' '.join(files)}
+                {cmd} --config-file={config} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(files)}
                 """,
                 _fg=True,
                 _env=os.environ,
