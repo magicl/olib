@@ -26,7 +26,7 @@ from .base import prep_config
 HELM_BURST_LIMIT = 5
 
 
-def images_build_pre(cls, ctx, k8s=False):
+def images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
     """
     Override in Config to do work before images are built. Either run actions directly, or set up
     parproc tasks with now=True
@@ -34,13 +34,21 @@ def images_build_pre(cls, ctx, k8s=False):
     click.echo('  None')
 
 
-def run_images_build_pre(cls, ctx, k8s=False):
+def run_images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
     click.echo('Pre-build Steps For Image...')
     cls.images_build_pre(ctx, k8s=k8s)
     pp.wait_clear(exception_on_failure=True)
 
 
-def images_build(cls, ctx, images=None, debug=False, no_pre_build=False, force=False, k8s=False):
+def images_build(
+    cls: Any,
+    ctx: click.Context,
+    images: str | None = None,
+    debug: bool = False,
+    no_pre_build: bool = False,
+    force: bool = False,
+    k8s: bool = False,
+) -> None:
     if not no_pre_build:
         run_images_build_pre(cls, ctx, k8s=k8s)
 
@@ -61,7 +69,7 @@ def images_build(cls, ctx, images=None, debug=False, no_pre_build=False, force=F
         sh.bash('-c', f"docker {options} .", _fg=True)
 
 
-def images_push(cls, ctx, images=None):
+def images_push(cls: Any, ctx: click.Context, images: str | None = None) -> None:
     click.echo('Pushing Image...')
     meta = ctx.obj.config.meta
     inst = ctx.obj.inst
@@ -81,7 +89,7 @@ def images_push(cls, ctx, images=None):
         )
 
 
-def images_analyze(cls, ctx, images=None):
+def images_analyze(cls: Any, ctx: click.Context, images: str | None = None) -> None:
     """Runs Dive (https://github.com/wagoodman/dive)"""
     if shutil.which('dive') is None:
         click.echo('Installing dive...')
@@ -113,7 +121,7 @@ def images_analyze(cls, ctx, images=None):
         )
 
 
-def k8s_push_config(cls, ctx):
+def k8s_push_config(cls: Any, ctx: click.Context) -> None:
     click.echo('Pushing Config to Kubernetes...')
     inst = ctx.obj.inst
 
@@ -149,7 +157,7 @@ def k8s_push_config(cls, ctx):
             )
 
 
-def k8s_push_secrets(cls, ctx):
+def k8s_push_secrets(cls: Any, ctx: click.Context) -> None:
     click.echo('Pushing Secrets to Kubernetes...')
     inst = ctx.obj.inst
 
@@ -166,7 +174,7 @@ def k8s_push_secrets(cls, ctx):
             k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, env_vars)
 
 
-def k8s_migrate(cls, ctx, break_on_error=False):
+def k8s_migrate(cls: Any, ctx: click.Context, break_on_error: bool = False) -> None:
     click.echo('Applying Migrations...')
     meta = ctx.obj.meta
 
@@ -221,7 +229,7 @@ def k8s_migrate(cls, ctx, break_on_error=False):
         sys.exit(1)
 
 
-def k8s_deploy(cls, ctx, deployments):
+def k8s_deploy(cls: Any, ctx: click.Context, deployments: str | None) -> None:
     click.echo('Deploying to Kubernetes...')
     meta = ctx.obj.meta
     # inst = ctx.obj.inst
@@ -272,7 +280,7 @@ def k8s_deploy(cls, ctx, deployments):
             )
 
 
-def k8s_uninstall(cls, ctx):
+def k8s_uninstall(cls: Any, ctx: click.Context) -> None:
     click.echo('Deleting from Kubernetes...')
     meta = ctx.obj.meta
 
@@ -293,7 +301,7 @@ def k8s_uninstall(cls, ctx):
         )
 
 
-def docker_run(cls, ctx):
+def docker_run(cls: Any, ctx: click.Context) -> None:
     click.echo('Running image on Docker...')
     meta = ctx.obj.meta
     sh.bash(
@@ -306,7 +314,7 @@ def docker_run(cls, ctx):
     )
 
 
-def docker_compose(cls, ctx, no_build=False):
+def docker_compose(cls: Any, ctx: click.Context, no_build: bool = False) -> None:
     click.echo('Running Docker Compose...')
     meta = ctx.obj.meta
 
@@ -343,7 +351,7 @@ def docker_compose(cls, ctx, no_build=False):
         signal.signal(signal.SIGINT, original_sigint)
 
 
-def docker_shell(cls, ctx):
+def docker_shell(cls: Any, ctx: click.Context) -> None:
     click.echo('Running image on Docker with /bin/bash shell...')
     meta = ctx.obj.meta
     sh.bash(
@@ -356,10 +364,10 @@ def docker_shell(cls, ctx):
     )
 
 
-def _implementImage():
+def _implementImage() -> Any:
     @click.group(chain=True)
     @click.pass_context
-    def imageGroup(ctx):
+    def imageGroup(ctx: click.Context) -> None:
         pass
 
     @imageGroup.command()
@@ -368,7 +376,7 @@ def _implementImage():
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
     @click.option('--force', help='Force build.  Ignore cache', default=False, is_flag=True)
     @click.pass_context
-    def build(ctx, images, debug, no_pre_build, force):
+    def build(ctx: click.Context, images: str | None, debug: bool, no_pre_build: bool, force: bool) -> None:
         """Build container"""
         ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build, force=force, k8s=True)
 
@@ -377,7 +385,7 @@ def _implementImage():
     @click.option('--debug', help='Output all build info', default=False, is_flag=True)
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
     @click.pass_context
-    def push(ctx, images, debug, no_pre_build):
+    def push(ctx: click.Context, images: str | None, debug: bool, no_pre_build: bool) -> None:
         """Push container to registry"""
         ctx.obj.config.images_build(ctx, images=images, debug=debug, no_pre_build=no_pre_build, k8s=True)
         ctx.obj.config.images_push(ctx, images=images)
@@ -385,34 +393,34 @@ def _implementImage():
     @imageGroup.command()
     @click.option('--images', help='Comma separated list of image names. All if empty', type=str)
     @click.pass_context
-    def analyze(ctx, images):
+    def analyze(ctx: click.Context, images: str | None) -> None:
         """Analyze image"""
         ctx.obj.config.images_analyze(ctx, images=images)
 
     return imageGroup
 
 
-def _implementApp():
+def _implementApp() -> Any:
     @click.group(chain=True)
     @click.pass_context
-    def appGroup(ctx):
+    def appGroup(ctx: click.Context) -> None:
         pass
 
     @appGroup.command()
     @click.pass_context
-    def pre_build(ctx):
+    def pre_build(ctx: click.Context) -> None:
         """Pre-build step"""
         run_images_build_pre(ctx.obj.config, ctx, k8s=True)
 
     @appGroup.command()
     @click.pass_context
-    def push_secrets(ctx):
+    def push_secrets(ctx: click.Context) -> None:
         """Push secrets to Kubernetes"""
         ctx.obj.config.k8s_push_secrets(ctx)
 
     @appGroup.command()
     @click.pass_context
-    def push_config(ctx):
+    def push_config(ctx: click.Context) -> None:
         """Push config to Kubernetes"""
         ctx.obj.config.k8s_push_config(ctx)
 
@@ -427,7 +435,14 @@ def _implementApp():
     @click.option('--no-build', help='Skip build step', default=False, is_flag=True)
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
     @click.pass_context
-    def deploy(ctx, images, deployments, no_migrate, no_build, no_pre_build):
+    def deploy(
+        ctx: click.Context,
+        images: str | None,
+        deployments: str | None,
+        no_migrate: bool,
+        no_build: bool,
+        no_pre_build: bool,
+    ) -> None:
         """Deploy container"""
         if not no_build:
             ctx.obj.config.images_build(ctx, images=images, no_pre_build=no_pre_build, k8s=True)
@@ -441,7 +456,7 @@ def _implementApp():
     @appGroup.command()
     @click.option('--break-on-error', default=False, is_flag=True)
     @click.pass_context
-    def migrate(ctx, break_on_error):
+    def migrate(ctx: click.Context, break_on_error: bool) -> None:
         """Deploy container"""
         ctx.obj.config.k8s_push_config(ctx)
         if ctx.obj.meta.django:
@@ -449,24 +464,24 @@ def _implementApp():
 
     @appGroup.command()
     @click.pass_context
-    def uninstall(ctx):
+    def uninstall(ctx: click.Context) -> None:
         """Uninstall container"""
         ctx.obj.config.k8s_uninstall(ctx)
 
     return appGroup
 
 
-def _implementDocker():
+def _implementDocker() -> Any:
     @click.group(chain=True)
     @click.pass_context
-    def dockerGroup(ctx):
+    def dockerGroup(ctx: click.Context) -> None:
         pass
 
     @dockerGroup.command('run')
     @click.option('--no-build', help='Skip build step', default=False, is_flag=True)
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
     @click.pass_context
-    def run(ctx, no_build, no_pre_build):
+    def run(ctx: click.Context, no_build: bool, no_pre_build: bool) -> None:
         """Run container in docker"""
         if not no_build:
             ctx.obj.config.images_build(ctx, no_pre_build=no_pre_build)
@@ -476,7 +491,7 @@ def _implementDocker():
     @click.option('--no-build', help='Skip build step', default=False, is_flag=True)
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
     @click.pass_context
-    def compose(ctx, no_build, no_pre_build):
+    def compose(ctx: click.Context, no_build: bool, no_pre_build: bool) -> None:
         """Run container in docker"""
         if not no_pre_build:
             run_images_build_pre(ctx.obj.config, ctx, k8s=False)
@@ -484,7 +499,7 @@ def _implementDocker():
 
     @dockerGroup.command('shell')
     @click.pass_context
-    def shell(ctx):
+    def shell(ctx: click.Context) -> None:
         """Run container in docker with shell"""
         ctx.obj.config.docker_shell(ctx)
 
@@ -511,7 +526,7 @@ def buildSingleService(
     - tls secret should be named {name}-tls
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.build_name = name

@@ -3,6 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 import datetime
+from typing import Any
 
 from django.test import tag
 from django.utils import timezone
@@ -16,24 +17,24 @@ from olib.py.exceptions import UserError
 
 @tag('olib')
 class Tests(OTestCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-        self.original_settings = {}
+        self.original_settings: dict[str, Any] = {}
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
 
         # Clear any settings.. Restore in tearDown
         self.original_settings = osettings.settings
         osettings.settings = {}
 
-    def tear_down(self):
+    def tear_down(self) -> None:
         osettings.settings = self.original_settings
 
         super().tearDown()
 
-    def test_online_settings(self):
+    def test_online_settings(self) -> None:
         osettings.register('strval', 'str', default='REF5', values=['REF5', 'REF15'])
         osettings.register('intval', 'int', default=200)
         osettings.register('floatval', 'float', default=1.0)
@@ -98,7 +99,7 @@ class Tests(OTestCase):
         osettings.write('floatval', 3.1, invalidateCache=True)
         self.assertEqual(osettings.floatval, 3.1)
 
-    def test_key_value(self):
+    def test_key_value(self) -> None:
         osettings.register('opt', 'key-str', default={})
         osettings.register('fopt', 'key-float', default={})
         osettings.register('iopt', 'key-int', default={})
@@ -147,7 +148,7 @@ class Tests(OTestCase):
         osettings.set('bopt', 'a', False, invalidateCache=True)
         self.assertEqual(osettings.bopt, {'a': False, 'b': False})
 
-    def test_list_value(self):
+    def test_list_value(self) -> None:
         osettings.register('opt', 'list-str', default=['A', 'BB'])
 
         self.assertEqual(osettings.opt, ['A', 'BB'])

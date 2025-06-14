@@ -7,6 +7,7 @@
 
 import os
 from functools import cache
+from typing import Any
 
 import click
 import sh
@@ -20,7 +21,7 @@ from ....utils.listutils import groupByValue
 
 
 @cache
-def find_package_json_dir(directory):
+def find_package_json_dir(directory: str) -> str | None:
     """Find closest package.json. Cached to prevent unnecessary lookups"""
     if directory == '':
         directory = '.'
@@ -33,9 +34,9 @@ def find_package_json_dir(directory):
     return find_package_json_dir(os.path.dirname(directory))
 
 
-def register(config):
+def register(config: Any) -> None:
     @click.group()
-    def js():
+    def js() -> None:
         pass
 
     if 'javascript' in config.tools:
@@ -43,13 +44,14 @@ def register(config):
         @js.command()
         @click.argument('files', nargs=-1, type=click.Path())
         @click.pass_context
-        def lint(ctx, files):
+        def lint(ctx: click.Context, files: tuple[str, ...]) -> None:
             """Run eslint in all package.js directories in scope"""
+            files_list: list[str]
             if not files:
                 if ctx.obj.meta.isOlib:
-                    files = ['js']  # All python code is in the js
+                    files_list = ['js']  # All javascript code is in the js folder
                 else:
-                    files = [
+                    files_list = [
                         f.name
                         for f in os.scandir('.')
                         if f.is_dir()
@@ -57,9 +59,11 @@ def register(config):
                         and f.name != 'olib'
                         and dir_has_files(f.name, '*.js', '*.ts', '*.tsx', '*.mjs')
                     ] + ['*.js', '*.ts', '*.tsx', '*.mjs']
+            else:
+                files_list = list(files)
 
             # For each file, find closest package.json, so we can run lint in that scope
-            by_dir = groupByValue(files, keyFunc=find_package_json_dir)
+            by_dir = groupByValue(files_list, keyFunc=find_package_json_dir)
 
             for dir, _ in by_dir.items():
                 if dir is None:
@@ -82,7 +86,7 @@ def register(config):
         @js.command()
         @click.option('--no-ui', default=False, is_flag=True)
         @click.pass_context
-        def test_unit(ctx, no_ui):
+        def test_unit(ctx: click.Context, no_ui: bool) -> None:
             # Keep it simple for now
             dir = 'frontend'
 
@@ -103,7 +107,7 @@ def register(config):
         @js.command()
         @click.option('--no-ui', default=False, is_flag=True)
         @click.pass_context
-        def test_integration(ctx, no_ui):
+        def test_integration(ctx: click.Context, no_ui: bool) -> None:
             # Keep it simple for now
             dir = 'frontend'
 
@@ -123,7 +127,7 @@ def register(config):
 
         @js.command()
         @click.pass_context
-        def tsc(ctx):
+        def tsc(ctx: click.Context) -> None:
             # Keep it simple for now
             dir = 'frontend'
 
@@ -139,7 +143,7 @@ def register(config):
 
         @js.command()
         @click.pass_context
-        def chromatic(ctx):
+        def chromatic(ctx: click.Context) -> None:
             # Keep it simple for now
             dir = 'frontend'
 

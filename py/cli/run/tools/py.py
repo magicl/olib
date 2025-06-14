@@ -8,7 +8,9 @@
 import os
 import shutil
 import sys
+from collections.abc import Sequence
 from functools import cache
+from typing import Any
 
 import click
 import parproc as pp
@@ -19,13 +21,13 @@ from ....utils.listutils import groupByValue
 from ..utils.template import render_template
 
 
-def pre_commit(cmd, files):
+def pre_commit(cmd: str, files: Sequence[str]) -> None:
     fileStr = '--all-files' if not files else f"--files {' '.join(files)}"
     sh.bash('-c', f"pre-commit run {cmd} {fileStr}", _fg=True)
 
 
 @cache
-def is_manage_py_dir(directory, django_working_dir_abs):
+def is_manage_py_dir(directory: str, django_working_dir_abs: str) -> bool:
     if django_working_dir_abs == '.':
         # Whole project is django
         return True
@@ -33,9 +35,9 @@ def is_manage_py_dir(directory, django_working_dir_abs):
     return os.path.abspath(directory).startswith(django_working_dir_abs)
 
 
-def register(config):
+def register(config: Any) -> None:
     @click.group()
-    def py():
+    def py() -> None:
         pass
 
     if 'python' in config.tools:
@@ -50,7 +52,7 @@ def register(config):
             help="Only display messages. Don't display score",
         )
         @click.pass_context
-        def lint(ctx, files, quiet):
+        def lint(ctx: click.Context, files: list[str], quiet: bool) -> None:
             """Run pylint"""
             if not files:
                 if ctx.obj.meta.isOlib:
@@ -92,7 +94,7 @@ def register(config):
         @click.option('--no-install-types', default=False, is_flag=True)
         @click.option('--daemon', '-d', default=False, is_flag=True)
         @click.pass_context
-        def mypy(ctx, files, no_install_types, daemon):
+        def mypy(ctx: click.Context, files: list[str], no_install_types: bool, daemon: bool) -> None:
             """Run mypy"""
             if not files:
                 if ctx.obj.meta.isOlib:
@@ -107,6 +109,8 @@ def register(config):
                         and f.name != 'frontend'
                         and dir_has_files(f.name, '*.py')
                     ] + ['*.py']
+            else:
+                files = list(files)
 
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
@@ -130,53 +134,53 @@ def register(config):
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def isort(files):
+        def isort(files: tuple[str, ...]) -> None:
             """Run isort"""
             pre_commit('isort', files)
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def pyupgrade(files):
+        def pyupgrade(files: tuple[str, ...]) -> None:
             """Run pyupgrade"""
             pre_commit('pyupgrade', files)
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def black(files):
+        def black(files: tuple[str, ...]) -> None:
             """Run black"""
             pre_commit('black', files)
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def unify(files):
+        def unify(files: tuple[str, ...]) -> None:
             """Run unify"""
             pre_commit('unify', files)
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def bandit(files):
+        def bandit(files: tuple[str, ...]) -> None:
             """Run bandit"""
             pre_commit('bandit', files)
 
         @py.command('license-update')
         @click.argument('files', nargs=-1, type=click.Path())
-        def licenseUpdate(files):
+        def licenseUpdate(files: tuple[str, ...]) -> None:
             """Run licenseUpdate"""
             pre_commit('license-update', files)
 
         @py.command()
         @click.argument('files', nargs=-1, type=click.Path())
-        def shellcheck(files):
+        def shellcheck(files: tuple[str, ...]) -> None:
             """Run shellcheck"""
             pre_commit('shellcheck', files)
 
-        def _djangoSetupTasks(ctx, fast):
+        def _djangoSetupTasks(ctx: click.Context, fast: bool) -> None:
             if fast:
                 return
 
             # Make sure db is up to date
             @pp.Proc(now=True)
-            def migrate(context):
+            def migrate(context: Any) -> None:
                 sh.python3(ctx.obj.meta.django_manage_py, 'migrate', _cwd=ctx.obj.meta.django_working_dir)
 
             # @pp.Proc(name='create-admin', deps=['migrate'], now=True)
@@ -185,7 +189,7 @@ def register(config):
 
             # Process / copy all static images etc
             @pp.Proc(now=True)
-            def collect_static(context):
+            def collect_static(context: Any) -> None:
                 sh.python3(
                     ctx.obj.meta.django_manage_py,
                     'collectstatic',
@@ -204,7 +208,7 @@ def register(config):
         @click.option('--tee-to', default='.output/debug.runserver.txt')
         @click.argument('args', nargs=-1)
         @click.pass_context
-        def runserver(ctx, fast, tee, tee_to, args):
+        def runserver(ctx: click.Context, fast: bool, tee: bool, tee_to: str, args: tuple[str, ...]) -> None:
             """Django runserver. Pass in any arguments you would pass to ./manage.py runserver"""
             if tee:
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
@@ -238,7 +242,7 @@ def register(config):
         @click.option('--coverage', default=False, is_flag=True)
         @click.argument('args', nargs=-1)
         @click.pass_context
-        def test(ctx, fast, tee, tee_to, coverage, args):
+        def test(ctx: click.Context, fast: bool, tee: bool, tee_to: str, coverage: bool, args: tuple[str, ...]) -> None:
             """Django test. Pass in any arguments you would pass to ./manage.py test"""
             if tee:
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
@@ -307,7 +311,7 @@ def register(config):
 
         @py.command(help='Convert camelCase func/var names to snake_case')
         @click.argument('files', nargs=-1, type=click.Path())
-        def fix_camel(files):
+        def fix_camel(files: tuple[str, ...]) -> None:
             # Install package if needed
             sh.uv('pip', 'install', 'camel-snake-pep8', '--upgrade')
             try:

@@ -33,34 +33,34 @@ _settingDefs: dict[str, OnlineSettingDef] = {}
 
 
 class OnlineSettingRef:
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         if name not in osettings.settings:
             raise ObjectDoesNotExist(f"Online setting does not exist: {name}")
 
         self.name = name
 
-    def val(self):
+    def val(self) -> Any:
         return getattr(osettings, self.name)
 
-    def __int__(self):
+    def __int__(self) -> int:
         if osettings.settings[self.name].type != 'int':
             raise Exception(f"Online setting {self.name} is not an int")
 
         return getattr(osettings, self.name)
 
-    def __float__(self):
+    def __float__(self) -> float:
         if osettings.settings[self.name].type != 'float':
             raise Exception(f"Online setting {self.name} is not a float")
 
         return getattr(osettings, self.name)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if osettings.settings[self.name].type != 'str':
             raise Exception(f"Online setting {self.name} is not a str")
 
         return getattr(osettings, self.name)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         if osettings.settings[self.name].type != 'bool':
             raise Exception(f"Online setting {self.name} is not a bool")
 
@@ -75,11 +75,11 @@ class OnlineSettingsAccess:
     _list_types = ('list-str', 'list-float', 'list-int', 'list-bool')
     _key_types = ('key-str', 'key-float', 'key-int', 'key-bool')
 
-    def __init__(self):
-        self._cache = {}
+    def __init__(self) -> None:
+        self._cache: dict[str, CachedValue] = {}
         self.settings = _settingDefs  # Member to allow easy access and mocking
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         cached_val = self._cache.get(name)
         t = time.time()
 
@@ -93,26 +93,26 @@ class OnlineSettingsAccess:
 
         return cached_val.value
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name: str, value: Any) -> None:
         if name in ('_cache', 'settings'):
             super().__setattr__(name, value)
         else:
             raise Exception('Online settings should not be modified like this. Use OnlineSetting.write')
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         if not isEnvTest():
             raise Exception(
                 'Online settings cache invalidation can only be done in testcases, as the invalidation would be local only to the current node'
             )
         self._cache = {}
 
-    def _read(self, name=None, load_group=None):
+    def _read(self, name: str | None = None, load_group: str | None = None) -> None:
         """Read option for a name or for given group. Makes sense to read group at the same time, because options from the same group are often used temporally close"""
 
         if load_group is not None:
             names = tuple(k for k, v in self.settings.items() if v.load_group == load_group)
         else:
-            names = (name,)
+            names = (name,) if name else ()
 
         last_ids = Subquery(
             OnlineSetting.objects.filter(name__in=names).values('name').annotate(lastId=Max('id')).values('lastId')
@@ -133,7 +133,7 @@ class OnlineSettingsAccess:
             # Write to cache
             self._cache[n] = CachedValue(val, t + spec.cache_timeout_seconds)
 
-    def ref(self, name):
+    def ref(self, name: str) -> OnlineSettingRef:
         """Online setting ref. Use as placeholder for online setting"""
         return OnlineSettingRef(name)
 
@@ -178,7 +178,7 @@ class OnlineSettingsAccess:
         return val
 
     @staticmethod
-    def cast_input_str(name, v):
+    def cast_input_str(name: str, v: str) -> tuple[str, str]:
         if len(v) > OnlineSettingsAccess.MAX_STR_LEN:
             raise UserError(
                 f"String length of setting must be no more than {OnlineSettingsAccess.MAX_STR_LEN} for: {name}"
@@ -186,7 +186,7 @@ class OnlineSettingsAccess:
         return v, v
 
     @staticmethod
-    def cast_input_bool(name, v):
+    def cast_input_bool(name: str, v: Any) -> tuple[str, bool]:
         if isinstance(v, bool):
             return ('1' if v else '0'), v
 
@@ -199,7 +199,7 @@ class OnlineSettingsAccess:
         raise UserError(f"{v} is not a valid bool. Use one of t/true/on/1 or f/false/off/0")
 
     @staticmethod
-    def cast_input_int(name, v):
+    def cast_input_int(name: str, v: Any) -> tuple[str, int]:
         if isinstance(v, int):
             return str(v), v
 
@@ -212,7 +212,7 @@ class OnlineSettingsAccess:
         raise UserError(f"{v} is not a valid int. An int is required for: {name}")
 
     @staticmethod
-    def cast_input_float(name, v):
+    def cast_input_float(name: str, v: Any) -> tuple[str, float]:
         if isinstance(v, (float, int)):
             return str(v), v
 
@@ -225,7 +225,7 @@ class OnlineSettingsAccess:
         raise UserError(f"{v} is not a valid float. A float is required for: {name}")
 
     @staticmethod
-    def cast_input(name, value, prefix=None):
+    def cast_input(name: str, value: Any, prefix: str | None = None) -> tuple[str, Any]:
 
         spec = OnlineSettingsAccess._get_spec(name)
         cast_val: Any
@@ -281,7 +281,7 @@ class OnlineSettingsAccess:
         return value, cast_val
 
     @staticmethod
-    def _get_spec(name):
+    def _get_spec(name: str) -> OnlineSettingDef:
 
         # Validate
         if name not in osettings.settings:
