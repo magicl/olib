@@ -5,9 +5,10 @@
 
 
 import uuid
+from typing import Any
 
 
-def createUser(username=None, permissions=None, **kwargs):
+def createUser(username: Any = None, permissions: Any = None, **kwargs: Any) -> Any:
     from django.contrib.auth import get_user_model
     from django.contrib.auth.models import Permission
 
@@ -35,6 +36,6 @@ def createUser(username=None, permissions=None, **kwargs):
     return user
 
 
-def resetCaches():
+def resetCaches() -> None:
     # Implement system where application can register a function to reset caches
     pass

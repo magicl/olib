@@ -9,7 +9,7 @@ import logging
 import warnings
 from collections.abc import Generator
 from contextlib import contextmanager
-from pathlib import Path
+from os import PathLike
 from typing import Any
 
 import pandas as pd
@@ -52,7 +52,7 @@ def openXLS(filenameOrFile: Any, storage: Any = None) -> Generator[tuple[Any, An
 
 @contextmanager
 def readXLS(
-    filenameOrFile: str | bytes | Path | io.IOBase,
+    filenameOrFile: str | bytes | PathLike[Any] | io.IOBase,
     sheet: str | None = None,
     headerRowFirst: str | None = None,
     skipRows: int = 0,
@@ -77,7 +77,7 @@ def readXLS(
             yield iterCSV(iterator, headerRowFirst, skipRows)
 
 
-def writeXLS(filename: str, sheet: str, data: Any, raw: bool = False) -> None:
+def writeXLS(filename: str | bytes | PathLike[str] | io.IOBase, sheet: str, data: Any, raw: bool = False) -> None:
     """
     Write any data acceptable by pd.DataFrame(...) to XLS
     :param raw: If true, data bypasses dataframe, and instead a double array is expected
@@ -95,4 +95,4 @@ def writeXLS(filename: str, sheet: str, data: Any, raw: bool = False) -> None:
     for l in data:
         ws.append(list(l))
 
-    wb.save(filename)
+    wb.save(filename)  # type: ignore

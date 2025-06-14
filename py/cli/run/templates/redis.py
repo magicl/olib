@@ -29,7 +29,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
     @redisGroup.command(help='Start a Redis shell')
     @click.option('--root', help='Start in root mode', default=False, is_flag=True)
     @click.pass_context
-    def shell(ctx, root):
+    def shell(ctx: Any, root: Any) -> None:
         pwd, database = redis_creds(ctx, root or defaultRoot)
 
         with redis_port_forward() as port:
@@ -43,7 +43,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
 
         @redisGroup.command()
         @click.pass_context
-        def app_create(ctx):
+        def app_create(ctx: Any) -> None:
             """Copy redis secret into namespace"""
             secretName, *_ = redis_convert_name(ctx)
             password, _ = redis_creds(ctx, defaultRoot)
@@ -63,7 +63,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
 
         @redisGroup.command()
         @click.pass_context
-        def app_exists(ctx):
+        def app_exists(ctx: Any) -> None:
             """Check if app exists"""
             secretName, *_ = redis_convert_name(ctx)
 
@@ -73,7 +73,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
 
         @redisGroup.command()
         @click.pass_context
-        def app_delete(ctx):
+        def app_delete(ctx: Any) -> None:
             """Remove redis secret from namespace"""
             secretName, *_ = redis_convert_name(ctx)
 
@@ -84,7 +84,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
     return ('redis', redisGroup)
 
 
-def redis(root=False):
+def redis(root: bool = False) -> Any:
     """
     Injects functions into service Config for managing redis
 
@@ -92,7 +92,7 @@ def redis(root=False):
 
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.redis = True

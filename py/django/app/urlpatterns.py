@@ -13,7 +13,7 @@ from django.views.static import serve
 from olib.py.utils.execenv import isEnvTest
 
 
-def serve_inmemory_file(request, path):
+def serve_inmemory_file(request: Any, path: Any) -> Any:
     try:
         file = default_storage.open(path)
         return FileResponse(file)

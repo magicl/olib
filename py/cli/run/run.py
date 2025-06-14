@@ -6,6 +6,7 @@
 
 import os
 import sys
+from typing import Any
 
 import click
 import parproc as pp
@@ -26,7 +27,7 @@ from .utils.template import render_template
 CLI_CONTEXT_SETTINGS = {'help_option_names': ['-h', '--help']}
 
 
-def create_cli(config=None):
+def create_cli(config: Any = None) -> Any:
     if config is None:
         try:
             config = importModuleFromPath('./config.py').Config
@@ -51,7 +52,7 @@ def create_cli(config=None):
     @click.option('--cluster', '-c', help='Cluster of inst to apply command to. Can be used in place of --inst')
     @click.option('--debug', '-d', help='Debug mode', is_flag=True)
     @click.pass_context
-    def cli(ctx, inst, cluster, debug):
+    def cli(ctx: Any, inst: Any, cluster: Any, debug: Any) -> None:
         if debug:
             pp.set_options(dynamic=False, parallel=1)
         ctx.obj = RunContext(config, inst, cluster)
@@ -59,13 +60,13 @@ def create_cli(config=None):
     @cli.command(context_settings={'ignore_unknown_options': True, 'help_option_names': []})
     @click.argument('args', nargs=-1)
     @click.pass_context
-    def init(ctx, args):
+    def init(ctx: Any, args: Any) -> None:
         sh.bash('-c', f"{ctx.obj.meta.olib_path}/scripts/init.sh {' '.join(args)}", _fg=True)
 
     @cli.command()
     @click.option('--tool', type=click.Choice(['python', 'javascript']))
     @click.pass_context
-    def has(ctx, tool):
+    def has(ctx: Any, tool: Any) -> None:
         """Check if tool is available"""
         if tool is not None:
             sys.exit(0 if tool in ctx.obj.config.tools else 1)
@@ -74,7 +75,7 @@ def create_cli(config=None):
     @cli.command()
     @click.option('--license', default=False, is_flag=True)
     @click.pass_context
-    def get(ctx, license):
+    def get(ctx: Any, license: Any) -> None:
         """Return a value"""
         if license:
             click.echo(ctx.obj.config.license, nl=False)
@@ -85,7 +86,7 @@ def create_cli(config=None):
     @cli.command(help='Render a template file. Returns path to rendered file')
     @click.argument('template')
     @click.pass_context
-    def render(ctx, template):
+    def render(ctx: Any, template: Any) -> None:
         """Render a template"""
         click.echo(
             render_template(
@@ -106,7 +107,7 @@ def create_cli(config=None):
     return cli
 
 
-def main():
+def main() -> None:
     with cliEnv():
         cli = create_cli()
 

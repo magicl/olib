@@ -3,23 +3,24 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 import json
+from typing import Any
 
 # from compressor.contrib.jinja2ext import CompressorExtension
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.urls import reverse
-from django.utils.timezone import template_localtime  # type: ignore[attr-defined]
+from django.utils.timezone import localtime
 from jinja2 import Environment
 
 from olib.py.utils.execenv import isEnvLocal
 
 
 # Escape string to make it ok to place in "". MUST use "", not '' around string
-def strEscape(inp):
+def strEscape(inp: Any) -> Any:
     # json.dumps includes quotes. The slicing is to remove them
     return json.dumps(inp)[1:-1]
 
 
-def environment(**options):
+def environment(**options: Any) -> Any:
     env = Environment(
         trim_blocks=True,
         lstrip_blocks=True,
@@ -32,14 +33,14 @@ def environment(**options):
             'static': staticfiles_storage.url,
             #'localstatic': localstatic_storage.url,
             'url': reverse,
-            'localtime': template_localtime,
+            'localtime': localtime,
         }
     )
 
     env.filters.update(
         {
             'strEscape': strEscape,
-            'localtime': template_localtime,
+            'localtime': localtime,
             'min': min,
             'max': max,
             'str': str,

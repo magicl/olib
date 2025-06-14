@@ -3,17 +3,19 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+from typing import Any
+
 from olib.py.utils.execenv import isEnvProduction
 
 
-def applyDjangoMigrationPatch():
+def applyDjangoMigrationPatch() -> None:
     import django.db.backends.base.schema
 
     # pylint: disable=protected-access
     #################################################
     # FIX for weird migration issue in Django.
     # The original function below sometimes gets related_objects out of sync, and matches the wrong objects with eachother
-    def _related_non_m2m_objects(old_field, new_field):
+    def _related_non_m2m_objects(old_field: Any, new_field: Any) -> Any:
         from django.db.backends.base.schema import _is_relevant_relation  # type: ignore
 
         # Filter out m2m objects from reverse relations.
@@ -40,7 +42,7 @@ def applyDjangoMigrationPatch():
     # pylint: enable=protected-access
 
 
-def applyDjangoBanNPlusOne():
+def applyDjangoBanNPlusOne() -> None:
     """
     Prevents django from doing implicit db queries during attribute access. Still allowed on production
     Modified from: https://suor.github.io/blog/2023/03/26/ban-1-plus-n-in-django/
@@ -54,7 +56,7 @@ def applyDjangoBanNPlusOne():
     isProduction = isEnvProduction()
     _DA_get_original = DeferredAttribute.__get__
 
-    def _DeferredAttribute_get(self, instance, cls=None):
+    def _DeferredAttribute_get(self: Any, instance: Any, cls: Any = None) -> Any:
         nonlocal _DA_get_original
 
         if instance is None:

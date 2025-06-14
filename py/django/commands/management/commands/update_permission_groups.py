@@ -4,7 +4,7 @@
 # ~
 
 import json
-import time
+from typing import Any
 
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
@@ -14,10 +14,10 @@ from django.db import transaction
 class Command(BaseCommand):
     help = 'Creates a hashed password based on a password string based on current settings'
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument('file', help='JSON file with permission groups')
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # time_start = time.time()
 
         with open(options['file'], encoding='utf-8') as f:

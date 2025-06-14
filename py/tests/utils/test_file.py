@@ -12,5 +12,5 @@ from olib.py.utils.file import acceptableFilename
 
 @tag('olib')
 class Tests(OTestCase):
-    def test_acceptable_filename(self):
+    def test_acceptable_filename(self) -> None:
         self.assertEqual(acceptableFilename('F[ x!_foo-bar!?'), 'f-x_foo-bar')

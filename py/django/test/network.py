@@ -12,7 +12,7 @@ _assigned_ports: dict[tuple[str, int], int] = {}
 _lock = threading.Lock()
 
 
-def get_test_port(service_name):
+def get_test_port(service_name: str) -> int:
     """Allocates a port for the service on a given thread. If a port was already allocated, that one is returned"""
     global _next_port  # pylint: disable=global-statement
 

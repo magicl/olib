@@ -4,6 +4,8 @@
 # ~
 
 import logging
+from collections.abc import Callable
+from typing import Any
 
 from django.conf import settings
 
@@ -11,22 +13,22 @@ from django.conf import settings
 class Formatter(logging.Formatter):
     """Provides facilities to add request ID to log items from web requests and task ID for tasks"""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         try:
             from celery._state import get_current_task
 
-            self.getCurrentTask = get_current_task
+            self.getCurrentTask: Callable[[], Any] = get_current_task
         except ImportError:
             self.getCurrentTask = lambda: None
 
         from django_middleware_global_request import get_request
 
         self.getRequest = get_request
-        self.notReprLog = None
-        self.parallelTest = None
+        self.notReprLog: bool | None = None
+        self.parallelTest: bool | None = None
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         # If format called before full settings loaded, don't read settings, but read later
         if self.notReprLog is None and hasattr(settings, 'TEST_REPRODUCIBLE_LOG'):
             self.notReprLog = not settings.TEST_REPRODUCIBLE_LOG

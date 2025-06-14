@@ -22,12 +22,12 @@ from olib.py.utils.execenv import (
 @tag('olib')
 class Tests(OTestCase):
 
-    def test_environments(self):
+    def test_environments(self) -> None:
         # Should currently be in test
         self.assertEqual(isEnvTest(), True)
         self.assertEqual(isEnvProduction(), False)
 
-    def test_sanity_checks(self):
+    def test_sanity_checks(self) -> None:
         # Disallow DEBUG=True on K8S
         with (
             patch('os.environ', {}),

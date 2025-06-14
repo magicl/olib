@@ -9,7 +9,7 @@ import logging
 import re
 import sys
 import time
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import click
 import requests
@@ -173,14 +173,14 @@ class RemoteConnection:
 
     def _get_credentials(
         self,
-        disable_cache=False,
-        retry=False,
-        login_user=None,
-        login_pwd=None,
-        basic_auth_user=None,
-        basic_auth_pwd=None,
-        forceNonInteractive=False,
-    ):
+        disable_cache: bool = False,
+        retry: bool = False,
+        login_user: Any = None,
+        login_pwd: Any = None,
+        basic_auth_user: Any = None,
+        basic_auth_pwd: Any = None,
+        forceNonInteractive: bool = False,
+    ) -> Any:
         """Gets authentication token for user"""
         if not disable_cache and self._login_pwd is None:
             # Try to pull from cache first
@@ -274,14 +274,14 @@ class RemoteConnection:
 
     def _request(
         self,
-        type,
-        endpoint,
-        *args,
-        content_type='application/json',
-        timeout=360000,
-        _authenticate=True,
-        **kwargs,
-    ):
+        type: Any,
+        endpoint: Any,
+        *args: Any,
+        content_type: str = 'application/json',
+        timeout: int = 360000,
+        _authenticate: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         args = (self.host.url + endpoint, *args)
         kwargs['headers'] = kwargs.get('headers', {}).copy()
 
@@ -344,12 +344,12 @@ class RemoteConnection:
 
     def request(
         self,
-        *args,
-        _authenticate=True,
-        _disable_auth_cache=False,
-        _pass_http_exception=False,
-        **kwargs,
-    ):
+        *args: Any,
+        _authenticate: bool = True,
+        _disable_auth_cache: bool = False,
+        _pass_http_exception: bool = False,
+        **kwargs: Any,
+    ) -> Any:
         """Request wrapper that ensures authentication is taken care of"""
 
         def tryAuth() -> None:
@@ -428,7 +428,7 @@ class RemoteConnection:
                     raise e
 
     @classmethod
-    def _fmtGqlArg(cls, k, v, quoteString=True):
+    def _fmtGqlArg(cls: Any, k: Any, v: Any, quoteString: bool = True) -> Any:
         if isinstance(k, str) and k.startswith('@'):
             # Enum. Strip @ from key, but don't quote value
             k = k[1:]
@@ -461,14 +461,14 @@ class RemoteConnection:
 
     def graphql(
         self,
-        query,
-        *args,
-        raw_args=None,
-        variables=None,
-        waitProgress=False,
-        _authenticate=True,
-        **kwargs,
-    ):
+        query: Any,
+        *args: Any,
+        raw_args: Any = None,
+        variables: Any = None,
+        waitProgress: bool = False,
+        _authenticate: bool = True,
+        **kwargs: Any,
+    ) -> Any:
         """Helper function for graphql queries
         :param query: GrqphQL query. Start with 'mutation' if mutation
         :param raw_args: Optional dict of arguments for mutation. Use %% as placeholder in query. An argument with value None is excluded from mutation
@@ -506,7 +506,7 @@ class RemoteConnection:
             _authenticate=_authenticate,
         )
 
-        def printErrors(errors):
+        def printErrors(errors: Any) -> None:
             print(f"GrqphQL:  {query}")
             print(f"Response: {resp}")
             for error in errors:
@@ -550,14 +550,14 @@ class RemoteConnection:
 
         return resp['data']
 
-    def gql_query(self, query, raw_args=None):
+    def gql_query(self, query: Any, raw_args: Any = None) -> Any:
         # Execute query
         resp = self.graphql(query, raw_args=raw_args)
         return resp
         # self._outputGqlData(resp, raw, printScope, onSuccess)
         # NOTE: Remove output call here, as well as onSuccess, ...
 
-    def gql_mut(self, mutation, extra_fields='', _authenticate=True, **kwargs):
+    def gql_mut(self, mutation: Any, extra_fields: str = '', _authenticate: bool = True, **kwargs: Any) -> Any:
         query = 'mutation { ' + mutation + '%% { ' + extra_fields + ' ... on OperationInfo { messages { message } } } }'
         resp = self.graphql(
             query,

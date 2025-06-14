@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 # Backoff for gspread functions:
-def expBackoff(func):
+def expBackoff(func: Any) -> Any:
     return exponentialBackoff(
         func,
         lambda e: isinstance(e, APIError)
@@ -61,7 +61,7 @@ def sheetCoord(col: int, row: int) -> str:
     return f"{colStr}{row}"
 
 
-def getSheet(sheet, key, url, gs, creds):
+def getSheet(sheet: Any, key: Any, url: Any, gs: Any, creds: Any) -> Any:
     if isinstance(sheet, str):
         return (gsOpen(creds, key=key, url=url) if gs is None else gs).worksheet(sheet)
 
@@ -89,23 +89,25 @@ def gsOpen(creds: str | None, key: str | None = None, url: str | None = None) ->
     return gc
 
 
-def gsReadDataFrame(sheet, key=None, url=None, gs=None, creds=None, skipRows=None):
+def gsReadDataFrame(
+    sheet: Any, key: Any = None, url: Any = None, gs: Any = None, creds: Any = None, skipRows: Any = None
+) -> Any:
     sheet = getSheet(sheet, key, url, gs, creds)
     return expBackoff(lambda: get_as_dataframe(sheet, evaluate_formulas=True, skiprows=skipRows))
 
 
 def gsWriteDataFrame(
-    df,
-    sheet,
-    key=None,
-    url=None,
-    gs=None,
-    creds=None,
-    clear=True,
-    row=1,
-    col=1,
-    header=None,
-):
+    df: Any,
+    sheet: Any,
+    key: Any = None,
+    url: Any = None,
+    gs: Any = None,
+    creds: Any = None,
+    clear: bool = True,
+    row: int = 1,
+    col: int = 1,
+    header: Any = None,
+) -> None:
     sheet = getSheet(sheet, key, url, gs, creds)
     if clear:
         # https://docs.gspread.org/en/v4.0.0/
@@ -120,18 +122,18 @@ def gsWriteDataFrame(
 
 
 def gsUpdateFormatted(
-    values,
-    sheet,
-    key=None,
-    url=None,
-    gs=None,
-    creds=None,
-    clear=True,
-    clearFormat=True,
-    row=1,
-    col=1,
-    header=None,
-):
+    values: Any,
+    sheet: Any,
+    key: Any = None,
+    url: Any = None,
+    gs: Any = None,
+    creds: Any = None,
+    clear: bool = True,
+    clearFormat: bool = True,
+    row: int = 1,
+    col: int = 1,
+    header: Any = None,
+) -> None:
     """
     :param values: 2-dimensional list where values can be tuples if they want styles applied to them. The styles for a given cell will be combined. Styles should be'
                    specified using 'CellFormat' as seen here: https://github.com/robin900/gspread-formatting?tab=readme-ov-file
@@ -187,7 +189,7 @@ def addGroupsOffset(groups: list[dict[str, int]], offset: int) -> list[dict[str,
     return groups
 
 
-def _gsApplyGroups(groups, listGroups, deleteGroup, addGroup):
+def _gsApplyGroups(groups: Any, listGroups: Any, deleteGroup: Any, addGroup: Any) -> None:
     # Check if current grouping matches spec. In that case, nothing to do
     exiGroups = {(g['range']['startIndex'], g['range']['endIndex'], g['depth']) for g in listGroups()}
     newGroups = {(g['start'], g['end'], g['depth']) for g in groups}

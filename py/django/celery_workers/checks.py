@@ -3,11 +3,13 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+from typing import Any
+
 from django.conf import settings
 from django.core import checks
 
 
-def checkSettings(**kwargs):
+def checkSettings(**kwargs: Any) -> Any:
     """Verify settings required by app"""
     errors = []
 

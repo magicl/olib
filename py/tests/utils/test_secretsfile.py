@@ -14,7 +14,7 @@ from olib.py.utils.secretsfile import SecretsFile
 @tag('olib')
 class Tests(OTestCase):
 
-    def test_basic(self):
+    def test_basic(self) -> None:
         path = './.output/test_utils_secretsfile.txt'
         if os.path.exists(path):
             os.remove(path)

@@ -16,10 +16,14 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def openOrPassthrough(
-    filenameOrFile: str | io.IOBase | os.PathLike, mode: str, *args: Any, storage: Any | None = None, **kwargs: Any
+    filenameOrFile: bytes | str | io.IOBase | os.PathLike,
+    mode: str,
+    *args: Any,
+    storage: Any | None = None,
+    **kwargs: Any,
 ) -> Generator[IO[Any] | io.IOBase, None, None]:
     """If a string object is received, opens the file. Else, treats it as an in-memory or previously opened file, and passes it through"""
-    if isinstance(filenameOrFile, (str, os.PathLike)):
+    if isinstance(filenameOrFile, (str, bytes, os.PathLike)):
         if storage is None:
             encoding = kwargs.get('encoding', 'utf-8' if mode in ('r', 'w', 'rt', 'wt') else None)
 

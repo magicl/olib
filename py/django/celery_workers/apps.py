@@ -13,5 +13,5 @@ class CeleryWorkersConfig(AppConfig):
     name = 'olib.py.django.celery_workers'
     verbose_name = 'Celery Workers'
 
-    def ready(self):
+    def ready(self) -> None:
         checks.register(checkSettings)

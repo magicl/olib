@@ -4,6 +4,7 @@
 # ~
 
 import logging
+from typing import Any
 
 import numpy as np
 from django.test import tag
@@ -17,14 +18,14 @@ logger = logging.getLogger(__name__)
 @tag('olib')
 class Tests(OTestCase):
 
-    def test_percentile(self):
+    def test_percentile(self) -> None:
         """Verifies percentile calculation based on datasets"""
 
         np.testing.assert_almost_equal(percentilePrep([1, 2, 3, 4], 5), [1, 2, 3, 4])  # Lower number.. Simply returned
         np.testing.assert_almost_equal(percentilePrep([1, 2, 3, 4], 2), [1, 3, 4])
         np.testing.assert_almost_equal(percentilePrep([1, 2, 3, 4], 3), [1, 2, 4])
 
-        def check(values, expPercentiles, dataSet, targetSegments):
+        def check(values: Any, expPercentiles: Any, dataSet: Any, targetSegments: Any) -> None:
             prep = percentilePrep(dataSet, targetSegments)
             pvals = [percentile(value, prep) for value in values]
             np.testing.assert_almost_equal(pvals, expPercentiles)

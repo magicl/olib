@@ -24,7 +24,7 @@ from olib.py.utils.date import (
 @tag('olib')
 class Tests(OTestCase):
 
-    def test_timezones(self):
+    def test_timezones(self) -> None:
 
         utcDt = utcDateFromStr('2019-01-10 12:00:00')
 
@@ -54,7 +54,7 @@ class Tests(OTestCase):
             '2019-01-10 06:00:00 CST',
         )
 
-    def test_shopify_date_str(self):
+    def test_shopify_date_str(self) -> None:
         """Verifies parse and gen of shopify date strings"""
 
         now = timezone.now().replace(microsecond=0)

@@ -7,6 +7,7 @@ import csv
 import io
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
+from os import PathLike
 from typing import Any
 
 import pandas as pd
@@ -16,7 +17,7 @@ from .file import openOrPassthrough
 
 @contextmanager
 def readCSV(
-    filenameOrFile: Any,
+    filenameOrFile: str | bytes | PathLike[Any] | io.IOBase,
     headerRowFirst: str | None = None,
     skipRows: int = 0,
     storage: Any = None,
@@ -89,7 +90,7 @@ def iterCSV(iterator: Any, headerRowFirst: str | None = None, skipRows: int = 0)
             yield rowObj
 
 
-def writeCSV(filenameOrFile: Any, data: Any, raw: bool = False) -> None:
+def writeCSV(filenameOrFile: str | bytes | PathLike[Any] | io.IOBase, data: Any, raw: bool = False) -> None:
     """
     Write any data acceptable by pd.DataFrame(...) to CSV
     :param raw: If true, data bypasses dataframe, and instead a double array is expected
@@ -104,7 +105,7 @@ def writeCSV(filenameOrFile: Any, data: Any, raw: bool = False) -> None:
             writer.writerow(list(l))
 
 
-def writeCSVFromRichTable(filenameOrFile: Any, table: Any) -> None:
+def writeCSVFromRichTable(filenameOrFile: str | bytes | PathLike[Any] | io.IOBase, table: Any) -> None:
     """
     Write any data from a Table for the rich library
     """

@@ -34,15 +34,15 @@ from ..utils.postgres import (
 from .base import prep_config
 
 
-def _implement(defaultRoot=True):
-    @click.group()
-    def postgresGroup(help='Postgres commands'):
+def _implement(defaultRoot: bool = True) -> Any:
+    @click.group(help='Postgres commands')
+    def postgresGroup() -> None:
         pass
 
     @postgresGroup.command(help='Start a Postgres shell (postgres)')
     @click.option('--root', help='Start in root mode', default=False, is_flag=True)
     @click.pass_context
-    def shell(ctx, root):
+    def shell(ctx: Any, root: Any) -> None:
         with postgres_shell_connect_args(ctx, root=root or defaultRoot) as (args, env):
             env = {
                 **env,
@@ -55,7 +55,7 @@ def _implement(defaultRoot=True):
     @click.option('--root', help='Run as root', default=False, is_flag=True)
     @click.option('--no-db', help='Run without selecting a db', default=False, is_flag=True)
     @click.pass_context
-    def exec(ctx, queries, root, no_db):
+    def exec(ctx: Any, queries: Any, root: Any, no_db: Any) -> None:
         with postgres_connect(ctx, root=root, use_db=not no_db) as db:
             q = partial(postgres_query, db)
             # queries = click.get_text_stream('stdin').read().strip().split(';')
@@ -70,7 +70,7 @@ def _implement(defaultRoot=True):
 
         @postgresGroup.command()
         @click.pass_context
-        def app_create(ctx):
+        def app_create(ctx: Any) -> None:
             """Set up db user and database for the given app. Both will use 'name' as their name. Stores pwd as kubernetes secret in the same namespace"""
             with postgres_connect(ctx, root=True) as db:
                 q = partial(postgres_query, db)
@@ -123,7 +123,7 @@ def _implement(defaultRoot=True):
 
         @postgresGroup.command()
         @click.pass_context
-        def app_exists(ctx):
+        def app_exists(ctx: Any) -> None:
             """Check if app exists"""
             secretName, *_ = postgres_convert_name(ctx)
 
@@ -133,7 +133,7 @@ def _implement(defaultRoot=True):
 
         @postgresGroup.command()
         @click.pass_context
-        def app_delete(ctx):
+        def app_delete(ctx: Any) -> None:
             """Delete user and database for a given app"""
             click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             click.echo('This will delete the given app from postgres, including the app database and user')
@@ -158,7 +158,7 @@ def _implement(defaultRoot=True):
 
         @postgresGroup.command()
         @click.pass_context
-        def app_clear_db(ctx):
+        def app_clear_db(ctx: Any) -> None:
             """Clear database for a given app"""
             click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             click.echo('This will delete all data in the database for the given app')
@@ -194,7 +194,7 @@ def _implement(defaultRoot=True):
             type=int,
         )
         @click.pass_context
-        def app_import_backup(ctx, filename, dryrun, queue_size):
+        def app_import_backup(ctx: Any, filename: Any, dryrun: Any, queue_size: Any) -> None:
             """Import database backup"""
             if not dryrun:
                 click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
@@ -205,12 +205,12 @@ def _implement(defaultRoot=True):
                     sys.exit(1)
 
             class NullPipe:
-                def put(self, s):
+                def put(self, s: Any) -> None:
                     pass
 
             # Need root in order to diesable foreign key checks etc. on import. We pass in a way to create a pipe
             # because the k8s port forwarding has a 4 hour timeout
-            def create_pipe():
+            def create_pipe() -> Any:
                 if dryrun:
                     return nullcontext((NullPipe(), None))
                 return postgres_pipe(ctx, root=True, quiet=True, queue_size=queue_size)
@@ -234,7 +234,7 @@ def postgres(root: bool = False, extensions: list[str] | None = None) -> Callabl
 
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.postgres = True

@@ -3,6 +3,8 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+from typing import Any
+
 import click
 
 from ....utils.kubernetes import (
@@ -14,14 +16,14 @@ from ..utils.infisical import infisical_convert_name, infisical_creds
 from .base import prep_config
 
 
-def _implement():
-    @click.group()
-    def infisicalGroup(help='Infisical commands'):
+def _implement() -> Any:
+    @click.group(help='Infisical commands')
+    def infisicalGroup() -> None:
         pass
 
     @infisicalGroup.command()
     @click.pass_context
-    def app_create(ctx):
+    def app_create(ctx: Any) -> None:
         """Copy infisical secret into namespace"""
         secret_name = infisical_convert_name(ctx)
         client_id, client_secret = infisical_creds(ctx)
@@ -42,7 +44,7 @@ def _implement():
 
     @infisicalGroup.command()
     @click.pass_context
-    def app_delete(ctx):
+    def app_delete(ctx: Any) -> None:
         """Remove infisical secret from namespace"""
         secret_name = infisical_convert_name(ctx)
 
@@ -53,7 +55,7 @@ def _implement():
     return infisicalGroup
 
 
-def infisical():
+def infisical() -> Any:
     """
     Injects functions into service Config for managing infisical
 
@@ -61,7 +63,7 @@ def infisical():
 
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.commandGroups.append(('infisical', _implement()))

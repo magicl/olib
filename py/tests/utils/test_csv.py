@@ -4,6 +4,7 @@
 # ~
 
 import io
+from typing import Any
 
 import pandas as pd
 from django.test import tag
@@ -15,7 +16,7 @@ from olib.py.utils.xls import readXLS, writeXLS
 
 @tag('olib')
 class Tests(OTestCase):
-    def test_csv_xls(self):
+    def test_csv_xls(self) -> None:
         """Verify CSV and XLS read and write"""
 
         # fcsv = './.output/test_utils_csv.csv'
@@ -32,7 +33,7 @@ class Tests(OTestCase):
         fxls.seek(0)
         fcsv.seek(0)
 
-        def read(itr):
+        def read(itr: Any) -> list[tuple[Any, str]]:
             vals = []
             for r in itr:
                 vals.append((r.tOpt('A', '?'), r.tVal('B')))

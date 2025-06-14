@@ -18,13 +18,13 @@ from kombu import Exchange, Queue
 _noInitSendTask: Any = None
 
 
-def _sendTaskInit(app):
+def _sendTaskInit(app: Any) -> Any:
     """
     Initial send_task function. Makes sure all tasks are imported, then replaces send_task with
     a quicker version, removing itself from the path
     """
 
-    def handler(name, args=None, kwargs=None, **opts):
+    def handler(name: Any, args: Any = None, kwargs: Any = None, **opts: Any) -> Any:
         assert _noInitSendTask is not None, '_noInitSendTask must be set as part of pre-init'  # nosec: assert_used
 
         for m in app.conf.imports:
@@ -36,10 +36,10 @@ def _sendTaskInit(app):
     return handler
 
 
-def _sendTaskEager(app):
+def _sendTaskEager(app: Any) -> Any:
     """Eager version of send_task(...) for use in development"""
 
-    def handler(name, args=None, kwargs=None, **opts):
+    def handler(name: Any, args: Any = None, kwargs: Any = None, **opts: Any) -> Any:
         try:
             return app.tasks[name].apply_async(args or (), kwargs or {}, **opts)
         except NotRegistered as e:
@@ -49,7 +49,7 @@ def _sendTaskEager(app):
     return handler
 
 
-def initCelery(appName):
+def initCelery(appName: Any) -> Any:
     """Initialize celery"""
     global _noInitSendTask  # pylint: disable=global-statement
 

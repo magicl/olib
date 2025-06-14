@@ -11,7 +11,7 @@ from olib.py.utils.encrypt import aesDecrypt, aesEncrypt, keygen
 
 @tag('olib')
 class Tests(OTestCase):
-    def test_aes(self):
+    def test_aes(self) -> None:
         plaintext = b'Some text to encrypt'
 
         key0 = keygen('Key0', iter=1)

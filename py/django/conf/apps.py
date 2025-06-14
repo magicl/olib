@@ -11,7 +11,7 @@ class ConfConfig(AppConfig):
     name = 'olib.py.django.conf'
     verbose_name = 'Config'
 
-    def ready(self):
+    def ready(self) -> None:
         # Register base settings from app.
         from olib.py.django.conf.osettings import osettings
 
