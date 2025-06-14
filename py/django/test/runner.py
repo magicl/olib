@@ -8,6 +8,7 @@ import os
 import re
 import time
 import unittest
+from collections.abc import Generator
 from contextlib import contextmanager
 from multiprocessing import (
     Manager,
@@ -18,7 +19,7 @@ from multiprocessing import (
     managers,
 )
 from typing import Any
-from unittest import TestLoader
+from unittest import TestLoader, TestResult
 
 from django.conf import settings
 from django.test.runner import DiscoverRunner, ParallelTestSuite, RemoteTestRunner
@@ -37,7 +38,7 @@ else:
     store = {}
 
 
-def get_test_thread_id():
+def get_test_thread_id() -> int:
     """When using multiple test threads, gives the ID of the current thread"""
     # Get ID from current db. dbname is suffixed by a number for each
     # thread after the first thread
@@ -49,22 +50,22 @@ def get_test_thread_id():
         return 0  # Could not get index from database name
 
 
-def getTestSettingsName():
+def getTestSettingsName() -> str:
     """Returns settings name for test that also includes multiprocessing ID"""
-    return f"{settings.SETTINGS_NAME}*{get_test_thread_id()}"
+    return f"*{get_test_thread_id()}"
 
 
 class OTextResult(unittest.TextTestResult):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         # Only set for parallel tests
-        self.xTestThreadId = None
+        self.xTestThreadId: int | None = None
 
-    def setCustomInfo(self, test, testThreadId):
+    def setCustomInfo(self, test: Any, testThreadId: int) -> None:
         self.xTestThreadId = testThreadId
 
-    def startTest(self, test):
+    def startTest(self, test: Any) -> None:
         testName = f"::{test.__class__.__module__}.{test.__class__.__name__}.{test._testMethodName} "  # pylint: disable=protected-access
         self.stream.write(f"{testName:.<120}")
         self.stream.flush()
@@ -75,7 +76,7 @@ class OTextResult(unittest.TextTestResult):
     #    print('PICKLE OVERRIDE')
     #    super()._print_unpicklable_subtest(self, test, subtest, pickle_exc)
 
-    def addSuccess(self, test):
+    def addSuccess(self, test: Any) -> None:
         from olib.py.django.test.cases import (
             OLiveServerTestCase,
             OStaticLiveServerTestCase,
@@ -119,15 +120,15 @@ class OTextResult(unittest.TextTestResult):
 
         self.stream.writeln(f"{'ok':.>6}{tStr} {testType}{mStr}{threadStr}")
 
-    def addError(self, test, err):
+    def addError(self, test: Any, err: Any) -> None:
         super().addError(test, err)
         self.stream.writeln(f"{'ERROR':.>6}")
 
-    def addFailure(self, test, err):
+    def addFailure(self, test: Any, err: Any) -> None:
         super().addFailure(test, err)
         self.stream.writeln(f"{'FAIL':.>6}")
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test: Any, reason: str) -> None:
         super().addSkip(test, reason)
         self.stream.writeln(f"{'skip!':.>6}")
 
@@ -143,7 +144,7 @@ class OTextTestRunner(unittest.TextTestRunner):
 class ORemoteTestRunner(RemoteTestRunner):
     # resultclass = ORemoteTestResult
 
-    def run(self, test):
+    def run(self, test: Any) -> Any:
         result = super().run(test)
 
         # Prepend event with additional data to help pass down which thread ran this test
@@ -155,13 +156,13 @@ class ORemoteTestRunner(RemoteTestRunner):
 class OParallelTestSuite(ParallelTestSuite):
     runner_class = ORemoteTestRunner
 
-    def run(self, result):
+    def run(self, result: TestResult, debug: bool = False) -> TestResult:
         """
         Lifted from Django to replace pool.close with pool.terminate on StopIteration to make sure
         mockserver threads don't prevent test suite from stopping
         """
 
-        self.initialize_suite()
+        self.initialize_suite()  # type: ignore[attr-defined]
         counter = Value(ctypes.c_int, 0)
         pool = Pool(  # pylint: disable=consider-using-with
             processes=self.processes,
@@ -170,9 +171,9 @@ class OParallelTestSuite(ParallelTestSuite):
                 counter,
                 self.initial_settings,
                 self.serialized_contents,
-                self.process_setup.__func__,
-                self.process_setup_args,
-                self.debug_mode,
+                self.process_setup.__func__,  # type: ignore[attr-defined]
+                self.process_setup_args,  # type: ignore[attr-defined]
+                self.debug_mode,  # type: ignore[attr-defined]
             ],
         )
         args = [
@@ -211,12 +212,12 @@ class OParallelTestSuite(ParallelTestSuite):
 
 
 class OTestLoader(TestLoader):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.exclude_dir_regexp = ''
 
-    def _find_tests(self, start_dir, pattern):
+    def _find_tests(self, start_dir: str, pattern: str) -> Generator[Any, None, None]:
         if self.exclude_dir_regexp and re.search(self.exclude_dir_regexp, start_dir):
             return
 
@@ -238,11 +239,11 @@ class OTestRunner(DiscoverRunner):
 
     def __init__(
         self,
-        keepdb_hard=False,
-        test_name_patterns=None,
-        exclude_dir_regexp='',
-        **kwargs,
-    ):
+        keepdb_hard: bool = False,
+        test_name_patterns: list[str] | None = None,
+        exclude_dir_regexp: str = '',
+        **kwargs: Any,
+    ) -> None:
 
         if settings.TEST_RUN_FAILED:
             # Read and add tests failed in past iteration to run-list
@@ -274,7 +275,7 @@ class OTestRunner(DiscoverRunner):
         os.environ['TESTING_TEST_ARG'] = 'testing!'
 
     @classmethod
-    def add_arguments(cls, parser):
+    def add_arguments(cls, parser: Any) -> None:
         super().add_arguments(parser)
 
         parser.add_argument(
@@ -378,7 +379,7 @@ class OTestRunner(DiscoverRunner):
             help='Make log more reproducible by removing timings, etc. Helps with log diffs between succeeding and failing tests',
         )
 
-    def run_tests(self, *args, **kwargs):  # pylint: disable=signature-differs
+    def run_tests(self, *args: Any, **kwargs: Any) -> int:  # pylint: disable=signature-differs
         # from tests.selenium.selenium_browsers import SeleniumBrowser
         ret = super().run_tests(*args, **kwargs)
 
@@ -419,14 +420,14 @@ class OTestRunner(DiscoverRunner):
         failedTests = [r[0] for r in self.result.errors or []] + [r[0] for r in self.result.failures]
         if failedTests:
             # Resolve subtests and remove duplicates
-            failedTests = [f.test_case if isinstance(f, unittest.case._SubTest) else f for f in failedTests]  # type: ignore[attr-defined] # pylint: disable=protected-access
+            # pylint: disable=protected-access
+            failedTests = [f.test_case if isinstance(f, unittest.case._SubTest) else f for f in failedTests]
             failedTestsOutput = ' '.join(
-                f"{test.__class__.__module__}.{test.__class__.__name__}.{test._testMethodName}"  # pylint: disable=protected-access
+                f"{test.__class__.__module__}.{test.__class__.__name__}.{test._testMethodName}"
                 for test in set(failedTests)
-                # pylint: disable=protected-access
-                if not isinstance(test, unittest.suite._ErrorHolder)  # type: ignore[attr-defined]
-                # pylint: enable=protected-access
+                if not isinstance(test, unittest.suite._ErrorHolder)
             )
+            # pylint: enable=protected-access
 
             print(f"\nFailed Tests:\n{failedTestsOutput}")
 
@@ -439,13 +440,13 @@ class OTestRunner(DiscoverRunner):
 
         return ret
 
-    def suite_result(self, suite, result, **kwargs):
+    def suite_result(self, suite: Any, result: Any, **kwargs: Any) -> int:
         """Default django version converts result to simply an integer number of failures.. Capture results as sell"""
         self.result = result
 
         return super().suite_result(suite, result, **kwargs)
 
-    def setup_databases(self, *args, **kwargs):
+    def setup_databases(self, *args: Any, **kwargs: Any) -> Any:
         """Preload fixtures once for all testcases"""
 
         if self.keepdb_hard:
@@ -458,7 +459,7 @@ class OTestRunner(DiscoverRunner):
 
         return ret
 
-    def teardown_databases(self, old_config, **kwargs):
+    def teardown_databases(self, old_config: Any, **kwargs: Any) -> None:
         if self.keepdb_hard:
             return
 
@@ -467,7 +468,7 @@ class OTestRunner(DiscoverRunner):
 
 # Utilities
 @contextmanager
-def measure_runtime(name):
+def measure_runtime(name: str) -> Generator[None, None, None]:
     t = time.time()
     yield
     key = f"timing|{name}"
