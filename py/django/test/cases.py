@@ -8,7 +8,10 @@ import logging
 import re
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
+from logging import Handler, Logger
+from typing import Any
 
 from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -21,13 +24,13 @@ from olib.py.utils.mem import procMaxMemUsage
 
 logger = logging.getLogger('tests.cases')
 
-prevTest: TestCase | None = None
+prevTest: TestCase | Any | None = None
 
 
-def testFixtures(*names):
+def testFixtures(*names: str) -> Any:
     """Apply fixtures to testcase. No effect on TestCase instances"""
 
-    def decorator(func):
+    def decorator(func: Any) -> Any:
         func._ovr_fixtures = list(names)  # pylint: disable=protected-access
         return func
 
@@ -35,7 +38,7 @@ def testFixtures(*names):
 
 
 class TestTimingMixin:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.tTestStart = 0.0
         self.tRealStart = 0.0
         # self.tEnd = 0.0
@@ -49,20 +52,20 @@ class TestTimingMixin:
 
         super().__init__(*args, **kwargs)
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Not called for parallel testcases"""
         self.tRealStart = time.time()
         self.mRssMaxPre = procMaxMemUsage()
 
         global prevTest  # pylint: disable=global-statement
-        self.prevTest = prevTest
+        self.prevTest = prevTest  # type: ignore[assignment]
         prevTest = self
 
         super().setUp()  # type: ignore[misc]
 
         self.tTestStart = time.time()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Called after 'addSuccess', so can't capture end-time here"""
         super().tearDown()  # type: ignore[misc]
         self.tEnd = time.time()
@@ -71,7 +74,7 @@ class TestTimingMixin:
 class MemDebugMixin:
     memTracker: tracker.SummaryTracker | None = None
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Not called for parallel testcases"""
         cls = type(self)
         if settings.TEST_DEBUG_MEM and cls.memTracker is None:
@@ -79,7 +82,7 @@ class MemDebugMixin:
 
         super().setUp()  # type: ignore[misc]
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Called after 'addSuccess', so can't capture end-time here"""
         super().tearDown()  # type: ignore[misc]
 
@@ -91,7 +94,7 @@ class MemDebugMixin:
 
 
 class ConfigMixin:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # No restriction on length of diffs
         self.maxDiff = None
         super().__init__(*args, **kwargs)
@@ -108,15 +111,15 @@ class LogMonitorMixin:
             )  # Seems to be an error in Kombu. Should not ahve any effect. See https://github.com/celery/kombu/issues/1357
         ]
 
-        def __init__(self, testcase, *args, **kwargs):
+        def __init__(self, testcase: Any, *args: Any, **kwargs: Any) -> None:
             super().__init__(*args, **kwargs)
             # self.testcase = testcase  # Removed.. don't think this has any use
+            self.messages: list[tuple[str, str]] = []
+
+        def clear(self) -> None:
             self.messages = []
 
-        def clear(self):
-            self.messages = []
-
-        def emit(self, record):
+        def emit(self, record: Any) -> None:
             # Only errors and warnings that are not filtered by utils.logging should hit here
             # Make sure they are reported as errors
             if not getattr(record, 'dontFailTest', False):
@@ -132,19 +135,19 @@ class LogMonitorMixin:
                 # Not in exceptions list. Record it
                 self.messages.append((record.levelname, record.getMessage()))
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         # Cannot set up handler object in __init__ as it makes this object unpicklable, preventing
         # parallelized tests
-        self.handler = None
-        self.rootLogger = None
+        self.handler: Handler | None = None
+        self.rootLogger: Logger | None = None
 
-    def _logMonitorMixinInit(self):
+    def _logMonitorMixinInit(self) -> None:
         self.handler = self.Handler(self)
         self.handler.setLevel(logging.WARNING)
         self.rootLogger = logging.getLogger('')
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Mount log monitor"""
         if self.handler is None:
             self._logMonitorMixinInit()
@@ -152,7 +155,7 @@ class LogMonitorMixin:
         assert self.handler is not None  # nosec: assert_used
         assert self.rootLogger is not None  # nosec: assert_used
 
-        self.handler.clear()
+        self.handler.clear()  # type: ignore[attr-defined]
         self.rootLogger.addHandler(self.handler)
 
         if settings.TEST_PARALLEL:
@@ -160,12 +163,12 @@ class LogMonitorMixin:
 
         super().setUp()  # type: ignore[misc]
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Check and remove log monitor"""
         if self.rootLogger is not None:
-            self.rootLogger.removeHandler(self.handler)
+            self.rootLogger.removeHandler(self.handler)  # type: ignore[arg-type]
 
-        if self.handler is not None and self.handler.messages:
+        if self.handler is not None and self.handler.messages:  # type: ignore[attr-defined]
             # To prevent a log warning / error from failing a test, add extra={'dontFailTest': True} to the log call
             self.fail(self.handler.messages)  # type: ignore[attr-defined]
         super().tearDown()  # type: ignore[misc]
@@ -173,27 +176,27 @@ class LogMonitorMixin:
 
 class AssertHelper:
 
-    def assertEqual(self, *args, **kwargs):
+    def assertEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertNotEqual(self, *args, **kwargs):
+    def assertNotEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertNotEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertTrue(self, *args, **kwargs):
+    def assertTrue(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertTrue(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertFalse(self, *args, **kwargs):
+    def assertFalse(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertFalse(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertIs(self, *args, **kwargs):
+    def assertIs(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertIs(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertIsNot(self, *args, **kwargs):
+    def assertIsNot(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertIsNot(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
@@ -207,50 +210,50 @@ class AssertHelper:
             super().assertIsNotNone(obj, msg)  # type: ignore # pylint: disable=no-member
         assert obj is not None  # Help mypy understand the constraint # nosec: assert_used
 
-    def assertAlmostEqual(self, *args, **kwargs):
+    def assertAlmostEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertAlmostEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertNotAlmostEqual(self, *args, **kwargs):
+    def assertNotAlmostEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertNotAlmostEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertGreater(self, *args, **kwargs):
+    def assertGreater(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertGreater(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertGreaterEqual(self, *args, **kwargs):
+    def assertGreaterEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertGreaterEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertLess(self, *args, **kwargs):
+    def assertLess(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertLess(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertLessEqual(self, *args, **kwargs):
+    def assertLessEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertLessEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertRegex(self, *args, **kwargs):
+    def assertRegex(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertRegex(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertNotRegex(self, *args, **kwargs):
+    def assertNotRegex(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertNotRegex(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def assertCountEqual(self, *args, **kwargs):
+    def assertCountEqual(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().assertCountEqual(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
-    def fail(self, *args, **kwargs):
+    def fail(self, *args: Any, **kwargs: Any) -> None:
         with breakOnError():
             super().fail(*args, **kwargs)  # type: ignore # pylint: disable=no-member
 
     # Disable subTest functionality when doing parallel tests, as subTests cause a lot of issues with pickling when a
     # test fails, but only in parallel mode
     @contextmanager
-    def subTest(self, *args, **kwargs):
+    def subTest(self, *args: Any, **kwargs: Any) -> Generator[None, None, None]:
         if settings.TEST_PARALLEL:
             logger.info(f"SUBTEST: {args}, {kwargs}")
             yield
@@ -265,12 +268,12 @@ class LiveServerMixin:
     Overrides url settings to point live_server_url
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         # No restriction on length of diffs
-        self.overrideSettingsCM = None
+        self.overrideSettingsCM: override_settings | None = None
         super().__init__(*args, **kwargs)
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.overrideSettingsCM = override_settings(
             # SERVER_HOST=self.live_server_url,
             # SERVER_HOST_CA=self.live_server_url,
@@ -285,7 +288,7 @@ class LiveServerMixin:
         self.overrideSettingsCM.__enter__()  # pylint: disable=unnecessary-dunder-call
         super().setUp()  # type: ignore[misc]
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         assert self.overrideSettingsCM is not None  # nosec: assert_used
 
         self.overrideSettingsCM.__exit__(*sys.exc_info())
@@ -293,7 +296,7 @@ class LiveServerMixin:
         super().tearDown()  # type: ignore[misc]
 
 
-class OStaticLiveServerTestCase(
+class OStaticLiveServerTestCase(  # type: ignore[misc]
     LiveServerMixin,
     AssertHelper,
     ConfigMixin,
@@ -305,7 +308,7 @@ class OStaticLiveServerTestCase(
     pass
 
 
-class OLiveServerTestCase(
+class OLiveServerTestCase(  # type: ignore[misc]
     LiveServerMixin,
     AssertHelper,
     ConfigMixin,
@@ -317,7 +320,7 @@ class OLiveServerTestCase(
     pass
 
 
-class OTestCase(
+class OTestCase(  # type: ignore[misc]
     AssertHelper,
     ConfigMixin,
     TestTimingMixin,
@@ -328,7 +331,7 @@ class OTestCase(
     pass
 
 
-class OTransactionTestCase(
+class OTransactionTestCase(  # type: ignore[misc]
     AssertHelper,
     ConfigMixin,
     TestTimingMixin,
