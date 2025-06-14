@@ -7,7 +7,7 @@
 
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from enum import Enum
 from typing import TypeVar
@@ -61,7 +61,7 @@ _isEnvCron = False
 
 
 @contextmanager
-def cliEnv(quiet=False):
+def cliEnv(quiet: bool = False) -> Generator[None, None, None]:
     """Makes isEnvCli return true for code within context"""
     global _isEnvCli, _isEnvCliQuiet  # pylint: disable=global-statement
     oldQuiet = _isEnvCliQuiet
@@ -76,7 +76,7 @@ def cliEnv(quiet=False):
 
 
 @contextmanager
-def cronEnv():
+def cronEnv() -> Generator[None, None, None]:
     """Makes isEnvCron true for code within context"""
     global _isEnvCron  # pylint: disable=global-statement
 
@@ -85,40 +85,40 @@ def cronEnv():
     _isEnvCron = False
 
 
-def isEnvCelery():
+def isEnvCelery() -> bool:
     return _execInv == ExecInv.celery
 
 
-def isEnvWeb():
+def isEnvWeb() -> bool:
     return _execContext == ExecContext.web
 
 
-def isEnvProduction():
+def isEnvProduction() -> bool:
     # Simple for now.. k8s == production.
     return _execEnv == ExecEnv.k8s
 
 
-def isEnvTest():
+def isEnvTest() -> bool:
     return _execContext == ExecContext.test
 
 
-def isEnvCron():
+def isEnvCron() -> bool:
     return _isEnvCron
 
 
-def isEnvCli():
+def isEnvCli() -> bool:
     return _isEnvCli
 
 
-def isEnvLocal():
+def isEnvLocal() -> bool:
     return _execEnv == ExecEnv.local and _execInv == ExecInv.django
 
 
-def isEnvCliNonQuiet():
+def isEnvCliNonQuiet() -> bool:
     return _isEnvCli and not _isEnvCliQuiet
 
 
-def _isDocker():
+def _isDocker() -> bool:
     try:
         with open('/proc/1/cgroup', encoding='utf-8') as ifh:
             return 'docker' in ifh.read()
@@ -126,7 +126,7 @@ def _isDocker():
         return False
 
 
-def _isK8S():
+def _isK8S() -> bool:
     """
     k8s -> pod: returns "k8s"
     k8s -> jenkins: identifies as "jenkins", not "k8s"
@@ -134,39 +134,39 @@ def _isK8S():
     return os.path.isfile('/var/run/secrets/kubernetes.io/serviceaccount/namespace') and not _isJenkins()
 
 
-def _isDjango():
+def _isDjango() -> bool:
     return sys.argv[0].endswith('manage.py')
 
 
-def _isGunicorn():
+def _isGunicorn() -> bool:
     return sys.argv[0].endswith('gunicorn')
 
 
-def _isUvicorn():
+def _isUvicorn() -> bool:
     return sys.argv[0].endswith('uvicorn')
 
 
-def _isStrawberry():
+def _isStrawberry() -> bool:
     return sys.argv[0].endswith('strawberry')
 
 
-def _isPylint():
+def _isPylint() -> bool:
     return sys.argv[0].endswith('pylint')
 
 
-def _isMypy():
+def _isMypy() -> bool:
     return sys.argv[0].endswith('mypy')
 
 
-def _isCelery():
+def _isCelery() -> bool:
     return sys.argv[0].endswith('celery')
 
 
-def _isJenkins():
+def _isJenkins() -> bool:
     return 'JENKINS_URL' in os.environ
 
 
-def _isVagrant():
+def _isVagrant() -> bool:
     return os.path.isfile('/var/log/inside_vagrant')
 
 
@@ -190,11 +190,11 @@ def _pickOne(what: str, *options: tuple[T | None, Callable], default: T | None =
     raise Exception(f"Unknown {what}: {result}")
 
 
-def _isContextWeb():
+def _isContextWeb() -> bool:
     return len(sys.argv) > 1 and sys.argv[1] == 'runserver' or os.environ.get('ENTRYPOINT') in ('web-server',)
 
 
-def _getManagePyContext():
+def _getManagePyContext() -> set[ExecContext]:
     if len(sys.argv) > 1 and _isDjango():
         if sys.argv[1] == 'runserver':
             return {ExecContext.web}
@@ -206,7 +206,7 @@ def _getManagePyContext():
     return set()
 
 
-def _getCeleryContext():
+def _getCeleryContext() -> set[ExecContext]:
     if len(sys.argv) > 1 and _isCelery():
         # Expect: celery -A {app} worker/beat
         if sys.argv[3] == 'worker':
@@ -216,7 +216,7 @@ def _getCeleryContext():
     return set()
 
 
-def _get_exception_info():
+def _get_exception_info() -> str:
     """Helper for debugging unknown context errors"""
     return f"{sys.argv=}"
 
@@ -228,7 +228,11 @@ def _get_exception_info():
 #    return len(sys.argv) > 1 and sys.argv[1] == 'collectstatic'
 
 
-def initExecEnv(execEnvOverride=None, execContextOverride=None, ignoreSanityChecks=False):
+def initExecEnv(
+    execEnvOverride: ExecEnv | None = None,
+    execContextOverride: ExecContext | None = None,
+    ignoreSanityChecks: bool = False,
+) -> None:
     global _execEnv, _execContext  # pylint: disable=global-statement
 
     _execEnv = _pickOne(

@@ -6,7 +6,7 @@
 from urllib.parse import parse_qs
 
 
-def split_url(url):
+def split_url(url: str) -> tuple[str, dict[str, str]]:
     """Split URL into path and map of get params"""
     idx = url.find('?')
     if idx >= 0:

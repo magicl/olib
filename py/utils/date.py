@@ -17,7 +17,7 @@ defaultTimezoneTimezone: str | None = None
 
 # Returns current season as string: 'summer', 'spring', 'fall' or 'winger'
 # Uses input month if available
-def getCurSeason(month=None):
+def getCurSeason(month: int | None = None) -> str:
     month = timezone.now().month if month is None else month
     if 3 <= month <= 5:
         return 'spring'
@@ -31,7 +31,7 @@ def getCurSeason(month=None):
     raise Exception('unknown month')
 
 
-def getSeasonMonths(season):
+def getSeasonMonths(season: str) -> tuple[int, int, int]:
     if season == 'spring':
         return (3, 4, 5)
     if season == 'summer':

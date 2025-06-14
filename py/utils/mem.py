@@ -9,7 +9,7 @@ import sys
 
 # Returns maximum memory usage of process
 # From http://fa.bianp.net/blog/2013/different-ways-to-get-memory-consumption-or-lessons-learned-from-memory_profiler/
-def procMaxMemUsage():
+def procMaxMemUsage() -> float:
     rusage_denom = 1024.0
     if sys.platform == 'darwin':
         # ... it seems that in OSX the output is different units ...

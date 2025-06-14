@@ -48,7 +48,7 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
     return grouped_vars
 
 
-def split_env_files(env_files, output_prefix):
+def split_env_files(env_files: list[str], output_prefix: str) -> None:
     """
     Given a list of env files, breaks them down into grouped sections, and outputs
     to files under the output_prefix with ".groupname" as suffixes
