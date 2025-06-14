@@ -1,5 +1,6 @@
 [mypy]
 python_version = 3.12
+cache_dir=.output/.mypy_cache
 
 #strict = True
 #ignore_missing_imports = True
@@ -20,7 +21,7 @@ strict_equality = True
 local_partial_types = True
 warn_unused_ignores = True
 disallow_incomplete_defs = True
-#disallow_untyped_defs = True
+disallow_untyped_defs = True
 #disallow_untyped_calls = True
 warn_redundant_casts = True
 #warn_return_any = True
