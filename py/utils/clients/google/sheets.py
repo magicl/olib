@@ -6,6 +6,7 @@
 import json
 import logging
 from functools import reduce
+from typing import Any
 
 import gspread
 from gspread.exceptions import APIError
@@ -55,7 +56,7 @@ def colFromInt(n: int) -> str:
     return string
 
 
-def sheetCoord(col, row):
+def sheetCoord(col: int, row: int) -> str:
     colStr = colFromInt(col)
     return f"{colStr}{row}"
 
@@ -67,7 +68,7 @@ def getSheet(sheet, key, url, gs, creds):
     return sheet
 
 
-def gsOpen(creds, key=None, url=None):
+def gsOpen(creds: str | None, key: str | None = None, url: str | None = None) -> Any:
     if creds is None:
         raise Exception('must provide JSON credentials object')
 
@@ -165,7 +166,7 @@ def gsUpdateFormatted(
         )
 
     # Apply styles
-    def applyStyles():
+    def applyStyles() -> None:
         with batch_updater(sheet.spreadsheet) as batch:
             for ri, row_ in enumerate(values):
                 for ci, val in enumerate(row_):

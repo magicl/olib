@@ -31,7 +31,7 @@ class ConfigMeta:
     postgres = False
     redis = False
 
-    def __init__(self, command_groups=None):
+    def __init__(self, command_groups=None) -> None:
         self.commandGroups = command_groups or []
 
 

@@ -7,6 +7,6 @@ from celery import shared_task
 
 
 @shared_task(bind=True)
-def debug_task(self):
+def debug_task(self) -> str:
     # print(f'Request: {self.request!r}')
     return 'hello from celery lib'

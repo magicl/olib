@@ -33,7 +33,7 @@ def mysql_backup_import(
     :param decrypt_pwd: key for .gz.gpg file
     """
 
-    def pass_pwd_to_pipe_thread(pwd, pipe):
+    def pass_pwd_to_pipe_thread(pwd: str, pipe: str) -> None:
         """Passes encryption PWD to gpg through pipe. Must be done in separate thread as 'sh' is blocking"""
         logger.info('Waiting to write to pipe')
         with open(pipe, 'w', encoding='utf-8') as fifo:
@@ -60,7 +60,7 @@ def mysql_backup_import(
         #     target=pass_pwd_to_pipe_thread, args=(decrypt_pwd + '\n', fifo_name)
         # )  # Start thread to write pwd to fifo
         # thread.start()
-        pass_pwd_to_pipe_thread(decrypt_pwd + '\n', fifo_name)
+        pass_pwd_to_pipe_thread(decrypt_pwd + '\n', str(fifo_name))
 
         # Turn off logging and foreign key checks
         # with create_pipe() as pipe:

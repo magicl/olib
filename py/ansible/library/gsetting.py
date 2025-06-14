@@ -88,7 +88,7 @@ from ansible.module_utils.basic import AnsibleModule
 
 
 class Setting:
-    def __init__(self, schema, path, key):
+    def __init__(self, schema: str | None, path: str | None, key: str) -> None:
         if not schema:
             schema, key = self.split_key(key)
         if path:
@@ -100,29 +100,29 @@ class Setting:
         self.args = (arg1, key)
 
     @staticmethod
-    def split_key(full_key):
+    def split_key(full_key: str) -> tuple[str, str]:
         key_array = full_key.split('.')
         schema = '.'.join(key_array[0:-1])
         single_key = key_array[-1]
         return (schema, single_key)
 
 
-def _check_output_strip(command):
+def _check_output_strip(command: list[str]) -> str:
     return subprocess.check_output(command).decode('utf-8').strip()  # nosec
 
 
-def _escape_single_quotes(string):
+def _escape_single_quotes(string: str) -> str:
     return re.sub("'", r"'\''", string)
 
 
-def _maybe_int(val):
+def _maybe_int(val: str) -> int | str:
     try:
         return int(val)
     except ValueError:
         return 0
 
 
-def _get_gnome_version():
+def _get_gnome_version() -> tuple[int | str, ...] | None:
     try:
         return tuple(
             map(
@@ -134,7 +134,7 @@ def _get_gnome_version():
         return None
 
 
-def _get_gnome_session_pid(user):
+def _get_gnome_session_pid(user: str) -> str | None:
     gnome_ver = _get_gnome_version()
     if gnome_ver and gnome_ver >= (42,):
         # It's actually gnome-session-binary, but pgrep uses /proc/#/status,
@@ -165,7 +165,7 @@ def _get_gnome_session_pid(user):
         return None
 
 
-def _get_phoc_session_pid(user):
+def _get_phoc_session_pid(user: str) -> str | None:
     pgrep_cmd = ['pgrep', '-u', user, 'phoc']
 
     try:
@@ -174,7 +174,7 @@ def _get_phoc_session_pid(user):
         return None
 
 
-def _get_dbus_bus_address(user):
+def _get_dbus_bus_address(user: str | None) -> str | None:
     if user is None:
         if environ.get('DBUS_SESSION_BUS_ADDRESS') is None:
             return None
@@ -188,7 +188,7 @@ def _get_dbus_bus_address(user):
     return None
 
 
-def _run_cmd_with_dbus(user, cmd, dbus_addr):
+def _run_cmd_with_dbus(user: str | None, cmd: list[str], dbus_addr: str | None) -> str:
     if not dbus_addr:
         command = ['dbus-run-session', '--']
     else:
@@ -201,7 +201,7 @@ def _run_cmd_with_dbus(user, cmd, dbus_addr):
     return _check_output_strip(['su', '-', user, '-c', ' '.join(command)])
 
 
-def _set_value(schemadir, user, setting, value, dbus_addr):
+def _set_value(schemadir: str | None, user: str | None, setting: Setting, value: str, dbus_addr: str | None) -> str:
     command = ['/usr/bin/gsettings']
     if schemadir:
         command.extend(['--schemadir', schemadir])
@@ -212,7 +212,7 @@ def _set_value(schemadir, user, setting, value, dbus_addr):
     return _run_cmd_with_dbus(user, command, dbus_addr)
 
 
-def _get_value(schemadir, user, setting, dbus_addr):
+def _get_value(schemadir: str | None, user: str | None, setting: Setting, dbus_addr: str | None) -> str:
     command = ['/usr/bin/gsettings']
     if schemadir:
         command.extend(['--schemadir', schemadir])

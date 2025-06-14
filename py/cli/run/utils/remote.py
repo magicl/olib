@@ -40,12 +40,12 @@ class CLIAuthException(CLIError):
 
 
 class CLIHttpError(Exception):
-    def __init__(self, string, status_code):
+    def __init__(self, string: str, status_code: int) -> None:
         super().__init__(string)
         self.status_code = status_code
 
     @staticmethod
-    def create_from_response(response):
+    def create_from_response(response: requests.Response) -> 'CLIHttpError | None':
         if response.status_code != 200:
             return CLIHttpError(
                 f"error response: {response.status_code}\n{response.text}",
@@ -67,7 +67,7 @@ class CLIHttpError(Exception):
         # No exception necessary
         return None
 
-    def is_http_auth_error(self):
+    def is_http_auth_error(self) -> bool:
         return (
             self.status_code == 401 and 'Authorization Required' in self.args[0]
         )  # pylint: disable=unsubscriptable-object
@@ -130,7 +130,7 @@ class RemoteConnection:
 
         self.secrets_file = SecretsFile(token_file_path)
 
-    def token_save(self, retry=False):
+    def token_save(self, retry: bool = False) -> None:
         self._get_credentials(disable_cache=True, retry=retry)
 
         self.secrets_file.save_secret(
@@ -163,7 +163,7 @@ class RemoteConnection:
     def token_clear_all(self) -> None:
         self.secrets_file.clear_secrets()
 
-    def _getpass(self):
+    def _getpass(self) -> str:
         if sys.stdin.isatty():
             return getpass.getpass()
 

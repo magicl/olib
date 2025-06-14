@@ -15,15 +15,15 @@ class InfisicalApiError(Exception):
 
 
 class Infisical(Requester):
-    def __init__(self, client_id, client_secret, base_url='https://app.infisical.com'):
+    def __init__(self, client_id: str, client_secret: str, base_url: str = 'https://app.infisical.com') -> None:
         self._client_id = client_id
         self._client_secret = client_secret
-        self._access_token = None
+        self._access_token: str | None = None
 
         super().__init__(base_url=base_url, timeout=10)
 
     @property
-    def access_token(self):
+    def access_token(self) -> str:
         if self._access_token is None:
             ret = super().request(
                 'POST',
@@ -35,9 +35,20 @@ class Infisical(Requester):
             )
             self._access_token = ret['accessToken']
 
+        if self._access_token is None:
+            raise InfisicalApiError('Failed to get access token')
+
         return self._access_token
 
-    def request(self, method, url, data=None, params=None, headers=None, timeout=10):
+    def request(
+        self,
+        method: str,
+        url: str,
+        data=None,
+        params=None,
+        headers: dict[str, str] | None = None,
+        timeout: int | None = 10,
+    ) -> dict:
         if headers is None:
             headers = {}
 

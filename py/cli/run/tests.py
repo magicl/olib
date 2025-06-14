@@ -6,7 +6,7 @@
 import logging
 import os
 import tempfile
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import sh
 from click.testing import CliRunner
@@ -33,7 +33,7 @@ class GQLReqResp(NamedTuple):
 class MockAppServer(MockMultiServer):
     """Server emulating app that remote is communicating with"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.reqresp: list[GQLReqResp] = []
 
         super().__init__(
@@ -56,7 +56,7 @@ class MockAppServer(MockMultiServer):
             }
         )
 
-    def gql(self, token, data):
+    def gql(self, token: str | None, data: dict[str, Any]) -> dict[str, Any]:
         # Respond with matching req/resp or fail
         for rr in self.reqresp:
             if rr.query == data['query']:
@@ -75,13 +75,23 @@ class TestCliRun(OTestCase):
         mock_server_reset_all()
         clear_sessions()
 
-    def _cli_check(self, runner, cli, args, exp_code=0, exp_out=None, exp_err=None):
+    def _cli_check(
+        self,
+        runner: Any,
+        cli: Any,
+        args: list[str],
+        exp_code: int = 0,
+        exp_out: str | None = None,
+        exp_err: str | None = None,
+    ) -> None:
         logger.info(f'run {' '.join(args)}')
 
         result = runner.invoke(cli, args, catch_exceptions=False)
         self._check_cli_result(result, exp_code, exp_out, exp_err)
 
-    def _check_cli_result(self, result, exp_code=None, exp_out=None, exp_err=None):
+    def _check_cli_result(
+        self, result: Any, exp_code: int | None = None, exp_out: str | None = None, exp_err: str | None = None
+    ) -> None:
         """Print exception in cli result if any"""
         logger.info(f'  exit_code={result.exit_code}')
         logger.info(f'  stdout={result.stdout_bytes}')

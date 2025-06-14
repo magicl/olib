@@ -7,6 +7,8 @@ import re
 import sys
 import time
 from contextlib import contextmanager
+from typing import Any
+from collections.abc import Generator
 
 import click
 import sh
@@ -14,7 +16,7 @@ import sh
 from ....utils.secrets import readFileSecret
 
 
-def redis_convert_name(ctx):
+def redis_convert_name(ctx: Any) -> tuple[str, int]:
     name = ctx.obj.k8sAppName
 
     if any(name.startswith(prefix) for prefix in ['root', 'localroot', 'redis']):
@@ -27,7 +29,7 @@ def redis_convert_name(ctx):
     return secret_name, database
 
 
-def redis_creds(ctx, root=None):
+def redis_creds(ctx: Any, root: bool | None = None) -> tuple[str, int | None]:
     # Always using root secret for redis
     pwd = readFileSecret('$KNOX/infrabase/secrets/infra/redis-root.txt')
 
@@ -40,10 +42,10 @@ def redis_creds(ctx, root=None):
 
 
 @contextmanager
-def redis_port_forward():
+def redis_port_forward() -> Generator[int, None, None]:
     port = None
 
-    def func(s):
+    def func(s: str) -> None:
         nonlocal port
         # print(s)
         if m := re.match(r'Forwarding from 127.0.0.1:(\d+) ->', s):
