@@ -88,12 +88,20 @@ def base_request(
 
 
 class Requester:
-    def __init__(self, base_url, session=None, timeout=10, retry=True):
+    def __init__(self, base_url: str, session: Any = None, timeout: int = 10, retry: bool = True) -> None:
         self.base_url = base_url
         self.session = session if session is not None else requests.Session()
         self.timeout = timeout
 
-    def request(self, method, url, data=None, params=None, headers=None, timeout=None):
+    def request(
+        self,
+        method: str,
+        url: str,
+        data: Any = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
         if timeout is None:
             timeout = self.timeout
 

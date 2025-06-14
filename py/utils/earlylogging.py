@@ -14,7 +14,7 @@ fileLevel: int | None = None  # Defaults to DEBUG. Set via LOG_LEVEL env variabl
 _levels = {'debug': logging.DEBUG, 'info': logging.INFO, 'warning': logging.WARNING, 'error': logging.ERROR}
 
 
-def cliLogLevel():
+def cliLogLevel() -> int:
     global cliLevel  # pylint: disable=global-statement
 
     if cliLevel is None:
@@ -55,7 +55,7 @@ def cliLogLevel():
     return cliLevel
 
 
-def fileLogLevel():
+def fileLogLevel() -> int:
     global fileLevel  # pylint: disable=global-statement
 
     if fileLevel is None:
@@ -73,6 +73,6 @@ def fileLogLevel():
     return fileLevel
 
 
-def earlyInfo(str):
+def earlyInfo(str: str) -> None:
     if cliLogLevel() <= logging.INFO:
         print(str)

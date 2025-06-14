@@ -25,7 +25,7 @@ def readFileSecretSplit(filename: str) -> list[str]:
     return [v.strip() for v in re.split('\n| ', value)]
 
 
-def readFileSecret(filename: str) -> str:
+def readFileSecretBytes(filename: str) -> bytes:
     filename = os.path.expanduser(filename)
     filename = os.path.expandvars(filename)
 
@@ -40,33 +40,37 @@ def readFileSecret(filename: str) -> str:
             )
 
         # Read file
-        with open(filename, encoding='utf-8') as f:
-            return f.read().strip()
+        with open(filename, 'rb') as f:
+            return f.read()
 
     raise SecretMissingError(f"Secret file {filename} is missing")
+
+
+def readFileSecret(filename: str) -> str:
+    return readFileSecretBytes(filename).decode('utf-8')
 
 
 class SecretProvider(ABC):
     """Allows access to a secret without keeping the secret in memory for the duration of a program"""
 
     @abstractmethod
-    def get_secret(self): ...
+    def get_secret(self) -> bytes: ...
 
 
 class ConstSecret(SecretProvider):
-    def __init__(self, const: bytes):
+    def __init__(self, const: bytes) -> None:
         self.const = const
 
-    def get_secret(self):
+    def get_secret(self) -> bytes:
         return self.const
 
 
 class FileSecret(SecretProvider):
-    def __init__(self, filename):
+    def __init__(self, filename: str) -> None:
         self.filename = filename
 
-    def get_secret(self):
-        return readFileSecret(self.filename)
+    def get_secret(self) -> bytes:
+        return readFileSecretBytes(self.filename)
 
 
 class LocalSharedFileSecret(FileSecret):
@@ -74,7 +78,7 @@ class LocalSharedFileSecret(FileSecret):
 
     PATH = '~/.infrabase/secrets/localshared'
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(os.path.expanduser(self.PATH))
 
         if not os.path.exists(self.filename):

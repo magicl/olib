@@ -4,6 +4,7 @@
 # ~
 import logging
 import threading
+from typing import Any
 
 from decorator import decorator
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 @decorator
-def synchronized(wrapped, instance, *args, **kwargs):
+def synchronized(wrapped: Any, instance: Any, *args: Any, **kwargs: Any) -> Any:
     """
     Apply synchronization to class function or stand-alone function
     From https://github.com/GrahamDumpleton/wrapt/blob/develop/blog/07-the-missing-synchronized-decorator.md

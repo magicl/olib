@@ -4,14 +4,15 @@
 # ~
 
 import os
+from typing import Any
 
 import click
 import sh
 
 
-def register(config):
+def register(config: Any) -> None:
     @click.group()
-    def k8s():
+    def k8s() -> None:
         pass
 
     @k8s.command(
@@ -19,7 +20,7 @@ def register(config):
         help='Read k8s cluster configs and store on current machine to allow accessing clusters',
     )
     @click.pass_context
-    def config_(ctx):
+    def config_(ctx: Any) -> None:
         """Hardcoded for now"""
         configs_root = os.path.expanduser('~/.kube/configs')
 
@@ -40,7 +41,7 @@ def register(config):
 
     @k8s.command(help='Switch k8s context to different k8s cluster')
     @click.argument('cluster', type=str)
-    def switch(cluster):
+    def switch(cluster: str) -> None:
         """Switch k8s config files"""
         # from_file = os.path.expanduser(f"~/.kube/configs/{cluster}.yml")
         # to_file = os.path.expanduser('~/.kube/config')

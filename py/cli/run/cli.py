@@ -3,6 +3,8 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+from typing import Any
+
 import click
 
 
@@ -11,7 +13,7 @@ class GroupTopLevel(click.Group):
     Splits commands and command groups into separate sections for help command
     """
 
-    def format_commands(self, ctx, formatter):
+    def format_commands(self, ctx: Any, formatter: Any) -> None:
         # Sort commands and groups
         commands = sorted(self.commands.items())
         cmds = []

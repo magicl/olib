@@ -5,7 +5,7 @@
 
 import re
 import sys
-from typing import cast
+from typing import Any, cast
 
 import click
 
@@ -17,7 +17,7 @@ inst_defaults = {
 
 
 class RunContext:
-    def __init__(self, config, instName=None, clusterName=None):
+    def __init__(self, config: Any, instName: str | None = None, clusterName: str | None = None) -> None:
         self.config = config
 
         # Resolve inst
@@ -65,7 +65,7 @@ class RunContext:
                     self._inst[k] = v
 
     @property
-    def inst(self):
+    def inst(self) -> dict[str, Any]:
         if self._inst is None:
             click.echo('inst must be specified or defaulted to for this command')
             sys.exit(1)
@@ -73,21 +73,21 @@ class RunContext:
         return cast(dict, self._inst)
 
     @property
-    def inst_or_none(self):
+    def inst_or_none(self) -> dict[str, Any] | None:
         return self.inst if self._inst is not None else None
 
     @property
-    def k8sContext(self):
+    def k8sContext(self) -> str:
         return self.inst['cluster']
 
     @property
-    def k8sNamespace(self):
+    def k8sNamespace(self) -> str:
         return self.inst['name']
 
     @property
-    def k8sAppName(self):
+    def k8sAppName(self) -> str:
         return self.inst['name']
 
     @property
-    def meta(self):
+    def meta(self) -> Any:
         return self.config.meta

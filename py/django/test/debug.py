@@ -4,6 +4,7 @@
 # ~
 import inspect
 import traceback
+from collections.abc import Generator
 from contextlib import contextmanager
 
 from django.conf import settings
@@ -12,7 +13,7 @@ _breakOnErrorEnabled = True
 
 
 @contextmanager
-def disableBreakOnError():
+def disableBreakOnError() -> Generator[None, None, None]:
     global _breakOnErrorEnabled  # pylint: disable=global-statement
 
     old = _breakOnErrorEnabled
@@ -26,7 +27,7 @@ def disableBreakOnError():
 
 
 @contextmanager
-def breakOnError():
+def breakOnError() -> Generator[None, None, None]:
     try:
         yield
     except:  # Intentional bare-except, so pylint: disable=bare-except

@@ -3,8 +3,9 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
-
 import time
+from collections.abc import Callable
+from typing import Any
 
 
 class BackoffFailedException(Exception):
@@ -12,13 +13,13 @@ class BackoffFailedException(Exception):
 
 
 def exponentialBackoff(
-    func,
-    exCheckFunc=None,
-    maxRetries=8,
-    initialDelaySeconds=1,
-    maxDelaySeconds=60,
-    retryOnFalse=False,
-):
+    func: Callable[[], Any],
+    exCheckFunc: Callable[[Exception], bool] | None = None,
+    maxRetries: int = 8,
+    initialDelaySeconds: float = 1,
+    maxDelaySeconds: float = 60,
+    retryOnFalse: bool = False,
+) -> Any:
     """
     Implements exponential backoff, which is useful when dealing with throttling. Backoff is not randomized.
     :param func:         Function to call, which can be throttled

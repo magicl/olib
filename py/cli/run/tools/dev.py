@@ -4,19 +4,21 @@
 # ~
 
 
+from typing import Any
+
 import click
 import sh
 
 
-def register(config):
+def register(config: Any) -> None:
     @click.group()
-    def dev():
+    def dev() -> None:
         pass
 
     @dev.command()
     @click.argument('files', nargs=-1, type=click.Path())
     @click.pass_context
-    def test_all(ctx, files):
+    def test_all(ctx: Any, files: tuple[str, ...]) -> None:
         """Run all available tests that make sense"""
 
         to_run: list[tuple] = []

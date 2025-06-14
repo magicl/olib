@@ -5,9 +5,9 @@
 
 import csv
 import io
-from collections.abc import Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 
@@ -16,13 +16,13 @@ from .file import openOrPassthrough
 
 @contextmanager
 def readCSV(
-    filenameOrFile,
-    headerRowFirst=None,
-    skipRows=0,
-    storage=None,
-    yieldIterator=False,
-    delimiter=',',
-):
+    filenameOrFile: Any,
+    headerRowFirst: str | None = None,
+    skipRows: int = 0,
+    storage: Any = None,
+    yieldIterator: bool = False,
+    delimiter: str = ',',
+) -> Generator[Any, None, None]:
     """Convenience class for reading CSVs"""
     # False positive, as we are returning the generator here, not iterating over it
     # pylint: disable=contextmanager-generator-missing-cleanup
@@ -44,7 +44,7 @@ def readCSV(
     # pylint: enable=contextmanager-generator-missing-cleanup
 
 
-def iterCSV(iterator, headerRowFirst=None, skipRows=0):
+def iterCSV(iterator: Any, headerRowFirst: str | None = None, skipRows: int = 0) -> Generator[Any, None, None]:
     # Find header
     header = None
     rowNum = 0  # 1 indexed row number
@@ -89,7 +89,7 @@ def iterCSV(iterator, headerRowFirst=None, skipRows=0):
             yield rowObj
 
 
-def writeCSV(filenameOrFile, data, raw=False):
+def writeCSV(filenameOrFile: Any, data: Any, raw: bool = False) -> None:
     """
     Write any data acceptable by pd.DataFrame(...) to CSV
     :param raw: If true, data bypasses dataframe, and instead a double array is expected
@@ -104,7 +104,7 @@ def writeCSV(filenameOrFile, data, raw=False):
             writer.writerow(list(l))
 
 
-def writeCSVFromRichTable(filenameOrFile, table):
+def writeCSVFromRichTable(filenameOrFile: Any, table: Any) -> None:
     """
     Write any data from a Table for the rich library
     """
@@ -122,12 +122,14 @@ def writeCSVFromRichTable(filenameOrFile, table):
 class CSVRow:
     """Helper class for reading csv files. Same object is reused"""
 
-    def __init__(self, keys):
+    def __init__(self, keys: dict[str, int]) -> None:
         self.keys = keys
-        self.row = []
+        self.row: list[Any] = []
         self.rowNum = -1
 
-    def tOpt(self, name, default=None, requireKey=False, cast=None):
+    def tOpt(
+        self, name: str, default: Any = None, requireKey: bool = False, cast: Callable[[Any], Any] | None = None
+    ) -> Any:
         if name not in self.keys:
             if requireKey:
                 raise Exception(f"Expected column {name} to exist")
@@ -139,7 +141,7 @@ class CSVRow:
 
         return cast(cellValue) if cast is not None else cellValue
 
-    def tVal(self, name, allowEmpty=False):
+    def tVal(self, name: str, allowEmpty: bool = False) -> Any:
         if name not in self.keys:
             raise Exception(f"Expected column {name} to exist")
         val = _cellValue(self.row[self.keys[name]])
@@ -147,7 +149,9 @@ class CSVRow:
             raise Exception(f"Value expected for column {name} in row {self.rowNum}")
         return val
 
-    def tOption(self, name: str, allowed: Iterable[Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True) -> Any:
+    def tOption(
+        self, name: str, allowed: Iterable[Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True
+    ) -> Any:
         val = self.tOpt(name, '', requireKey=requireKey)
         if cast is not None:
             val = cast(val)
@@ -155,7 +159,9 @@ class CSVRow:
             raise Exception(f"Column {name} must have one of the following values: {allowed}. Found: {val}")
         return val
 
-    def tOptionMap(self, name: str, allowed: dict[Any, Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True) -> Any:
+    def tOptionMap(
+        self, name: str, allowed: dict[Any, Any], cast: Callable[[Any], Any] | None = None, requireKey: bool = True
+    ) -> Any:
         val = self.tOption(name, allowed.keys(), cast, requireKey)
         return allowed[val]
 

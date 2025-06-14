@@ -5,11 +5,12 @@
 
 
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 
 
 @contextmanager
-def lineprofile(statistical=False, enabledForTests=False):
+def lineprofile(statistical: bool = False, enabledForTests: bool = False) -> Generator[None, None, None]:
     """
     Add to a function to perform line-by-line profiling of function, i.e.
      @lineprofile()
@@ -56,7 +57,7 @@ def lineprofile(statistical=False, enabledForTests=False):
 
 
 @contextmanager
-def functime(name=''):
+def functime(name: str = '') -> Generator[None, None, None]:
     """Determine how much time is spent in a function over the time of execution. Prints something every time the function is hit"""
     start = time.time()
 

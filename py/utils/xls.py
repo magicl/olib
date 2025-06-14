@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
-def openXLS(filenameOrFile, storage=None):
+def openXLS(filenameOrFile: Any, storage: Any = None) -> Generator[tuple[Any, Any], None, None]:
     from openpyxl import load_workbook  # Deferred for speed
 
     # Expect same format as is written in 'writeXls'
@@ -54,7 +54,7 @@ def openXLS(filenameOrFile, storage=None):
 def readXLS(
     filenameOrFile: str | bytes | Path | io.IOBase,
     sheet: str | None = None,
-    headerRowFirst: bool | None = None,
+    headerRowFirst: str | None = None,
     skipRows: int = 0,
     storage: Any = None,
     yieldIterator: bool = False,
@@ -77,7 +77,7 @@ def readXLS(
             yield iterCSV(iterator, headerRowFirst, skipRows)
 
 
-def writeXLS(filename, sheet, data, raw=False):
+def writeXLS(filename: str, sheet: str, data: Any, raw: bool = False) -> None:
     """
     Write any data acceptable by pd.DataFrame(...) to XLS
     :param raw: If true, data bypasses dataframe, and instead a double array is expected
