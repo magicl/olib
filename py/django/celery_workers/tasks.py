@@ -3,10 +3,12 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+from typing import Any
+
 from celery import shared_task
 
 
 @shared_task(bind=True)
-def debug_task(self) -> str:
+def debug_task(self: Any) -> str:
     # print(f'Request: {self.request!r}')
     return 'hello from celery lib'

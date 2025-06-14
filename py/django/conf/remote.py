@@ -19,7 +19,7 @@ def conf_cli() -> list[tuple[str, Any]]:
 
     @os_group.command('list', help='List all online settings with data')
     @click.pass_context
-    def list(ctx) -> None:
+    def list(ctx: Any) -> None:
         con(ctx).gql_query('{ onlineSettings { edges { node { name type value } } } }')
         breakpoint()  # pylint: disable=forgotten-debug-statement
         print('foo')
@@ -29,7 +29,7 @@ def conf_cli() -> list[tuple[str, Any]]:
     @click.argument('name', type=str)
     @click.argument('value', type=str)
     @click.pass_context
-    def update(ctx, name: str, value: str) -> None:
+    def update(ctx: Any, name: str, value: str) -> None:
         con(ctx).gql_mut('onlineSettingUpdate', name=name, value=value)
 
     return [('os', os_group)]

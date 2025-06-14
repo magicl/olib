@@ -39,7 +39,7 @@ class TestTimingMixin:
         self.tTestStart = 0.0
         self.tRealStart = 0.0
         # self.tEnd = 0.0
-        self.mRssMaxPre = 0
+        self.mRssMaxPre = 0.0
         self.prevTest = None
 
         # Set by test runner

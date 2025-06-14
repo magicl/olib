@@ -6,6 +6,7 @@
 # pylint: disable=duplicate-code
 
 import sys
+from typing import Any
 
 import click
 import sh
@@ -20,9 +21,9 @@ from ..utils.redis_utils import redis_convert_name, redis_creds, redis_port_forw
 from .base import prep_config
 
 
-def _implement(defaultRoot=True):
-    @click.group()
-    def redisGroup(help='Redis commands'):
+def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
+    @click.group(help='Redis commands')
+    def redisGroup() -> None:
         pass
 
     @redisGroup.command(help='Start a Redis shell')
@@ -80,7 +81,7 @@ def _implement(defaultRoot=True):
             k8s_secret_delete(secretName, ctx.obj.k8sNamespace, ctx.obj.k8sContext)
             click.echo('Deleted redis secret from kubernetes')
 
-    return redisGroup
+    return ('redis', redisGroup)
 
 
 def redis(root=False):

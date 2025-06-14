@@ -41,7 +41,10 @@ ignore_errors = True
 #Libs ignored for now, as we are not using them yet
 [mypy-*.xauth.*]
 ignore_errors = True
-
+[mypy-*.selenium.*]
+ignore_errors = True
+[mypy-*.mock_server.*]
+ignore_errors = True
 
 #[mypy-utils._meta]
 #ignore_errors = True

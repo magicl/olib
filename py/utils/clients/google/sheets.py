@@ -179,7 +179,7 @@ def gsUpdateFormatted(
     expBackoff(applyStyles)
 
 
-def addGroupsOffset(groups, offset):
+def addGroupsOffset(groups: list[dict[str, int]], offset: int) -> list[dict[str, int]]:
     for g in groups:
         g['start'] += offset
         g['end'] += offset
@@ -204,7 +204,7 @@ def _gsApplyGroups(groups, listGroups, deleteGroup, addGroup):
         expBackoff(lambda: addGroup(g['start'], g['end']))  # pylint: disable=cell-var-from-loop
 
 
-def gsApplyRowGroups(sheet, groups):
+def gsApplyRowGroups(sheet: Any, groups: list[dict[str, int]]) -> None:
     """
     Groups should have format
     [{'start': NN, 'end': NN, depth: NN}]
@@ -219,7 +219,7 @@ def gsApplyRowGroups(sheet, groups):
     )
 
 
-def gsApplyColGroups(sheet, groups):
+def gsApplyColGroups(sheet: Any, groups: list[dict[str, int]]) -> None:
     _gsApplyGroups(
         groups,
         sheet.list_dimension_group_columns,

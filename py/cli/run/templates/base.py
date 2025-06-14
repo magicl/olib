@@ -31,10 +31,10 @@ class ConfigMeta:
     postgres = False
     redis = False
 
-    def __init__(self, command_groups=None) -> None:
+    def __init__(self, command_groups: Any = None) -> None:
         self.commandGroups = command_groups or []
 
 
-def prep_config(config):
+def prep_config(config: Any) -> None:
     if not hasattr(config, 'meta'):
         config.meta = ConfigMeta()

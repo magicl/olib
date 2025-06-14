@@ -44,8 +44,8 @@ class Infisical(Requester):
         self,
         method: str,
         url: str,
-        data=None,
-        params=None,
+        data: dict | None = None,
+        params: dict | None = None,
         headers: dict[str, str] | None = None,
         timeout: int | None = 10,
     ) -> dict:
