@@ -89,6 +89,11 @@ class LocalSharedFileSecret(FileSecret):
 
             os.chmod(self.filename, 0o400)
 
+    def get_secret(self) -> bytes:
+        secret = super().get_secret()
+        # Convert from base64 to bytes
+        return base64.b64decode(secret)
+
 
 class PasswordInputSecret(ConstSecret):
     """Prompts for password on creation, then derives a key from password"""

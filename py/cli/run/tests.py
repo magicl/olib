@@ -71,7 +71,7 @@ class MockAppServer(MockMultiServer):
 @tag('olib')
 class TestCliRun(OTestCase):
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         mock_server_reset_all()
         clear_sessions()
 
@@ -93,19 +93,19 @@ class TestCliRun(OTestCase):
         if exp_err is not None:
             self.assertEqual(result.stderr_bytes, exp_err.encode('utf-8'))
 
-    def test_shell(self):
+    def test_shell(self) -> None:
         """Smoke-test for shell. Verify that getting help message works"""
         ret = sh.python3('-m', 'olib.py.cli.run.run', '--help')
         self.assertTrue(ret.startswith('Usage: python -m olib.py.cli.run.run'))
 
-    def test_help(self):
+    def test_help(self) -> None:
         """Smoke-test via click.testing. Verify that getting help message works"""
         cli = create_cli()
         runner = CliRunner()
         result = runner.invoke(cli, ['--help'], catch_exceptions=False)
         self.assertTrue(result.output.startswith('Usage: cli'))
 
-    def test_has(self):
+    def test_has(self) -> None:
         """Verify capability checking"""
 
         runner = CliRunner()
@@ -125,7 +125,7 @@ class TestCliRun(OTestCase):
         self._cli_check(runner, cli, ['has', '--tool', 'python'], 1)  # Python is now off
         self._cli_check(runner, cli, ['has', '--tool', 'javascript'], 0)  # Javascript is now on
 
-    def test_get(self):
+    def test_get(self) -> None:
         """Verify capability checking"""
         cli = create_cli(config=defaultConfig)
         runner = CliRunner()
@@ -141,7 +141,7 @@ class TestCliRun(OTestCase):
         self._cli_check(runner, cli, ['get'], 1)  # No arg
         self._cli_check(runner, cli, ['get', '--license'], 0, 'apache')  # Default license
 
-    def test_auto_login(self):
+    def test_auto_login(self) -> None:
         """Verifies automatic login with predefined credentials"""
 
         # Server setup
@@ -176,7 +176,7 @@ class TestCliRun(OTestCase):
         result = runner.invoke(cli, ['remote', '-r', 'local', 'ping'], catch_exceptions=False)
         self._check_cli_result(result, 0, 'Trying credential-set 0\nhey you!\n')
 
-    def test_manual_login(self):
+    def test_manual_login(self) -> None:
         """Verifies manual login with predefined credentials"""
 
         # Server setup

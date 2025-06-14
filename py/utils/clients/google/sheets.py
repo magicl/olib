@@ -46,7 +46,7 @@ def expBackoff(func):
     )
 
 
-def colFromInt(n):
+def colFromInt(n: int) -> str:
     """Returns column name from a column index"""
     string = ''
     while n > 0:

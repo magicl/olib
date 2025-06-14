@@ -32,7 +32,7 @@ options:
 """
 
 
-def run_module():
+def run_module() -> None:
     module_args = {
         'source': {'type': 'str', 'required': True},
         'target': {'type': 'str', 'required': True},
@@ -75,7 +75,7 @@ def run_module():
     module.exit_json(**result)
 
 
-def main():
+def main() -> None:
     run_module()
 
 

@@ -89,7 +89,7 @@ def con(ctx: click.Context) -> 'RemoteConnection':
     return _remote_connections[target]
 
 
-def clear_sessions():
+def clear_sessions() -> None:
     global _remote_connections  # pylint: disable=global-statement
     _remote_connections = {}
 
@@ -145,7 +145,7 @@ class RemoteConnection:
             ),
         )
 
-    def token_delete(self):
+    def token_delete(self) -> None:
         deleted = self.secrets_file.delete_secret(self.host.url)
 
         # Delete current token if present
@@ -155,12 +155,12 @@ class RemoteConnection:
             print(self.host.url)
             print('Was not logged in')
 
-    def token_list(self):
+    def token_list(self) -> None:
         print('Current logins:')
         for url in self.secrets_file.list_keys():
             print(f"  {url}")
 
-    def token_clear_all(self):
+    def token_clear_all(self) -> None:
         self.secrets_file.clear_secrets()
 
     def _getpass(self):
@@ -352,7 +352,7 @@ class RemoteConnection:
     ):
         """Request wrapper that ensures authentication is taken care of"""
 
-        def tryAuth():
+        def tryAuth() -> None:
             """Attempt authentication with remote server using pre-defined credentials first, then trying user credentials"""
             # When None is hit, user is asked for credentials
             try_creds = [*[v.split(':') for v in self.host.try_creds], None]

@@ -675,7 +675,7 @@ class WebHookMixin(MockServerClearable):
         self.hooksDisabled = set()  # Names of disabled hooks
 
     @synchronized
-    def clear(self):
+    def clear(self) -> None:
         """Override to clear data values"""
         self.stallHooks = None
         self.hooksDisabled = set()
@@ -910,7 +910,7 @@ class MockMultiServer(MockServerUtils):
 
             self.servers[serverName] = server
 
-    def softStop(self):
+    def softStop(self) -> None:
         for serverName, server in self.servers.items():
             logger.info(f"soft-stop of server {serverName}")
             server.softStop()
@@ -918,7 +918,7 @@ class MockMultiServer(MockServerUtils):
     def isSoftStopped(self):
         return all(server.softStopped for _, server in self.servers.items())
 
-    def stop(self):
+    def stop(self) -> None:
         # Wait for hooks if necessary. Hooks are managed in another mixin, so if available, do it
         if hasattr(self, 'waitHookCompletion'):
             logger.info(f"about to shut down {type(self)}")
@@ -940,7 +940,7 @@ class MockMultiServer(MockServerUtils):
         """
 
     @synchronized
-    def reset(self):
+    def reset(self) -> None:
         self.softStop()
         self.clear()
 
@@ -953,7 +953,7 @@ class MockMultiServer(MockServerUtils):
 
         return inst
 
-    def clear(self):
+    def clear(self) -> None:
         """Override to clear state"""
         for _, server in self.servers.items():
             server.clear()

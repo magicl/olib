@@ -222,7 +222,7 @@ def _get_value(schemadir, user, setting, dbus_addr):
     return _run_cmd_with_dbus(user, command, dbus_addr)
 
 
-def main():
+def main() -> None:
 
     module = AnsibleModule(
         argument_spec={
