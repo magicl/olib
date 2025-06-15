@@ -9,6 +9,8 @@ trap "exit 1" ERR
 
 LOCAL_DIR=$(dirname "$(realpath "$0")")
 
+NODE_VERSION=22
+
 # Install / update NVM, the node.js version manager
 export PROFILE=/dev/null #Tell nvm installer to not update .zshrc / .bashrc
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
@@ -18,8 +20,8 @@ wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
 
 # For now, just install latest LTS
 # Update: --lts = v22 had some issues on Jenkins
-nvm install 20 #--lts
-nvm use 20 #--lts
+nvm install $NODE_VERSION #--lts
+nvm use $NODE_VERSION #--lts
 
 nvm install-latest-npm
 

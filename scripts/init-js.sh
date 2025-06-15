@@ -17,7 +17,7 @@ fi
 for dir in . */ ; do
     # Check if package.json exists in the directory
     if [ -f "$dir/package.json" ]; then
-        echo "Running 'npm ci' in $dir"
-        (cd "$dir" && npm ci)
+        echo "Running 'pnpm install' in $dir"
+        (cd "$dir" && pnpm install)
     fi
 done
