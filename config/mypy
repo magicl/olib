@@ -24,8 +24,8 @@ disallow_incomplete_defs = True
 disallow_untyped_defs = True
 #disallow_untyped_calls = True
 warn_redundant_casts = True
-#warn_return_any = True
-#no_implicit_optional = True
+warn_return_any = True
+no_implicit_optional = True
 ; plugins = strawberry.ext.mypy_plugin
 
 
