@@ -116,7 +116,7 @@ def _implement():
     return mysqlGroup
 
 
-def django(settings, manage_py='./manage.py', django_working_dir=None):
+def django(settings: str, manage_py: str = './manage.py', django_working_dir: str | None = None):
     """
     Injects functions into service Config for managing django
 
