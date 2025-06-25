@@ -8,11 +8,16 @@ from typing import Any
 
 import click
 import sh
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 
 def register(config: Any) -> None:
     @click.group()
-    def k8s() -> None:
+    def k8s():
         pass
 
     @k8s.command(
@@ -22,22 +27,58 @@ def register(config: Any) -> None:
     @click.pass_context
     def config_(ctx: Any) -> None:
         """Hardcoded for now"""
-        configs_root = os.path.expanduser('~/.kube/configs')
+        kube_root = os.path.expanduser('~/.kube')
 
-        os.makedirs(configs_root, exist_ok=True)
+        os.makedirs(f'{kube_root}/configs', exist_ok=True)
 
+        configs = []
         for cluster, node in (('dev', 'node0'), ('pub', 'pnode0')):
             conf = sh.ssh('-o', 'BatchMode=yes', node, 'microk8s config')  # pylint: disable=too-many-function-args
-            path = f"{configs_root}/{cluster}.yml"
+            token = sh.ssh('-o', 'BatchMode=yes', node, f'microk8s kubectl get secrets admin-{cluster}-token -n default -o jsonpath=\'{{.data.token}}\' | base64 --decode')  # pylint: disable=too-many-function-args
+
+            
+            path = f"{kube_root}/configs/{cluster}.yml"
+
+            if os.path.exists(path):
+                os.chmod(path, mode=0o700)
+
+            #Update names in config before writing out so multiple can be merged
+            doc = load(conf, Loader=Loader)
+            doc['clusters'][0]['name'] = f'{cluster}-cluster'
+            doc['contexts'][0]['context']['cluster'] = f'{cluster}-cluster'
+            doc['contexts'][0]['context']['user'] = f'admin-{cluster}'
+            doc['contexts'][0]['name'] = cluster
+            doc['users'][0]['name'] = f'admin-{cluster}'
+
+            #Use token for service account created by 'services/system_serviceaccounts'
+            del doc['users'][0]['user']['client-certificate-data']
+            del doc['users'][0]['user']['client-key-data']
+            doc['users'][0]['user']['token'] = token
+
+            conf = dump(doc, Dumper=Dumper)
+            
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(conf)
 
             os.chmod(path, mode=0o400)
-            print(f"configured: {cluster}")
+            print(f"extracted config: {cluster}")
 
-        # Should extend this.. look at infrabase/readme
+            configs.append(path)
 
-        # ctx.invoke(switch, cluster='dev')
+        #Write kubeconfig file
+        kubeconfig_env = ":".join(str(p) for p in configs)
+        
+        flattened_config = sh.kubectl.config.view(
+            "--flatten",
+            _env={"KUBECONFIG": kubeconfig_env},
+        )
+
+        with open(f'{kube_root}/config', 'w', encoding='utf-8') as f:
+            f.write(flattened_config)
+
+        print('wrote flattened config')
+
+        ctx.invoke(switch, cluster='dev')
 
     @k8s.command(help='Switch k8s context to different k8s cluster')
     @click.argument('cluster', type=str)

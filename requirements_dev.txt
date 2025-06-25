@@ -55,6 +55,7 @@ gspread-dataframe==3.3.1
 gspread-formatting
 jinja2
 django-cors-headers
+pyyaml
 
 pandas
 selenium
