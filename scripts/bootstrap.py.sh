@@ -19,7 +19,7 @@ MODE=${1:-}
 REQUIREMENTS=${2:-}
 
 if [[ "$MODE" != "pyenv" && "$MODE" != "uv" ]]; then
-	>&2 echo "ERROR: bootstrap.py.sh requires specifying pyenv or pyenv as fist param"
+	>&2 echo "ERROR: bootstrap.py.sh requires specifying uv or pyenv as fist param"
 	exit 1
 fi
 
