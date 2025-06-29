@@ -11,8 +11,10 @@ local_partial_types = True
 
 plugins = strawberry.ext.mypy_plugin{% if extra_context.have_django %},mypy_django_plugin.main{% endif %}
 
-#Additional stubs
-mypy_path={% if meta.isOlib %}./py/stubs{% else %}./olib/py/stubs{% endif %}
+#Additional stubs. Only needed when olib is used as a library
+{% if not meta.isOlib %}
+mypy_path=./olib/py/stubs
+{% endif %}
 
 
 

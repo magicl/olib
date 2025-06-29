@@ -559,8 +559,7 @@ def buildSingleService(
             docker_compose,
         ):
             if not hasattr(cls, f.__name__):
-                setattr(cls, f.__name__, classmethod(f))  # type: ignore[arg-type]
-
+                setattr(cls, f.__name__, classmethod(f))
         return cls
 
     return decorator

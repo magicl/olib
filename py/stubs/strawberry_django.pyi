@@ -8,7 +8,7 @@ Type stubs for strawberry_django decorators to fix mypy errors.
 """
 
 from collections.abc import Callable, Sequence
-from typing import Any, TypeVar, overload
+from typing import Any, Type, TypeVar, overload
 
 from strawberry.extensions import FieldExtension
 
@@ -56,7 +56,7 @@ def mutation(func: F) -> F:
 # strawberry_django.connection decorator (for method decorators)
 @overload
 def connection(
-    connection_type: type,
+    connection_type: Type[Any],
     *,
     extensions: ExtensionsType = None,
 ) -> Callable[[F], F]:
@@ -106,7 +106,7 @@ def django_resolver(func: F) -> F:
 class mutations:
     @staticmethod
     def update(
-        input_type: type,
+        input_type: Type[Any],
         *,
         extensions: ExtensionsType = None,
     ) -> Any:
@@ -114,7 +114,7 @@ class mutations:
 
     @staticmethod
     def delete(
-        input_type: type,
+        input_type: Type[Any],
         *,
         extensions: ExtensionsType = None,
     ) -> Any:
@@ -152,7 +152,7 @@ class utils:
 # strawberry_django.filters module
 class filters:
     @staticmethod
-    def filter(model: type) -> Callable[[type], type]:
+    def filter(model: Type[Any]) -> Callable[[Type[Any]], Type[Any]]:
         ...
 
     @staticmethod
@@ -161,11 +161,11 @@ class filters:
 
 
 # strawberry_django.type, input, partial decorators (simplified)
-def type(model: type, *, filters: type | None = None) -> Callable[[type], type]:
+def type(model: Type[Any], *, filters: Type[Any] | None = None) -> Callable[[Type[Any]], Type[Any]]:
     ...
 
-def input(model: type) -> Callable[[type], type]:
+def input(model: Type[Any]) -> Callable[[Type[Any]], Type[Any]]:
     ...
 
-def partial(model: type) -> Callable[[type], type]:
-    ... 
+def partial(model: Type[Any]) -> Callable[[Type[Any]], Type[Any]]:
+    ...
