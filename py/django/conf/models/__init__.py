@@ -5,3 +5,7 @@
 
 
 from .onlinesetting import OnlineSetting
+
+__all__ = [
+    'OnlineSetting',
+]

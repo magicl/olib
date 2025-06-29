@@ -11,7 +11,11 @@ import strawberry_django
 from strawberry import relay
 from strawberry_django.permissions import HasPerm
 
-from .osettings import OnlineSetting, OnlineSettingsAccess, osettings
+from .osettings import (  # type: ignore[attr-defined]
+    OnlineSetting,
+    OnlineSettingsAccess,
+    osettings,
+)
 
 
 async def _read_online_settings(node_ids: Iterable[str] | None = None) -> list['OnlineSettingType']:
@@ -55,7 +59,7 @@ class OnlineSettingType(relay.Node):
 @strawberry.type
 class Query:
 
-    @relay.connection(
+    @relay.connection(  # type: ignore[misc]
         relay.ListConnection[OnlineSettingType],
         extensions=[HasPerm('conf.view_onlinesetting')],
     )
@@ -66,7 +70,7 @@ class Query:
 @strawberry.type
 class Mutation:
 
-    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])
+    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])  # type: ignore[misc]
     def online_setting_update(self, name: str, value: str) -> OnlineSettingType:
         """Update online setting"""
         # NOTE: Make sure to control what comes out in OperationInfo on production to not leak sensitive error data (!).. Might want to implement
@@ -77,19 +81,19 @@ class Mutation:
         obj = osettings.write(name, value)
         return OnlineSettingType.make(name, obj)
 
-    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])
+    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])  # type: ignore[misc]
     def online_setting_add_key(self, name: str, value: str) -> OnlineSettingType:
         """Add item to online setting"""
         obj = osettings.add(name, value)
         return OnlineSettingType.make(name, obj)
 
-    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])
+    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])  # type: ignore[misc]
     def online_setting_set_key(self, name: str, key: str, value: str) -> OnlineSettingType:
         """Add key/value pair to online setting"""
         obj = osettings.set(name, key, value)
         return OnlineSettingType.make(name, obj)
 
-    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])
+    @strawberry_django.mutation(extensions=[HasPerm('conf.change_onlinesetting')])  # type: ignore[misc]
     def online_setting_remove_key(self, name: str, key: str) -> OnlineSettingType:
         """Remove key or value from online setting"""
         obj = osettings.clr(name, key)

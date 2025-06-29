@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class GQLReqResp(NamedTuple):
     auth: str | None
     query: str
-    response: dict
+    response: dict[str, Any]
 
 
 class MockAppServer(MockMultiServer):
@@ -36,7 +36,7 @@ class MockAppServer(MockMultiServer):
     def __init__(self) -> None:
         self.reqresp: list[GQLReqResp] = []
 
-        super().__init__(
+        super().__init__(  # type: ignore[no-untyped-call]
             spec={
                 'server': {
                     'localPort': get_test_port(f"{__name__}.MockAppServer"),
@@ -72,7 +72,7 @@ class MockAppServer(MockMultiServer):
 class TestCliRun(OTestCase):
 
     def tearDown(self) -> None:
-        mock_server_reset_all()
+        mock_server_reset_all()  # type: ignore[no-untyped-call]
         clear_sessions()
 
     def _cli_check(
@@ -155,7 +155,7 @@ class TestCliRun(OTestCase):
         """Verifies automatic login with predefined credentials"""
 
         # Server setup
-        server = MockAppServer.getSingletonServer(testName='test_auto_login')
+        server = MockAppServer.getSingletonServer(testName='test_auto_login')  # type: ignore[no-untyped-call]
         server_port = server.servers['server'].port
         server.reqresp = [
             GQLReqResp(
@@ -190,7 +190,7 @@ class TestCliRun(OTestCase):
         """Verifies manual login with predefined credentials"""
 
         # Server setup
-        server = MockAppServer.getSingletonServer(testName='test_manual_login')
+        server = MockAppServer.getSingletonServer(testName='test_manual_login')  # type: ignore[no-untyped-call]
         server_port = server.servers['server'].port
         server.reqresp = [
             GQLReqResp(

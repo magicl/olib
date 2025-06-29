@@ -10,7 +10,7 @@ from typing import Any, NamedTuple
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max, QuerySet, Subquery
 
-from olib.py.django.conf.models import OnlineSetting  # type: ignore[attr-defined]
+from olib.py.django.conf.models import OnlineSetting
 from olib.py.exceptions import UserError
 from olib.py.utils.execenv import isEnvProduction, isEnvTest
 
