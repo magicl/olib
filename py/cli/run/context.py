@@ -9,7 +9,7 @@ from typing import Any, cast
 
 import click
 
-inst_defaults = {
+inst_defaults: dict[str, Any] = {
     'env_files': [],
     'cluster': 'dev',
     'pck_registry': 'pck-reg.home.arpa',
@@ -70,23 +70,23 @@ class RunContext:
             click.echo('inst must be specified or defaulted to for this command')
             sys.exit(1)
 
-        return cast(dict, self._inst)
+        return cast(dict[str, Any], self._inst)
 
     @property
     def inst_or_none(self) -> dict[str, Any] | None:
-        return self.inst if self._inst is not None else None
+        return cast(dict[str, Any], self._inst) if self._inst is not None else None
 
     @property
     def k8sContext(self) -> str:
-        return self.inst['cluster']
+        return cast(str, self.inst['cluster'])
 
     @property
     def k8sNamespace(self) -> str:
-        return self.inst['name']
+        return cast(str, self.inst['name'])
 
     @property
     def k8sAppName(self) -> str:
-        return self.inst['name']
+        return cast(str, self.inst['name'])
 
     @property
     def meta(self) -> Any:

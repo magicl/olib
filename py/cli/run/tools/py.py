@@ -179,7 +179,7 @@ def register(config: Any) -> None:
                 return
 
             # Make sure db is up to date
-            @pp.Proc(now=True)
+            @pp.Proc(now=True)  # type: ignore[misc]
             def migrate(context: Any) -> None:
                 sh.python3(ctx.obj.meta.django_manage_py, 'migrate', _cwd=ctx.obj.meta.django_working_dir)
 
@@ -188,7 +188,7 @@ def register(config: Any) -> None:
             #     sh.python3('./sm.py', 'admin-create', 'admin', '', '', '', 'superuser', 'nimda', '--if-no-user')
 
             # Process / copy all static images etc
-            @pp.Proc(now=True)
+            @pp.Proc(now=True)  # type: ignore[misc]
             def collect_static(context: Any) -> None:
                 sh.python3(
                     ctx.obj.meta.django_manage_py,

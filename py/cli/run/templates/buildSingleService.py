@@ -171,7 +171,9 @@ def k8s_push_secrets(cls: Any, ctx: click.Context) -> None:
 
             # Store k8s secrets with the name of the secret file
             secret_name = os.path.basename(secret_file)
-            k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, env_vars)
+            # Filter out None values to match the expected dict[str, str] type
+            filtered_env_vars = {k: v for k, v in env_vars.items() if v is not None}
+            k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, filtered_env_vars)
 
 
 def k8s_migrate(cls: Any, ctx: click.Context, break_on_error: bool = False) -> None:
@@ -512,7 +514,7 @@ def buildSingleService(
     servicePort: int,
     localMountPort: int,
     deployments: list[str] | None = None,
-    containers: dict | None = None,
+    containers: dict[str, str] | None = None,
     helm_deploy: str | None = None,
     helm_migrate: str | None = None,
     compose: str | None = None,
@@ -557,7 +559,7 @@ def buildSingleService(
             docker_compose,
         ):
             if not hasattr(cls, f.__name__):
-                setattr(cls, f.__name__, classmethod(f))
+                setattr(cls, f.__name__, classmethod(f))  # type: ignore[arg-type]
 
         return cls
 

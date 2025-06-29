@@ -95,4 +95,4 @@ def writeXLS(filename: str | bytes | PathLike[str] | io.IOBase, sheet: str, data
     for l in data:
         ws.append(list(l))
 
-    wb.save(filename)  # type: ignore
+    wb.save(filename)

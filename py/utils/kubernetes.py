@@ -7,7 +7,7 @@
 import base64
 import sys
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from urllib3.exceptions import MaxRetryError
 
@@ -48,7 +48,7 @@ def k8s_namespace_create(name: str, context: str, exist_ok: bool = True) -> None
     v1.create_namespace(namespace)
 
 
-def k8s_secret_create(name: str, namespace: str, context: str, data: dict) -> None:
+def k8s_secret_create(name: str, namespace: str, context: str, data: dict[str, str]) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -62,7 +62,7 @@ def k8s_secret_create(name: str, namespace: str, context: str, data: dict) -> No
     )
 
 
-def k8s_secret_update(name: str, namespace: str, context: str, data: dict) -> None:
+def k8s_secret_update(name: str, namespace: str, context: str, data: dict[str, str]) -> None:
     from kubernetes import client, config
 
     config.load_kube_config(context=context)
@@ -77,7 +77,7 @@ def k8s_secret_update(name: str, namespace: str, context: str, data: dict) -> No
     )
 
 
-def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict) -> None:
+def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: dict[str, str]) -> None:
     if k8s_secret_exists(name, namespace, context):
         k8s_secret_update(name, namespace, context, data)
     else:
@@ -173,7 +173,7 @@ def k8s_pod_get_log(v1: 'client.CoreV1Api', podName: str, namespace: str, prev_l
     from kubernetes import client
 
     try:
-        new_log = v1.read_namespaced_pod_log(name=podName, namespace=namespace)
+        new_log = cast(str, v1.read_namespaced_pod_log(name=podName, namespace=namespace))
         if prev_log:
             new_log = new_log[len(prev_log) :]
 
@@ -229,6 +229,6 @@ def k8s_job_wait_for_completion(jobName: str, namespace: str, context: str | Non
         if api_response.status.succeeded or api_response.status.failed:
             i += 1
             if i > 3:
-                return api_response.status.succeeded
+                return bool(api_response.status.succeeded)
 
         time.sleep(2)

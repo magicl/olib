@@ -27,7 +27,7 @@ def base_request(
     headers: dict[str, str] | None = None,
     timeout: int = 10,
     session: Any = None,
-) -> Any:
+) -> dict[str, Any]:
     if params is None:
         params = {}
 
@@ -78,7 +78,7 @@ def base_request(
             raise RequestError(msg)
 
     try:
-        jsonResp = r.json()
+        jsonResp: dict[str, Any] = r.json()
     except Exception as e:
         msg = f"Unable to parse\nURL:'{full_url}'\nJSON:'{r.text}'"
         logger.error(msg)

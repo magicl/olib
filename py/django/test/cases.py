@@ -78,7 +78,7 @@ class MemDebugMixin:
         """Not called for parallel testcases"""
         cls = type(self)
         if settings.TEST_DEBUG_MEM and cls.memTracker is None:
-            cls.memTracker = tracker.SummaryTracker()
+            cls.memTracker = tracker.SummaryTracker()  # type: ignore[no-untyped-call]
 
         super().setUp()  # type: ignore[misc]
 
@@ -90,7 +90,7 @@ class MemDebugMixin:
         cls = type(self)
         if cls.memTracker is not None:
             gc.collect()
-            cls.memTracker.print_diff()
+            cls.memTracker.print_diff()  # type: ignore[no-untyped-call]
 
 
 class ConfigMixin:

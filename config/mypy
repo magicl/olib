@@ -2,7 +2,7 @@
 python_version = 3.12
 cache_dir=.output/.mypy_cache
 
-#strict = True
+strict = True
 #ignore_missing_imports = True
 #local_partial_types = True
 

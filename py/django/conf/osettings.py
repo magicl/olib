@@ -10,7 +10,7 @@ from typing import Any, NamedTuple
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max, QuerySet, Subquery
 
-from olib.py.django.conf.models import OnlineSetting
+from olib.py.django.conf.models import OnlineSetting  # type: ignore[attr-defined]
 from olib.py.exceptions import UserError
 from olib.py.utils.execenv import isEnvProduction, isEnvTest
 
@@ -46,25 +46,25 @@ class OnlineSettingRef:
         if osettings.settings[self.name].type != 'int':
             raise Exception(f"Online setting {self.name} is not an int")
 
-        return getattr(osettings, self.name)
+        return getattr(osettings, self.name)  # type: ignore[no-any-return]
 
     def __float__(self) -> float:
         if osettings.settings[self.name].type != 'float':
             raise Exception(f"Online setting {self.name} is not a float")
 
-        return getattr(osettings, self.name)
+        return getattr(osettings, self.name)  # type: ignore[no-any-return]
 
     def __str__(self) -> str:
         if osettings.settings[self.name].type != 'str':
             raise Exception(f"Online setting {self.name} is not a str")
 
-        return getattr(osettings, self.name)
+        return getattr(osettings, self.name)  # type: ignore[no-any-return]
 
     def __bool__(self) -> bool:
         if osettings.settings[self.name].type != 'bool':
             raise Exception(f"Online setting {self.name} is not a bool")
 
-        return getattr(osettings, self.name)
+        return getattr(osettings, self.name)  # type: ignore[no-any-return]
 
 
 class OnlineSettingsAccess:

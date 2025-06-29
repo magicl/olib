@@ -116,9 +116,9 @@ def mysqlsh_shell_connect_args(
 
 @contextmanager
 def mysql_port_forward(quiet: bool = False) -> Iterator[int]:
-    port = None
+    port: int | None = None
 
-    def func(s):
+    def func(s: str) -> None:
         nonlocal port
         # print(s)
         if m := re.match(r'Forwarding from 127.0.0.1:(\d+) ->', s):
@@ -186,10 +186,10 @@ def mysql_connect(ctx: click.Context, root: bool = False, use_db: bool | None = 
 @contextmanager
 def mysql_pipe(
     ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024
-) -> Iterator[tuple[queue.Queue, sh.Command]]:
+) -> Iterator[tuple[queue.Queue[str], sh.Command]]:
     """Open a pipe into mysql. Useful for e.g. restoring backups"""
     with mysql_shell_connect_args(ctx, root, quiet=quiet) as args:
-        mysqlIn: queue.Queue = queue.Queue(maxsize=queue_size)
+        mysqlIn: queue.Queue[str] = queue.Queue(maxsize=queue_size)
         mysql_ref = sh.mysql(*args, _in=mysqlIn, _bg=True, _no_out=True)
 
         yield mysqlIn, mysql_ref
@@ -208,7 +208,7 @@ def mysql_escape(s: str) -> str:
     """Note, even though escaped, this is not fully safe, and should only be used by superusers on good input"""
     from MySQLdb._mysql import escape_string
 
-    return escape_string(s.encode('utf-8')).decode('utf-8')
+    return str(escape_string(s.encode('utf-8')).decode('utf-8'))
 
 
 # def mysqlExec(db, q, params, table=True):

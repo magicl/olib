@@ -8,6 +8,7 @@
 import getpass
 import os
 from functools import partial
+from typing import Any
 
 import click
 import sh
@@ -23,18 +24,18 @@ from ..utils.postgres import postgres_connect, postgres_query
 from .base import prep_config
 
 
-def app_create_superuser_post(cls, ctx, q, username, email):
+def app_create_superuser_post(cls: Any, ctx: Any, q: Any, username: str, email: str) -> None:
     pass
 
 
-def _implement():
-    @click.group()
-    def mysqlGroup(help='MySQL commands'):
+def _implement() -> Any:
+    @click.group(help='MySQL commands')
+    def mysqlGroup() -> None:
         pass
 
     @mysqlGroup.command()
     @click.pass_context
-    def app_create_secret(ctx):
+    def app_create_secret(ctx: Any) -> None:
         """Create secret for the django app with the given name"""
         secretName = 'django'
         secret = makePassword(length=50, symbols=True)
@@ -54,7 +55,7 @@ def _implement():
 
     @mysqlGroup.command()
     @click.pass_context
-    def app_delete_secret(ctx):
+    def app_delete_secret(ctx: Any) -> None:
         """Create secret for the django app with the given name"""
         secretName = 'django'
 
@@ -64,7 +65,7 @@ def _implement():
 
     @mysqlGroup.command()
     @click.pass_context
-    def app_create_superuser(ctx):
+    def app_create_superuser(ctx: Any) -> None:
         """Create superuser for django app"""
 
         fname = mysql_escape(input('first name:'))
@@ -97,7 +98,7 @@ def _implement():
                 q = partial(postgres_query, db)
 
                 q(
-                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s, true, true, true, now());""",
+                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s, true, true, true, now());""",  # nosec
                     (username, email, password_hash, fname, ''),
                 )
 
@@ -109,14 +110,14 @@ def _implement():
     @mysqlGroup.command(context_settings={'ignore_unknown_options': True, 'help_option_names': []})
     @click.argument('args', nargs=-1)
     @click.pass_context
-    def manage(ctx, args):
+    def manage(ctx: Any, args: tuple[str, ...]) -> None:
         """Run manage.py commands"""
         sh.python3(ctx.obj.meta.django_manage_py, *args, _fg=True, _cwd=ctx.obj.meta.django_working_dir)
 
     return mysqlGroup
 
 
-def django(settings: str, manage_py: str = './manage.py', django_working_dir: str | None = None):
+def django(settings: str, manage_py: str = './manage.py', django_working_dir: str | None = None) -> Any:
     """
     Injects functions into service Config for managing django
 
@@ -124,7 +125,7 @@ def django(settings: str, manage_py: str = './manage.py', django_working_dir: st
 
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.django = True

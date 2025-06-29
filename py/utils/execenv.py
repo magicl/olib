@@ -10,7 +10,7 @@ import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from enum import Enum
-from typing import TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar('T')
 
@@ -170,8 +170,8 @@ def _isVagrant() -> bool:
     return os.path.isfile('/var/log/inside_vagrant')
 
 
-def _pickOne(what: str, *options: tuple[T | None, Callable], default: T | None = None) -> T:
-    result = set()
+def _pickOne(what: str, *options: tuple[T | None, Callable[[], Any]], default: T | None = None) -> T:
+    result: set[T] = set()
     for val, func in options:
         if val is None:
             # func returns values to add

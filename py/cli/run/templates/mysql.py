@@ -9,6 +9,7 @@
 import sys
 from contextlib import nullcontext
 from functools import partial
+from typing import Any
 
 import click
 import sh
@@ -33,22 +34,22 @@ from ..utils.mysql_backup import mysql_backup_import
 from .base import prep_config
 
 
-def _implement(defaultRoot=True):
-    @click.group()
-    def mysqlGroup(help='MySQL commands'):
+def _implement(defaultRoot: bool = True) -> Any:
+    @click.group(help='MySQL commands')
+    def mysqlGroup() -> None:
         pass
 
     @mysqlGroup.command(help='Start a MySQL shell (mysql)')
     @click.option('--root', help='Start in root mode', default=False, is_flag=True)
     @click.pass_context
-    def shell(ctx, root):
+    def shell(ctx: Any, root: bool) -> None:
         with mysql_shell_connect_args(ctx, root or defaultRoot) as args:
             sh.mysql(*args, _fg=True)
 
     @mysqlGroup.command(help='Start a MySQL admin shell (mysqlsh)')
     @click.option('--root', help='Start in root mode', default=False, is_flag=True)
     @click.pass_context
-    def admin(ctx, root):
+    def admin(ctx: Any, root: bool) -> None:
         with mysqlsh_shell_connect_args(ctx, root or defaultRoot) as args:
             sh.mysqlsh(*args, _fg=True)
 
@@ -56,7 +57,7 @@ def _implement(defaultRoot=True):
 
         @mysqlGroup.command()
         @click.pass_context
-        def app_create(ctx):
+        def app_create(ctx: Any) -> None:
             """Set up db user and database for the given app. Both will use 'name' as their name. Stores pwd as kubernetes secret in the same namespace"""
             with mysql_connect(ctx, root=True) as db:
                 q = partial(mysql_query, db)
@@ -103,7 +104,7 @@ def _implement(defaultRoot=True):
 
         @mysqlGroup.command()
         @click.pass_context
-        def app_exists(ctx):
+        def app_exists(ctx: Any) -> None:
             """Check if app exists"""
             secretName, *_ = mysql_convert_name(ctx)
 
@@ -113,7 +114,7 @@ def _implement(defaultRoot=True):
 
         @mysqlGroup.command()
         @click.pass_context
-        def app_delete(ctx):
+        def app_delete(ctx: Any) -> None:
             """Delete user and database for a given app"""
             click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             click.echo('This will delete the given app from mysql, including the app database and user')
@@ -157,7 +158,7 @@ def _implement(defaultRoot=True):
             type=int,
         )
         @click.pass_context
-        def app_import_backup(ctx, filename, dryrun, queue_size):
+        def app_import_backup(ctx: Any, filename: str, dryrun: bool, queue_size: int) -> None:
             """Import database backup"""
             if not dryrun:
                 click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
@@ -168,12 +169,12 @@ def _implement(defaultRoot=True):
                     sys.exit(1)
 
             class NullPipe:
-                def put(self, s):
+                def put(self, s: str) -> None:
                     pass
 
             # Need root in order to diesable foreign key checks etc. on import. We pass in a way to create a pipe
             # because the k8s port forwarding has a 4 hour timeout
-            def create_pipe():
+            def create_pipe() -> Any:
                 if dryrun:
                     return nullcontext((NullPipe(), None))
                 return mysql_pipe(ctx, root=True, quiet=True, queue_size=queue_size)
@@ -189,7 +190,7 @@ def _implement(defaultRoot=True):
     return mysqlGroup
 
 
-def mysql(root=False):
+def mysql(root: bool = False) -> Any:
     """
     Injects functions into service Config for managing mysql
 
@@ -197,7 +198,7 @@ def mysql(root=False):
 
     """
 
-    def decorator(cls):
+    def decorator(cls: Any) -> Any:
         prep_config(cls)
 
         cls.meta.mysql = True

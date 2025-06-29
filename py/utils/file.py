@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def openOrPassthrough(
-    filenameOrFile: bytes | str | io.IOBase | os.PathLike,
+    filenameOrFile: bytes | str | io.IOBase | os.PathLike[str],
     mode: str,
     *args: Any,
     storage: Any | None = None,

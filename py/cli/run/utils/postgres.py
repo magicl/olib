@@ -10,7 +10,7 @@ import sys
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 import sh
@@ -92,10 +92,10 @@ def postgres_shell_connect_args(
 
 
 @contextmanager
-def postgres_port_forward(quiet=False):
-    port = None
+def postgres_port_forward(quiet: bool = False) -> Generator[int, None, None]:
+    port: int | None = None
 
-    def func(s):
+    def func(s: str) -> None:
         nonlocal port
         # print(s)
         if m := re.match(r'Forwarding from 127.0.0.1:(\d+) ->', s):
@@ -154,10 +154,10 @@ def postgres_connect(
 @contextmanager
 def postgres_pipe(
     ctx: click.Context, root: bool = False, quiet: bool = False, queue_size: int = 1024
-) -> Generator[tuple[queue.Queue, sh.Command], None, None]:
+) -> Generator[tuple[queue.Queue[str], sh.Command], None, None]:
     """Open a pipe into postgres. Useful for e.g. restoring backups"""
     with postgres_shell_connect_args(ctx, root, quiet=quiet) as args:
-        postgresIn: queue.Queue = queue.Queue(maxsize=queue_size)
+        postgresIn: queue.Queue[str] = queue.Queue(maxsize=queue_size)
         postgres_ref = sh.postgres(*args, _in=postgresIn, _bg=True, _no_out=True)
 
         yield postgresIn, postgres_ref
@@ -172,7 +172,7 @@ def postgres_pipe(
             print('Postgres statements complete')
 
 
-def postgres_query(db, q, values=(), table=True):
+def postgres_query(db: Any, q: str, values: tuple[Any, ...] = (), table: bool = True) -> Any:
     """Use e.g. %s as placeholders for values, and pass values in 'values' as a tuple"""
     db.execute(q, values)
 
@@ -182,7 +182,7 @@ def postgres_query(db, q, values=(), table=True):
     return None
 
 
-def _postgres_result(db, table=True):
+def _postgres_result(db: Any, table: bool = True) -> Any:
     import pandas as pd
 
     if db.rowcount == -1:

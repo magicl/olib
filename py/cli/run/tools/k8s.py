@@ -8,16 +8,18 @@ from typing import Any
 
 import click
 import sh
-from yaml import load, dump
+from yaml import dump, load
+
 try:
-    from yaml import CLoader as Loader, CDumper as Dumper
+    from yaml import CDumper as Dumper
+    from yaml import CLoader as Loader
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Dumper, Loader  # type: ignore[assignment]
 
 
 def register(config: Any) -> None:
     @click.group()
-    def k8s():
+    def k8s() -> None:
         pass
 
     @k8s.command(
@@ -33,16 +35,22 @@ def register(config: Any) -> None:
 
         configs = []
         for cluster, node in (('dev', 'node0'), ('pub', 'pnode0')):
-            conf = sh.ssh('-o', 'BatchMode=yes', node, 'microk8s config')  # pylint: disable=too-many-function-args
-            token = sh.ssh('-o', 'BatchMode=yes', node, f'microk8s kubectl get secrets admin-{cluster}-token -n default -o jsonpath=\'{{.data.token}}\' | base64 --decode')  # pylint: disable=too-many-function-args
+            # pylint: disable=too-many-function-args
+            conf = sh.ssh('-o', 'BatchMode=yes', node, 'microk8s config')
+            token = sh.ssh(
+                '-o',
+                'BatchMode=yes',
+                node,
+                f'microk8s kubectl get secrets admin-{cluster}-token -n default -o jsonpath=\'{{.data.token}}\' | base64 --decode',
+            )
+            # pylint: enable=too-many-function-args
 
-            
             path = f"{kube_root}/configs/{cluster}.yml"
 
             if os.path.exists(path):
                 os.chmod(path, mode=0o700)
 
-            #Update names in config before writing out so multiple can be merged
+            # Update names in config before writing out so multiple can be merged
             doc = load(conf, Loader=Loader)
             doc['clusters'][0]['name'] = f'{cluster}-cluster'
             doc['contexts'][0]['context']['cluster'] = f'{cluster}-cluster'
@@ -50,13 +58,13 @@ def register(config: Any) -> None:
             doc['contexts'][0]['name'] = cluster
             doc['users'][0]['name'] = f'admin-{cluster}'
 
-            #Use token for service account created by 'services/system_serviceaccounts'
+            # Use token for service account created by 'services/system_serviceaccounts'
             del doc['users'][0]['user']['client-certificate-data']
             del doc['users'][0]['user']['client-key-data']
             doc['users'][0]['user']['token'] = token
 
             conf = dump(doc, Dumper=Dumper)
-            
+
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(conf)
 
@@ -65,12 +73,12 @@ def register(config: Any) -> None:
 
             configs.append(path)
 
-        #Write kubeconfig file
-        kubeconfig_env = ":".join(str(p) for p in configs)
-        
+        # Write kubeconfig file
+        kubeconfig_env = ':'.join(str(p) for p in configs)
+
         flattened_config = sh.kubectl.config.view(
-            "--flatten",
-            _env={"KUBECONFIG": kubeconfig_env},
+            '--flatten',
+            _env={'KUBECONFIG': kubeconfig_env},
         )
 
         with open(f'{kube_root}/config', 'w', encoding='utf-8') as f:

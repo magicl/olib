@@ -21,7 +21,7 @@ def register(config: Any) -> None:
     def test_all(ctx: Any, files: tuple[str, ...]) -> None:
         """Run all available tests that make sense"""
 
-        to_run: list[tuple] = []
+        to_run: list[tuple[str, str] | tuple[str, str, dict[str, Any]]] = []
 
         if 'python' in config.tools:
             to_run += [

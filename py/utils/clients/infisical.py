@@ -4,6 +4,7 @@
 # ~
 
 import logging
+from typing import Any
 
 from ..request import Requester, RequestError
 
@@ -44,11 +45,11 @@ class Infisical(Requester):
         self,
         method: str,
         url: str,
-        data: dict | None = None,
-        params: dict | None = None,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         timeout: int | None = 10,
-    ) -> dict:
+    ) -> dict[str, Any]:
         if headers is None:
             headers = {}
 

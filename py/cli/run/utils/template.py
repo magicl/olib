@@ -4,13 +4,14 @@
 # ~
 
 import os
+from typing import Any
 
 import click
 from jinja2 import Environment, FileSystemLoader
 
 
 def _render(
-    ctx: click.Context, filename: str, out_filename: str, base_dir: str, extra_context: dict | None = None
+    ctx: click.Context, filename: str, out_filename: str, base_dir: str, extra_context: dict[str, Any] | None = None
 ) -> None:
     env = Environment(loader=FileSystemLoader(base_dir))  # nosec
     template = env.get_template(filename)
@@ -19,7 +20,11 @@ def _render(
 
 
 def render_template(
-    ctx: click.Context, filename: str, extra_context: dict | None = None, suffix: str = '', base_dir: str | None = None
+    ctx: click.Context,
+    filename: str,
+    extra_context: dict[str, Any] | None = None,
+    suffix: str = '',
+    base_dir: str | None = None,
 ) -> str:
     """
     Applies template to target file, and returns a path to the new file to use. The new file is only updated if necessary

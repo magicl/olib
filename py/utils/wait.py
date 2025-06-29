@@ -17,14 +17,14 @@ class WaitForException(Exception):
 
 
 def waitFor(
-    func: Callable,
+    func: Callable[[], Any],
     *,
     equals: Any | None = None,
-    condition: Callable | None = None,
+    condition: Callable[[Any], bool] | None = None,
     timeout: int | float = 10,
     extraDelay: Any | None = None,
     delay: float = 0.1,
-    info: Callable | str = '',
+    info: Callable[[], str] | str = '',
     raiseOnFailure: bool = True,
     description: str = '',
 ) -> Any:

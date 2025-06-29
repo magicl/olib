@@ -16,6 +16,7 @@ import uuid
 from collections import defaultdict, deque
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import sh
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def mysql_backup_import(
-    create_pipe: Callable, database: str, filename: str, decrypt_pwd: str, debug_lookback: int = 128
+    create_pipe: Callable[[], Any], database: str, filename: str, decrypt_pwd: str, debug_lookback: int = 128
 ) -> None:
     """
     Apply a mysql backup to a database
@@ -41,7 +42,7 @@ def mysql_backup_import(
         logger.info('Wrote pwd to pipe')
 
     # Transformantions. Applies transformation of item[1] to any line that starts with item[0]
-    transforms = [
+    transforms: list[tuple[bytes, Callable[[bytes], bytes]]] = [
         # (b'CREATE', lambda line, reg=re.compile(rb'^(CREATE DATABASE .*) `(\w+)` (.*)'): ''), #reg.sub(rb'\1 `%b` \3' % bDatabase, line)),
         # (b'USE',    lambda line, reg=re.compile(rb'^USE `(\w+)`'):                       ''), #reg.sub(rb'USE `%b`'   % bDatabase, line)),
         (b'CREATE DATABASE', lambda line: b''),
@@ -75,16 +76,16 @@ def mysql_backup_import(
 
         # Track size of inserts in string-length
         insert_sizes: dict[str, int] = defaultdict(int)
-        insert_begin_at = {}
-        insert_end_at = {}
+        insert_begin_at: dict[str, float] = {}
+        insert_end_at: dict[str, float] = {}
 
         dot_period = 100
         # pipe_time_seconds = 600
 
         # In the interest of speed, whole file is decrypted into memory before being decompressed
-        cur_table = None
+        cur_table: str | None = None
         line_i = 0
-        debug_list: deque = deque(maxlen=debug_lookback)
+        debug_list: deque[bytes] = deque(maxlen=debug_lookback)
 
         with subprocess.Popen(
             f"gpg --decrypt --batch --yes --passphrase-file {fifo_name} --cipher-algo AES256 -o- {filename} | gunzip",
@@ -94,7 +95,7 @@ def mysql_backup_import(
             assert proc.stdout is not None  # nosec: assert_used
 
             feed = iter(proc.stdout)
-            line = None
+            line: bytes | None = None
             done = False
 
             while not done:
@@ -191,7 +192,8 @@ def mysql_backup_import(
             pipe.put(b"""SET GLOBAL connect_timeout = 10;\n""")
 
         # Final table
-        insert_end_at[cur_table] = time.time()
+        if cur_table is not None:
+            insert_end_at[cur_table] = time.time()
 
         # Output data for each
         print('INSERT sizes:')
