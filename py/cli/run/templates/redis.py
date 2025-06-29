@@ -21,7 +21,7 @@ from ..utils.redis_utils import redis_convert_name, redis_creds, redis_port_forw
 from .base import prep_config
 
 
-def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
+def _implement(defaultRoot: bool = True) -> Any:
     @click.group(help='Redis commands')
     def redisGroup() -> None:
         pass
@@ -81,7 +81,7 @@ def _implement(defaultRoot: bool = True) -> tuple[str, Any]:
             k8s_secret_delete(secretName, ctx.obj.k8sNamespace, ctx.obj.k8sContext)
             click.echo('Deleted redis secret from kubernetes')
 
-    return ('redis', redisGroup)
+    return redisGroup
 
 
 def redis(root: bool = False) -> Any:

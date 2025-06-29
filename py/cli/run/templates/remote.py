@@ -11,7 +11,7 @@ from ..utils.remote import con
 from .base import prep_config
 
 
-def _implement(plugins: Any, default_host: str) -> tuple[str, Any]:
+def _implement(plugins: Any, default_host: str) -> Any:
     @click.group(help='Remote commands')
     @click.option('-r', default=default_host, help='Remote target')
     @click.pass_context
@@ -49,7 +49,7 @@ def _implement(plugins: Any, default_host: str) -> tuple[str, Any]:
         for groupName, group in plugin():
             remote_group.add_command(group, name=groupName)
 
-    return ('remote', remote_group)
+    return remote_group
 
 
 def remote(
