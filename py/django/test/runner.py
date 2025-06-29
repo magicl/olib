@@ -29,7 +29,7 @@ from rich.table import Table
 from olib.py.utils.mem import procMaxMemUsage
 
 # Multiprocess data store. Don't create in daemonic processes
-store: dict[str, Any] | managers.DictProxy[str, Any]
+store: dict[str, Any] | Any
 
 if not current_process().daemon:
     manager = Manager()
