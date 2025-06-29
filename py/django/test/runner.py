@@ -10,14 +10,7 @@ import time
 import unittest
 from collections.abc import Generator
 from contextlib import contextmanager
-from multiprocessing import (
-    Manager,
-    Pool,
-    TimeoutError,
-    Value,
-    current_process,
-    managers,
-)
+from multiprocessing import Manager, Pool, TimeoutError, Value, current_process
 from typing import Any
 from unittest import TestLoader, TestResult
 
