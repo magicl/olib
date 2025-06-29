@@ -9,6 +9,7 @@ strict = True
 plugins = strawberry.ext.mypy_plugin{% if extra_context.have_django %},mypy_django_plugin.main{% endif %}
 
 
+mypy_path={% if meta.isOlib %}./py/stubs{% else %}./olib/py/stubs{% endif %}
 # THe above is the final version I want ^^
 
 
