@@ -81,27 +81,28 @@ class TestCliRun(OTestCase):
         cli: Any,
         args: list[str],
         exp_code: int = 0,
-        exp_out: str | None = None,
-        exp_err: str | None = None,
+        exp_out: str = '',
+        exp_err: str = '',
     ) -> None:
         logger.info(f'run {' '.join(args)}')
 
         result = runner.invoke(cli, args, catch_exceptions=False)
         self._check_cli_result(result, exp_code, exp_out, exp_err)
 
-    def _check_cli_result(
-        self, result: Any, exp_code: int | None = None, exp_out: str | None = None, exp_err: str | None = None
-    ) -> None:
+    def _check_cli_result(self, result: Any, exp_code: int, exp_out: str = '', exp_err: str = '') -> None:
         """Print exception in cli result if any"""
+
+        output = result.stdout_bytes.decode('utf-8')
+        error = result.stderr_bytes.decode('utf-8')
         logger.info(f'  exit_code={result.exit_code}')
-        logger.info(f'  stdout={result.stdout_bytes}')
-        logger.info(f'  stderr={result.stderr_bytes}')
+        logger.info(f'  stdout={output}')
+        logger.info(f'  stderr={error}')
 
         self.assertEqual(result.exit_code, exp_code)
         if exp_out is not None:
-            self.assertEqual(result.stdout_bytes, exp_out.encode('utf-8'))
+            self.assertEqual(output, exp_out)
         if exp_err is not None:
-            self.assertEqual(result.stderr_bytes, exp_err.encode('utf-8'))
+            self.assertEqual(error, exp_err)
 
     def test_shell(self) -> None:
         """Smoke-test for shell. Verify that getting help message works"""
@@ -184,7 +185,7 @@ class TestCliRun(OTestCase):
         cli = create_cli(config=Config)
         runner = CliRunner()
         result = runner.invoke(cli, ['remote', '-r', 'local', 'ping'], catch_exceptions=False)
-        self._check_cli_result(result, 0, 'Trying credential-set 0\nhey you!\n')
+        self._check_cli_result(result, 0, 'hey you!\n', 'Trying credential-set 0\n')
 
     def test_manual_login(self) -> None:
         """Verifies manual login with predefined credentials"""
@@ -244,7 +245,7 @@ class TestCliRun(OTestCase):
         clear_sessions()
 
         result = runner.invoke(cli, ['remote', '-r', 'local', 'ping'], catch_exceptions=False)
-        self._check_cli_result(result, 0, 'Trying credential-set 0\nhey you!\n')
+        self._check_cli_result(result, 0, 'hey you!\n', 'Trying credential-set 0\n')
 
         # Clean up temp file
         os.unlink(token_file)
