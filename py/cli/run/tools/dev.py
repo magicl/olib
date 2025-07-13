@@ -17,8 +17,9 @@ def register(config: Any) -> None:
 
     @dev.command()
     @click.argument('files', nargs=-1, type=click.Path())
+    @click.option('--full', is_flag=True, help='Run everything, including chromatic')
     @click.pass_context
-    def test_all(ctx: Any, files: tuple[str, ...]) -> None:
+    def test_all(ctx: Any, files: tuple[str, ...], full: bool) -> None:
         """Run all available tests that make sense"""
 
         to_run: list[tuple[str, str] | tuple[str, str, dict[str, Any]]] = []
@@ -37,7 +38,7 @@ def register(config: Any) -> None:
                 ('js', 'tsc'),
                 ('js', 'test-unit', {'no_ui': True}),
                 ('js', 'test-integration', {'no_ui': True}),
-                ('js', 'chromatic'),
+                *([('js', 'chromatic')] if full else []),
             ]
 
         # Find all commands and run
