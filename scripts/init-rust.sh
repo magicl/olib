@@ -3,6 +3,8 @@
 # Install Rust
 curl https://sh.rustup.rs -sSf | sh
 
+. $HOME/.cargo/env
+
 # Add WASM target
 rustup target add wasm32-unknown-unknown
 
