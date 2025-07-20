@@ -116,5 +116,33 @@ repos:
         #  language: system
         #  types_or: [javascript, jsx, ts, tsx]
         #  args: ['-c', 'python -m ${OLIB_MODULE} js tsc $@', '--']
+      - id: cargo-check
+        name: cargo check
+        entry: bash
+        language: system
+        types: [rust]
+        args: ['-c', 'cd rust/wasm-fields && cargo check']
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: bash
+        language: system
+        types: [rust]
+        args: ['-c', 'cd rust/wasm-fields && cargo clippy -- -D warnings']
+        pass_filenames: false
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: bash
+        language: system
+        types: [rust]
+        args: ['-c', 'cd rust/wasm-fields && cargo fmt']
+        pass_filenames: false
+      - id: cargo-test
+        name: cargo test
+        entry: bash
+        language: system
+        types: [rust]
+        args: ['-c', 'cd rust/wasm-fields && cargo test']
+        pass_filenames: false
 default_language_version:
   python: python3.12
