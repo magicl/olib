@@ -79,3 +79,4 @@ pylsp-mypy
 pylsp-rope
 python-lsp-ruff
 python-lsp-black
+urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
