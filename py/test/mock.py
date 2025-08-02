@@ -5,9 +5,14 @@
 
 from typing import Any
 
+from django.contrib.auth.models import AnonymousUser
+
 
 class MockRequest:
     def __init__(self, user: Any = None, backend: str | None = None) -> None:
+        if user is None:
+            user = AnonymousUser()
+
         self.user = user
         self.session: dict[str, Any] = {}
         self.META: dict[str, Any] = {}
@@ -33,3 +38,11 @@ class MockRequest:
         for name in dir(self):
             if name not in self.attrNames:
                 delattr(self, name)
+
+    async def auser(self) -> Any:
+        return self.user
+
+
+class MockGraphQLContext:
+    def __init__(self, request: MockRequest) -> None:
+        self.request = request

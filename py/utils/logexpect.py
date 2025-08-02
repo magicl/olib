@@ -7,8 +7,8 @@ import logging
 import re
 import time
 import uuid
-from collections.abc import Generator
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Generator
+from contextlib import asynccontextmanager, contextmanager
 from inspect import Traceback, getframeinfo, stack
 from multiprocessing import Manager, current_process, managers
 from typing import cast
@@ -123,7 +123,7 @@ class ExpectLogItem(logging.Filter):
             return False
 
         # No match. Let it pass
-        record.msg = '[SEEN->] ' + record.msg + ' [<-SEEN]'
+        record.msg = '[SEEN->] ' + msg + ' [<-SEEN]'
         return True
 
     def count(self) -> int:
@@ -146,16 +146,8 @@ class ExpectLogItem(logging.Filter):
         return f'logger: {self.logger}, level: {self.level}, regex: {self.regex}'
 
 
-# Checks for a specific number of defined log messages, and by default also suppresses them
-@contextmanager
-def expectLogItems(items: list[ExpectLogItem]) -> Generator[list[ExpectLogItem], None, None]:
-    # Get info about caller so we can give better error messages
-    # 0 is logging.expectLogItems
-    # 1 is contextlib.__enter__
-    # 2 is caller
-    caller = getframeinfo(stack()[2][0])
-
-    # Apply log filters
+def _setup_log_filters(items: list[ExpectLogItem], caller: Traceback) -> None:
+    """Setup log filters for the given items."""
     for i in items:
         # Verify that specified logger has been registered
         loggerInst = logging.root.manager.loggerDict.get(i.logger)  # pylint: disable=no-member
@@ -166,16 +158,84 @@ def expectLogItems(items: list[ExpectLogItem]) -> Generator[list[ExpectLogItem],
         # logging.getLogger(i.logger).addFilter(i)
         loggerInst.addFilter(i)
 
+
+def _cleanup_log_filters(items: list[ExpectLogItem]) -> None:
+    """Cleanup log filters and verify expected hits."""
+    for i in items:
+        logging.getLogger(i.logger).removeFilter(i)
+
+        # Verify that all items were hit
+        if i.count() > 0:
+            logger.error(
+                f'Logging {i.callerInfo} expected to be hit {i.count()} more times. {i}. Seen items:{i.records()}'
+            )
+
+
+# Checks for a specific number of defined log messages, and by default also suppresses them
+@contextmanager
+def expectLogItems(items: list[ExpectLogItem]) -> Generator[list[ExpectLogItem], None, None]:
+    """
+    Context manager for expecting log messages in synchronous functions.
+
+    Usage:
+        @expectLogItems([ExpectLogItem('logger.name', logging.ERROR, r'.*error.*', count=1)])
+        def my_test():
+            # Your test code here
+            some_operation()
+
+    Args:
+        items: List of ExpectLogItem instances to monitor
+
+    Yields:
+        The same list of items for potential inspection during the test
+    """
+    # Get info about caller so we can give better error messages
+    # 0 is logging.expectLogItems
+    # 1 is contextlib.__enter__
+    # 2 is caller
+    caller = getframeinfo(stack()[2][0])
+
+    # Apply log filters
+    _setup_log_filters(items, caller)
+
     try:
         # Run stuff
         yield items
     finally:
         # Remove log filters
-        for i in items:
-            logging.getLogger(i.logger).removeFilter(i)
+        _cleanup_log_filters(items)
 
-            # Verify that all items were hit
-            if i.count() > 0:
-                logger.error(
-                    f'Logging {i.callerInfo} expected to be hit {i.count()} more times. {i}. Seen items:{i.records()}'
-                )
+
+# Async version of expectLogItems for use with async functions
+@asynccontextmanager
+async def expectLogItemsAsync(items: list[ExpectLogItem]) -> AsyncGenerator[list[ExpectLogItem], None]:
+    """
+    Async context manager for expecting log messages in async functions.
+
+    Usage:
+        @expectLogItemsAsync([ExpectLogItem('logger.name', logging.ERROR, r'.*error.*', count=1)])
+        async def my_async_test():
+            # Your async test code here
+            await some_async_operation()
+
+    Args:
+        items: List of ExpectLogItem instances to monitor
+
+    Yields:
+        The same list of items for potential inspection during the test
+    """
+    # Get info about caller so we can give better error messages
+    # 0 is logging.expectLogItemsAsync
+    # 1 is contextlib.__aenter__
+    # 2 is caller
+    caller = getframeinfo(stack()[2][0])
+
+    # Apply log filters
+    _setup_log_filters(items, caller)
+
+    try:
+        # Run stuff
+        yield items
+    finally:
+        # Remove log filters
+        _cleanup_log_filters(items)
