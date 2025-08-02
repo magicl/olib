@@ -73,7 +73,7 @@ def mysql_shell_connect_args(
 
     user, pwd, database = mysql_creds(ctx, root, use_db)
 
-    with mysql_port_forward(quiet=quiet) as port:
+    with mysql_port_forward(ctx, quiet=quiet) as port:
         # Create a temp file for config to pass username / password
         with tempfile.NamedTemporaryFile(mode='w+t') as tempConfig:
             host = '127.0.0.1'
@@ -103,7 +103,7 @@ def mysqlsh_shell_connect_args(
 
     user, _, database = mysql_creds(ctx, root, use_db)
 
-    with mysql_port_forward() as port:
+    with mysql_port_forward(ctx) as port:
         host = '127.0.0.1'
 
         args = [f"--user={user}", f"--host={host}", f"--port={port}"]
@@ -115,7 +115,7 @@ def mysqlsh_shell_connect_args(
 
 
 @contextmanager
-def mysql_port_forward(quiet: bool = False) -> Iterator[int]:
+def mysql_port_forward(ctx: click.Context, quiet: bool = False) -> Iterator[int]:
     port: int | None = None
 
     def func(s: str) -> None:
@@ -130,6 +130,7 @@ def mysql_port_forward(quiet: bool = False) -> Iterator[int]:
         'service/mysql',
         ':3306',
         '-n=mysql',
+        f'--context={ctx.obj.k8sContext}',
         _bg=True,
         _out=func,
         _err=func,
@@ -157,7 +158,7 @@ def mysql_connect(ctx: click.Context, root: bool = False, use_db: bool | None = 
 
     user, pwd, database = mysql_creds(ctx, root, use_db)
 
-    with mysql_port_forward() as port:
+    with mysql_port_forward(ctx) as port:
         # Connect with mysql client. Add more mappings if we need access to more fields
         args = {
             'host': '127.0.0.1',

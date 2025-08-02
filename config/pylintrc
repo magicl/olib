@@ -55,7 +55,7 @@ confidence=
 
 #Default disabled rules due to tests not being applicable to Python3+. First additional arg is "bad-whitespace"
 
-disable=invalid-name,broad-exception-raised,missing-function-docstring,missing-class-docstring,missing-module-docstring,too-many-locals,unused-argument,too-many-branches,wrong-import-position,logging-format-interpolation,too-few-public-methods,unnecessary-lambda-assignment,multiple-imports,too-many-arguments,logging-fstring-interpolation,redefined-builtin,import-outside-toplevel,relative-beyond-top-level,missing-param-doc,missing-type-doc,trailing-whitespace,too-many-ancestors,too-many-nested-blocks,too-many-positional-arguments,wrong-import-order,duplicate-code,too-many-return-statements
+disable=invalid-name,broad-exception-raised,missing-function-docstring,missing-class-docstring,missing-module-docstring,too-many-locals,unused-argument,too-many-branches,wrong-import-position,logging-format-interpolation,too-few-public-methods,unnecessary-lambda-assignment,multiple-imports,too-many-arguments,logging-fstring-interpolation,redefined-builtin,import-outside-toplevel,relative-beyond-top-level,missing-param-doc,missing-type-doc,trailing-whitespace,too-many-ancestors,too-many-nested-blocks,too-many-positional-arguments,wrong-import-order,duplicate-code,too-many-return-statements,too-many-function-args
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

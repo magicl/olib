@@ -74,7 +74,7 @@ def postgres_shell_connect_args(
 
     user, pwd, database = postgres_creds(ctx, root, use_db)
 
-    with postgres_port_forward(quiet=quiet) as port:
+    with postgres_port_forward(ctx, quiet=quiet) as port:
         host = '127.0.0.1'
 
         args = [
@@ -92,7 +92,7 @@ def postgres_shell_connect_args(
 
 
 @contextmanager
-def postgres_port_forward(quiet: bool = False) -> Generator[int, None, None]:
+def postgres_port_forward(ctx: click.Context, quiet: bool = False) -> Generator[int, None, None]:
     port: int | None = None
 
     def func(s: str) -> None:
@@ -107,6 +107,7 @@ def postgres_port_forward(quiet: bool = False) -> Generator[int, None, None]:
         'service/postgres',
         ':5432',
         '-n=postgres',
+        f'--context={ctx.obj.k8sContext}',
         _bg=True,
         _out=func,
         _err=func,
@@ -135,7 +136,7 @@ def postgres_connect(
 
     user, pwd, database = postgres_creds(ctx, root, use_db)
 
-    with postgres_port_forward() as port:
+    with postgres_port_forward(ctx) as port:
         # Connect with postgres client. Add more mappings if we need access to more fields
         host = '127.0.0.1'
         url = f"postgresql://{user}:{pwd}@{host}:{port}"

@@ -32,7 +32,7 @@ def _implement(defaultRoot: bool = True) -> Any:
     def shell(ctx: Any, root: Any) -> None:
         pwd, database = redis_creds(ctx, root or defaultRoot)
 
-        with redis_port_forward() as port:
+        with redis_port_forward(ctx) as port:
             args = ['-h', '127.0.0.1', '-p', port]
             if database is not None:
                 args += ['-n', database]

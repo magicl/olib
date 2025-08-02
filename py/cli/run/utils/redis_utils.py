@@ -6,9 +6,9 @@
 import re
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
-from collections.abc import Generator
 
 import click
 import sh
@@ -42,7 +42,7 @@ def redis_creds(ctx: Any, root: bool | None = None) -> tuple[str, int | None]:
 
 
 @contextmanager
-def redis_port_forward() -> Generator[int, None, None]:
+def redis_port_forward(ctx: click.Context) -> Generator[int, None, None]:
     port = None
 
     def func(s: str) -> None:
@@ -57,6 +57,7 @@ def redis_port_forward() -> Generator[int, None, None]:
         'service/redis',
         ':6379',
         '-n=redis',
+        f'--context={ctx.obj.k8sContext}',
         _bg=True,
         _out=func,
         _err=func,

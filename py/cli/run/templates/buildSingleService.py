@@ -158,6 +158,12 @@ def k8s_push_config(cls: Any, ctx: click.Context) -> None:
 
 
 def k8s_push_secrets(cls: Any, ctx: click.Context) -> None:
+    """
+    Rules:
+        Prefix a filename with _ and it will be excluded
+        Use file:{filename} as a value in a secret file to load the contents of that file
+
+    """
     click.echo('Pushing Secrets to Kubernetes...')
     inst = ctx.obj.inst
 
@@ -166,6 +172,10 @@ def k8s_push_secrets(cls: Any, ctx: click.Context) -> None:
 
         secret_files = glob.glob(secret_file_glob)
         for secret_file in secret_files:
+            if os.path.basename(secret_file).startswith('_'):
+                # Exclude file.. This is included in other files
+                continue
+
             # Secret files have a config-file format, with key=value pairs
             env_vars = dotenv_values(secret_file)
 
