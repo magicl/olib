@@ -132,15 +132,20 @@ SECRET_KEY = env.str(
 # fmt: off
 SESSION_COOKIE_HTTPONLY = True     #Make session cookie http-only, to prevent JS from sniffing it
 SESSION_COOKIE_SECURE = not DEBUG  #Only serve session cookie over https
+SESSION_COOKIE_SAMESITE = 'Strict'  #Maximum security - cookies only sent on same-site requests
 CSRF_COOKIE_SECURE = not DEBUG     #Only serve csrf cookie over https
+CSRF_COOKIE_SAMESITE = 'Strict'    #Maximum security - cookies only sent on same-site requests
 
 CORS_ALLOW_CREDENTIALS = True      #Allow cookies to be sent with requests
 
 SECURE_CONTENT_TYPE_NOSNIFF = True #Pevent browser from trying to guess content type
+SECURE_BROWSER_XSS_FILTER = True   #Enable XSS protection header
 
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_SECONDS = 3600*24      #24 hours. Limits potential fallout, while still providing protection
+
+
 # fmt: on
 
 # Password validation
