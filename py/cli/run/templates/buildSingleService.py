@@ -171,9 +171,20 @@ def k8s_push_secrets(cls: Any, ctx: click.Context) -> None:
 
             # Store k8s secrets with the name of the secret file
             secret_name = os.path.basename(secret_file)
-            # Filter out None values to match the expected dict[str, str] type
-            filtered_env_vars = {k: v for k, v in env_vars.items() if v is not None}
-            k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, filtered_env_vars)
+
+            # Filter out None values and if a value starts with file:, load that file from the same directory
+            final_env_vars = {}
+            for k, v in env_vars.items():
+                if v is None:
+                    continue
+                if v.startswith('file:'):
+                    with open(os.path.join(os.path.dirname(secret_file), v[5:]), encoding='utf-8') as f:
+                        value = f.read()
+                else:
+                    value = v
+                final_env_vars[k] = value
+
+            k8s_secret_create_or_update(secret_name, ctx.obj.k8sNamespace, ctx.obj.k8sContext, final_env_vars)
 
 
 def k8s_migrate(cls: Any, ctx: click.Context, break_on_error: bool = False) -> None:
