@@ -89,10 +89,6 @@ class ExpectLogItem(logging.Filter):
         # if self.cRegex.match(message):
         # logger.info('level: {} == {}, {} on "{}" ~= "{}" at count={} countId {}'.format(record.levelno, self.level, self.cRegex.match(message) is not None, self.regex, message, self.count(), self.countId))
 
-        if not isinstance(record.msg, str):
-            # Don't process non-string messages
-            return True
-
         msg = str(message)
         match = record.levelno == self.level and self.cRegex.search(msg)
 
