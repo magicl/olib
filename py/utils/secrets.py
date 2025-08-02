@@ -47,7 +47,7 @@ def readFileSecretBytes(filename: str) -> bytes:
 
 
 def readFileSecret(filename: str) -> str:
-    return readFileSecretBytes(filename).decode('utf-8')
+    return readFileSecretBytes(filename).decode('utf-8').removesuffix('\n')
 
 
 class SecretProvider(ABC):
