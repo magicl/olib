@@ -7,9 +7,11 @@ import logging
 import re
 import time
 import uuid
+from collections.abc import Generator
 from contextlib import contextmanager
-from inspect import getframeinfo, stack
+from inspect import Traceback, getframeinfo, stack
 from multiprocessing import Manager, current_process, managers
+from typing import cast
 
 from django.conf import settings
 
@@ -21,7 +23,7 @@ logger = logging.getLogger('utils.logexpect')
 errorReg = lazyReCompile('ERROR|error|Error|Exception|EXCEPTION|exception|Traceback.*')
 
 # Multiprocess data store. Don't create in daemonic processes. Also only needed in test environment
-store: dict | managers.DictProxy
+store: dict[str, int | str] | managers.DictProxy  # type: ignore
 if not current_process().daemon and isEnvTest():
     manager = Manager()
     store = manager.dict()
@@ -29,28 +31,28 @@ else:
     store = {}
 
 
-def storeSet(key, val):
+def storeSet(key: str, val: int | str) -> None:
     store[key] = val
     # print(f'set: {key}, {val} -> {os.getpid()}.{threading.get_ident()}.{id(store)}\n{pprint.pformat(store)}')
 
 
-def storeAdd(key, val):
+def storeAdd(key: str, val: int) -> None:
     # print(f'add: {key}, {val} -> {id(store)} TRY')
     if key not in store:
         store[key] = val
         # print(f'add: {key}, {val} -> {os.getpid()}.{threading.get_ident()}.{id(store)}\n{pprint.pformat(store)}')
 
 
-def storeDec(key, val=1):
-    store[key] -= val
+def storeDec(key: str, val: int = 1) -> int:
+    store[key] -= val  # type: ignore
     # print(f'dec: {key}, {val} -> {os.getpid()}.{threading.get_ident()}.{id(store)}\n{pprint.pformat(store)}')
-    return store[key]
+    return store[key]  # type: ignore
 
 
 class ExpectLogItem(logging.Filter):
     postfixCounter = 0  # Added to keys to prevent items created rapidly after eachother from getting the same ID
 
-    def __init__(self, logger_, level, regex, count=1, suppress=True):
+    def __init__(self, logger_: str, level: int, regex: str, count: int = 1, suppress: bool = True) -> None:
         """
         :params count: set to -1 to block messages without a count cap
         """
@@ -62,11 +64,11 @@ class ExpectLogItem(logging.Filter):
         self.cRegex = re.compile(regex, re.DOTALL | re.M)
         self.suppress = suppress
         self.initialCount = count
-        self.countId = None
-        self.callerInfo = None  # Info about where in code this log expectation is
-        self.logDataId = None
+        self.countId = ''
+        self.callerInfo = ''  # Info about where in code this log expectation is
+        self.logDataId = ''
 
-    def init(self, caller=None):
+    def init(self, caller: Traceback | None = None) -> None:
         """Separate init function so object can be re-used multiple times"""
         # Items will be used across threads in a given process. Use regex and test-thread id to create
         # a unique entry in dict. Then use this value to keep track of number of hits
@@ -78,7 +80,7 @@ class ExpectLogItem(logging.Filter):
         storeSet(self.logDataId, '')
         ExpectLogItem.postfixCounter += 1
 
-    def filter(self, record):
+    def filter(self, record: logging.LogRecord) -> bool:
         # If record has exception attached, add exception info to match so we can filter on exception info
         message = record.getMessage()
         if record.exc_info:
@@ -114,7 +116,7 @@ class ExpectLogItem(logging.Filter):
                     if self.suppress:
                         record.levelno = logging.DEBUG
                         record.levelname = 'SUP!!'
-                        record.msg = errorReg.sub(
+                        record.msg = cast(re.Pattern[str], errorReg).sub(
                             lambda m: m.group(0)[:2] + ('*' * (len(m.group(0)) - 4)) + m.group(0)[-2:], record.msg
                         )
                     return True
@@ -128,11 +130,11 @@ class ExpectLogItem(logging.Filter):
         record.msg = '[SEEN->] ' + record.msg + ' [<-SEEN]'
         return True
 
-    def count(self):
+    def count(self) -> int:
         # logger.info('using key {}'.format(self.countId))
-        return store.get(self.countId, 0)
+        return cast(int, store.get(self.countId, 0))
 
-    def wait(self, timeout=10):
+    def wait(self, timeout: float = 10) -> None:
         """Wait until expected log messages have been received"""
         tStart = time.time()
         while self.count() > 0 and time.time() - tStart < timeout:
@@ -141,16 +143,16 @@ class ExpectLogItem(logging.Filter):
         if self.count() > 0:
             raise Exception('Log messages not seen before timeout')
 
-    def records(self):
-        return store.get(self.logDataId)
+    def records(self) -> str:
+        return cast(str, store.get(self.logDataId))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'logger: {self.logger}, level: {self.level}, regex: {self.regex}'
 
 
 # Checks for a specific number of defined log messages, and by default also suppresses them
 @contextmanager
-def expectLogItems(items):
+def expectLogItems(items: list[ExpectLogItem]) -> Generator[list[ExpectLogItem], None, None]:
     # Get info about caller so we can give better error messages
     # 0 is logging.expectLogItems
     # 1 is contextlib.__enter__
@@ -159,8 +161,14 @@ def expectLogItems(items):
 
     # Apply log filters
     for i in items:
+        # Verify that specified logger has been registered
+        loggerInst = logging.root.manager.loggerDict.get(i.logger)  # pylint: disable=no-member
+        if not loggerInst or not isinstance(loggerInst, logging.Logger):
+            raise ValueError(f'Logger {i.logger} not registered')
+
         i.init(caller)
-        logging.getLogger(i.logger).addFilter(i)
+        # logging.getLogger(i.logger).addFilter(i)
+        loggerInst.addFilter(i)
 
     try:
         # Run stuff
