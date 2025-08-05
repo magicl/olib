@@ -12,7 +12,7 @@ from django.db import transaction
 
 
 class Command(BaseCommand):
-    help = 'Creates a hashed password based on a password string based on current settings'
+    help = 'Updates permission groups based on the provided JSON file'
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument('file', help='JSON file with permission groups')
