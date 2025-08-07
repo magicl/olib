@@ -115,6 +115,9 @@ def register(config: Any) -> None:
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
 
+            click.echo('CLEARING MYPY CACHE (mypy has been craching on me a lot)')
+            sh.rm('-rf', '.output/.mypy_cache')
+
             config = render_template(ctx, 'config/mypy', {'have_django': ctx.obj.meta.django})
             cmd = 'dmypy start --' if daemon else 'nice mypy'
 
