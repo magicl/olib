@@ -25,12 +25,15 @@ def render_template(
     extra_context: dict[str, Any] | None = None,
     suffix: str = '',
     base_dir: str | None = None,
+    out_filename: str | None = None,
+    always_render: bool = False,
 ) -> str:
     """
     Applies template to target file, and returns a path to the new file to use. The new file is only updated if necessary
     :param suffix: Optional suffix to add to output filename to allow different output versions
     """
-    out_filename = f".output/tmpl/{filename}{suffix}"
+    if out_filename is None:
+        out_filename = f".output/tmpl/{filename}{suffix}"
     missing = False
 
     if base_dir is None:
@@ -40,7 +43,7 @@ def render_template(
         os.makedirs(os.path.dirname(out_filename), exist_ok=True)
         missing = True
 
-    if missing or os.path.getmtime(f"{base_dir}/{filename}") > os.path.getmtime(out_filename):
+    if missing or always_render or os.path.getmtime(f"{base_dir}/{filename}") > os.path.getmtime(out_filename):
         _render(ctx, filename, out_filename, base_dir, extra_context)
 
     return out_filename
