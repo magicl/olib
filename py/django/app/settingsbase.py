@@ -206,6 +206,10 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Don't automatically append slashes to urls. It can hide redirects
+APPEND_SLASH = False
+
+
 ###############################################################
 # Storage
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
