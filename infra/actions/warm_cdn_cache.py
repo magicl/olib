@@ -15,7 +15,7 @@ from rich.text import Text
 from urllib3.exceptions import InsecureRequestWarning
 
 
-def warm_cdn_cache_impl(
+def warm_cdn_cache(
     base_url: str,
     max_age_seconds: int,
     glob_to_url_mappings: list[tuple[str, str]],
