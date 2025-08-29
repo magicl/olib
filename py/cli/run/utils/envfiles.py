@@ -48,12 +48,14 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
     return grouped_vars
 
 
-def split_env_files(env_files: list[str], output_prefix: str) -> None:
+def split_env_files(env_files: list[str], output_prefix: str, substitutions: dict[str, str] | None = None) -> None:
     """
     Given a list of env files, breaks them down into grouped sections, and outputs
     to files under the output_prefix with ".groupname" as suffixes
 
     Vars in later files or later in files take priority in case there are duplicates
+
+    @param substitutions: If any {key} is found in the env files, it will be replaced with the value
 
     env file example:
 
@@ -71,7 +73,13 @@ def split_env_files(env_files: list[str], output_prefix: str) -> None:
     contents = []
     for env_file in env_files:
         with open(env_file, encoding='utf-8') as f:
-            contents.append((env_file, f.read()))
+            content = f.read()
+
+            if substitutions is not None:
+                for key, value in substitutions.items():
+                    content = content.replace(f'{{{key}}}', value)
+
+            contents.append((env_file, content))
 
     grouped_vars = _split_env_files_content(contents)
 
