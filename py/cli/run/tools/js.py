@@ -85,8 +85,9 @@ def register(config: Any) -> None:
 
         @js.command()
         @click.option('--no-ui', default=False, is_flag=True)
+        @click.option('--watch', default=False, is_flag=True)
         @click.pass_context
-        def test_unit(ctx: click.Context, no_ui: bool) -> None:
+        def test_unit(ctx: click.Context, no_ui: bool, watch: bool) -> None:
             # Keep it simple for now
             dir = 'frontend'
 
@@ -94,10 +95,12 @@ def register(config: Any) -> None:
             if no_ui:
                 env['CI'] = '1'
 
+            command = 'test:watch' if watch else 'test'
+
             sh.bash(
                 '-c',
-                """
-                nice npm run test
+                f"""
+                nice npm run {command}
                 """,
                 _fg=True,
                 _env=env,
