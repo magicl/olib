@@ -215,7 +215,7 @@ APPEND_SLASH = False
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 ###############################################################
 
-db_options = {}
+db_options: dict[str, Any] = {}
 
 if env('MYSQL_URL', default=''):
     os.environ['_DB_URL'] = (
@@ -238,6 +238,12 @@ if env('POSTGRES_URL', default=''):
         .replace('{POSTGRES_PASSWORD}', env('POSTGRES_PASSWORD', default=''))
         .replace('{POSTGRES_DB}', env('POSTGRES_DB', default=''))
     )
+
+    db_options = {
+        'OPTIONS': {
+            'pool': True,
+        }
+    }
 
 DATABASES = {
     'default': {

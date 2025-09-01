@@ -25,6 +25,13 @@ repos:
     hooks:
       - id: yamlfmt
         exclude: '/templates/'
+  - repo: https://github.com/reteps/dockerfmt
+    rev: main
+    hooks:
+      - id: dockerfmt
+        args:
+          - --indent=4
+          - --write
   # Only checks styles.. Does not fix them, so too much work :)
   # - repo: https://github.com/openstack/bashate
   #   rev: 2.1.1
