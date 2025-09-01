@@ -32,6 +32,7 @@ repos:
         args:
           - --indent=4
           - --write
+          - --newline
   # Only checks styles.. Does not fix them, so too much work :)
   # - repo: https://github.com/openstack/bashate
   #   rev: 2.1.1
