@@ -215,7 +215,12 @@ APPEND_SLASH = False
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 ###############################################################
 
-db_options: dict[str, Any] = {}
+# Defaults are applied to sqlite3
+db_options: dict[str, Any] = {
+    'OPTIONS': {
+        'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
+    }
+}
 
 if env('MYSQL_URL', default=''):
     os.environ['_DB_URL'] = (
@@ -228,6 +233,7 @@ if env('MYSQL_URL', default=''):
     db_options = {
         'OPTIONS': {
             'charset': 'utf8mb4',
+            'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
         }
     }
 
@@ -249,7 +255,6 @@ DATABASES = {
     'default': {
         **env.db_url('_DB_URL', default=f"sqlite:///{BASE_DIR}/db.sqlite3"),
         'isolation_level': 'read committed',
-        'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
         **db_options,
     }
 }
