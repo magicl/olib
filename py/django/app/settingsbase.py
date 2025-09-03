@@ -217,9 +217,7 @@ APPEND_SLASH = False
 
 # Defaults are applied to sqlite3
 db_options: dict[str, Any] = {
-    'OPTIONS': {
-        'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
-    }
+    'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
 }
 
 if env('MYSQL_URL', default=''):
@@ -231,10 +229,10 @@ if env('MYSQL_URL', default=''):
     )
 
     db_options = {
+        'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'CONN_MAX_AGE': 1000,  # Keep connection alive for a good amount of time
-        }
+        },
     }
 
 if env('POSTGRES_URL', default=''):
