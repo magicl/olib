@@ -26,7 +26,7 @@ repos:
       - id: yamlfmt
         exclude: '/templates/'
   - repo: https://github.com/reteps/dockerfmt
-    rev: main
+    rev: v0.3.7
     hooks:
       - id: dockerfmt
         args:
