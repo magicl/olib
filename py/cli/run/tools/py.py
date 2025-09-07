@@ -9,7 +9,6 @@ import os
 import shutil
 import sys
 from collections.abc import Sequence
-from functools import cache
 from typing import Any
 
 import click
@@ -17,12 +16,11 @@ import parproc as pp
 import sh
 
 from ....utils.file import dir_has_files
-from ....utils.listutils import groupByValue
 from ..templates.django_ import DjangoConfig
 from ..utils.template import render_template
 
 
-def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, bool]:
+def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, DjangoConfig | None]:
     """Find the Python root directory for a given file path.
 
     Traverses up the directory tree until it finds a directory with manage.py
@@ -54,7 +52,9 @@ def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, 
         current_dir = os.path.dirname(current_dir)
 
 
-def group_files_by_root(files: list[str], configs: list[DjangoConfig]) -> dict[tuple[str, DjangoConfig|None], list[str]]:
+def group_files_by_root(
+    files: list[str], configs: list[DjangoConfig]
+) -> dict[tuple[str, DjangoConfig | None], list[str]]:
     """Group files by their Python root directory.
 
     Args:
@@ -63,7 +63,7 @@ def group_files_by_root(files: list[str], configs: list[DjangoConfig]) -> dict[t
     Returns:
         dict: {(root_path, config): [file_paths]} mapping root directories to their files
     """
-    groups = {}
+    groups: dict[tuple[str, DjangoConfig | None], list[str]] = {}
 
     for file_path in files:
         root_path, config = find_py_root_dir(file_path, configs)
@@ -76,21 +76,21 @@ def group_files_by_root(files: list[str], configs: list[DjangoConfig]) -> dict[t
     return groups
 
 
-def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoConfig|None]]:
+def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoConfig | None]]:
     """Discover all Python root directories in the current working directory.
 
     Returns:
         list: [(root_path, config)] tuples for all discovered roots
         All paths are relative to the current working directory
     """
-    roots = []
+    roots: list[tuple[str, DjangoConfig | None]] = []
     cwd = os.getcwd()
 
     # Add the current working directory as a root (non-Django by default)
-    #roots.append(('.', None))
+    # roots.append(('.', None))
 
     # Find all directories with manage.py
-    for root, dirs, filenames in os.walk(cwd):
+    for root, _, filenames in os.walk(cwd):
         if 'manage.py' in filenames:
             # Convert to relative path from cwd
             rel_root = os.path.relpath(root, cwd)
@@ -105,32 +105,37 @@ def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoCon
             else:
                 raise Exception(f'Manage.py found in {rel_root} but no config found for it in config.py')
 
-    #Add project root if missing
+    # Add project root if missing
     if not any(r[0] == '.' for r in roots):
         roots.append(('.', None))
 
     return roots
 
+
 def list_py_dirs(root_path: str, exclude_dirs: list[str]) -> list[str]:
     dir_list = []
 
     for f in os.scandir(root_path):
-        if (f.is_dir()
+        if (
+            f.is_dir()
             and not f.name.startswith('.')
             and f.name not in ['olib', 'node_modules', '.venv']
             and f.name not in [os.path.basename(d) for d in exclude_dirs]
-            and dir_has_files(f.name, '*.py')):
+            and dir_has_files(f.name, '*.py')
+        ):
             dir_list.append(f.name)
 
     dir_list = dir_list + ['*.py']
     return dir_list
 
 
-def get_py_file_groups(files: list[str], configs: list[DjangoConfig]) -> dict[tuple[str, DjangoConfig|None], list[str]]:
+def get_py_file_groups(
+    files: list[str], configs: list[DjangoConfig]
+) -> dict[tuple[str, DjangoConfig | None], list[str]]:
     if not files:
         # No files specified - discover all roots and use them as groups
         roots = discover_all_roots(configs)
-        groups = {}
+        groups: dict[tuple[str, DjangoConfig | None], list[str]] = {}
 
         django_dirs = [d for d, config in roots if config is not None]
         for root_path, config in roots:
@@ -146,7 +151,6 @@ def get_py_file_groups(files: list[str], configs: list[DjangoConfig]) -> dict[tu
 def pre_commit(cmd: str, files: Sequence[str]) -> None:
     fileStr = '--all-files' if not files else f"--files {' '.join(files)}"
     sh.bash('-c', f"pre-commit run {cmd} {fileStr}", _fg=True)
-
 
 
 def register(config: Any) -> None:
@@ -168,7 +172,7 @@ def register(config: Any) -> None:
         @click.pass_context
         def lint(ctx: click.Context, files: list[str], quiet: bool) -> None:
             """Run pylint"""
-            #if ctx.obj.meta.isOlib:
+            # if ctx.obj.meta.isOlib:
             #    # All python code is in the py folder
             #    files = ['py', '*.py']
 
@@ -180,11 +184,13 @@ def register(config: Any) -> None:
                     continue
 
                 pylintrc_path = render_template(
-                    ctx, 'config/pylintrc', {'django_config': config},
-                    suffix=f'.django.{config.hash()}' if config is not None else ''
+                    ctx,
+                    'config/pylintrc',
+                    {'django_config': config},
+                    suffix=f'.django.{config.hash()}' if config is not None else '',
                 )
 
-                print(f'Pylint {root_path} : {files_list} {"[django]" if config is not None else ""} {pylintrc_path}')
+                print(f'Pylint {root_path} : {files_list} {'[django]' if config is not None else ''} {pylintrc_path}')
                 print('=======================================================================================')
 
                 sh.bash(
@@ -193,11 +199,15 @@ def register(config: Any) -> None:
                     nice pylint --rcfile={pylintrc_path} {'-rn -sn' if quiet else ''} {' '.join(files_list)}
                     """,
                     _fg=True,
-                    _env={
-                        **os.environ,
-                        'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
-                        'DJANGO_SETTINGS_MODULE': config.settings,
-                    } if config is not None else os.environ,
+                    _env=(
+                        {
+                            **os.environ,
+                            'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
+                            'DJANGO_SETTINGS_MODULE': config.settings,
+                        }
+                        if config is not None
+                        else os.environ
+                    ),
                 )
 
         @py.command()
@@ -211,8 +221,8 @@ def register(config: Any) -> None:
 
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
-            #click.echo('CLEARING MYPY CACHE (mypy has been craching on me a lot)')
-            #sh.rm('-rf', '.output/.mypy_cache')
+            # click.echo('CLEARING MYPY CACHE (mypy has been craching on me a lot)')
+            # sh.rm('-rf', '.output/.mypy_cache')
 
             cmd = 'dmypy start --' if daemon else 'nice mypy'
             exclude = '--exclude=^.*/olib/.*$'
@@ -222,11 +232,14 @@ def register(config: Any) -> None:
                 if not files_list:
                     continue
 
-                mypyrc_path = render_template(ctx, 'config/mypy', {'django_config': config},
-                    suffix=f'.django.{config.hash()}' if config is not None else ''
+                mypyrc_path = render_template(
+                    ctx,
+                    'config/mypy',
+                    {'django_config': config},
+                    suffix=f'.django.{config.hash()}' if config is not None else '',
                 )
 
-                print(f'Mypy {root_path} : {files_list} {"[django]" if config is not None else ""} {mypyrc_path}')
+                print(f'Mypy {root_path} : {files_list} {'[django]' if config is not None else ''} {mypyrc_path}')
                 print('=======================================================================================')
 
                 sh.bash(
@@ -235,11 +248,15 @@ def register(config: Any) -> None:
                     {cmd} --config-file={mypyrc_path} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(files_list)}
                     """,
                     _fg=True,
-                    _env={
-                        **os.environ,
-                        'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
-                        'DJANGO_SETTINGS_MODULE': config.settings,
-                    } if config is not None else os.environ,
+                    _env=(
+                        {
+                            **os.environ,
+                            'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
+                            'DJANGO_SETTINGS_MODULE': config.settings,
+                        }
+                        if config is not None
+                        else os.environ
+                    ),
                 )
 
         @py.command()

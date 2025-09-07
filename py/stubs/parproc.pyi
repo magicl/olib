@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeVar, Union, overload
+from typing import Any, Callable, TypeVar, overload
 
 F = TypeVar('F', bound=Callable[..., Any])
 

@@ -7,11 +7,12 @@
 
 import glob
 import re
+from typing import Any
 
 import click
 
 
-def get_headers(use_apache=False):
+def get_headers(use_apache: bool = False) -> list[dict[str, Any]]:
     # Common excludes
     excludes = [
         '.*node_modules/.*',
@@ -86,7 +87,7 @@ def get_headers(use_apache=False):
     return headers
 
 
-def updateFile(spec, filename, dryrun):
+def updateFile(spec: dict[str, Any], filename: str, dryrun: bool) -> str:
     with open(filename, encoding='utf-8') as f:
         content = f.read()
 
@@ -130,7 +131,7 @@ totalUpdated = 0
 headerMatches = 0
 
 
-def pathGenerator(spec, paths=None):
+def pathGenerator(spec: dict[str, Any], paths: list[str] | None = None) -> Any:
     """
     Call with targets to apply glob to find paths
     or call with paths to skip glob
@@ -181,7 +182,7 @@ def pathGenerator(spec, paths=None):
 @click.option('--dryrun/--no-dryrun', default=False, is_flag=True)  # Disable dryrun to do stuff for real
 @click.option('--license', type=click.Choice(['restrictive', 'apache']), default='restrictive')
 @click.argument('paths', nargs=-1)
-def main(paths, dryrun, license):
+def main(paths: tuple[str, ...], dryrun: bool, license: str) -> None:
     global headerMatches, totalUpdated  # pylint: disable=global-statement
 
     # Olib is the only on using apache at this point. Expand later
@@ -189,7 +190,7 @@ def main(paths, dryrun, license):
 
     for spec in get_headers(use_apache):
         headerMatches = 0
-        for path in pathGenerator(spec, paths=paths):
+        for path in pathGenerator(spec, paths=list(paths) if paths else None):
             status = updateFile(spec, path, dryrun)
             if status == 'UPDATE':
                 totalUpdated += 1

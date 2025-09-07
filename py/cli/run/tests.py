@@ -250,12 +250,18 @@ class TestCliRun(OTestCase):
         # Clean up temp file
         os.unlink(token_file)
 
-
     def test_py_dir_discovery(self) -> None:
         """Verify that py dir discovery works for mypy, pylint, ..."""
 
-        from olib.py.cli.run.tools.py import discover_all_roots
-        from olib.py.cli.run.tools.py import group_files_by_root
+        from olib.py.cli.run.templates.django_ import DjangoConfig
+        from olib.py.cli.run.tools.py import discover_all_roots, group_files_by_root
 
-        self.assertEqual(discover_all_roots(), [('.', False), ('py/django/_app', True)])
-        self.assertEqual(group_files_by_root(['py/tests/test_csv.py', 'py/django/_app/settings.py']), {('.', False): ['py/tests/test_csv.py'], ('py/django/_app', True): ['py/django/_app/settings.py']})
+        # Create a mock config for testing
+        config = DjangoConfig('py/django/_app', 'test_settings')
+        configs = [config]
+
+        self.assertEqual(discover_all_roots(configs), [('.', None), ('py/django/_app', config)])
+        self.assertEqual(
+            group_files_by_root(['py/tests/test_csv.py', 'py/django/_app/settings.py'], configs),
+            {('.', None): ['py/tests/test_csv.py'], ('py/django/_app', config): ['py/django/_app/settings.py']},
+        )

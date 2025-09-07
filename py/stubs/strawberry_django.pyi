@@ -7,6 +7,8 @@
 Type stubs for strawberry_django decorators to fix mypy errors.
 """
 
+# pylint: disable=redefined-outer-name,abstract-method
+
 from collections.abc import Callable, Sequence
 from typing import Any, Type, TypeVar, overload
 
