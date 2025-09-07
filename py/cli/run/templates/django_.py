@@ -6,12 +6,12 @@
 # pylint: disable=duplicate-code
 
 import getpass
+import hashlib
 import os
 from functools import partial
-from typing import Any
+from typing import Any, NamedTuple
 
 import click
-import hashlib
 import sh
 
 from ....utils.kubernetes import (
@@ -23,11 +23,10 @@ from ....utils.passwords import makePassword
 from ..utils.mysql import mysql_connect, mysql_escape, mysql_query
 from ..utils.postgres import postgres_connect, postgres_query
 from .base import prep_config
-from typing import NamedTuple
 
 
 class DjangoConfig(NamedTuple):
-    settings: str # django settings module
+    settings: str  # django settings module
     working_dir: str = './'
     manage_py: str = './manage.py'
 
@@ -35,10 +34,11 @@ class DjangoConfig(NamedTuple):
         return os.path.normpath(os.path.join(self.working_dir, self.manage_py))
 
     def hash(self) -> str:
-        #Create a simple 6 digit hash of the settings_module and working_dir for caching
+        # Create a simple 6 digit hash of the settings_module and working_dir for caching
         return hashlib.sha256(f'{self.settings}{self.working_dir}'.encode()).hexdigest()[:6]
 
-
+    def name(self) -> str:
+        return self.settings.split('.')[-2]
 
 
 def app_create_superuser_post(cls: Any, ctx: Any, q: Any, username: str, email: str) -> None:
@@ -149,8 +149,8 @@ def django(configs: list[DjangoConfig]) -> Any:
         cls.meta.commandGroups.append(('django', _implement()))
 
         # Ensure correct django settings have been configurated
-        #os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings)
-        #os.environ['PYTHONPATH'] = f'{os.environ.get('PYTHONPATH', '')}:{cls.meta.django_working_dir}'
+        # os.environ.setdefault('DJANGO_SETTINGS_MODULE', settings)
+        # os.environ['PYTHONPATH'] = f'{os.environ.get('PYTHONPATH', '')}:{cls.meta.django_working_dir}'
 
         for f in (app_create_superuser_post,):
             if not hasattr(cls, f.__name__):

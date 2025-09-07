@@ -306,24 +306,28 @@ def register(config: Any) -> None:
                 return
 
             # Make sure db is up to date
-            @pp.Proc(now=True)  # type: ignore[misc]
-            def migrate(context: Any) -> None:
-                sh.python3(ctx.obj.meta.django_manage_py, 'migrate', _cwd=ctx.obj.meta.django_working_dir)
+            for config in ctx.obj.meta.django:
+
+                @pp.Proc(now=True, name=f'migrate:{config.name()}')  # type: ignore[misc]
+                def migrate(context: Any, config: DjangoConfig = config) -> None:
+                    sh.python3(config.manage_py, 'migrate', _cwd=config.working_dir)
 
             # @pp.Proc(name='create-admin', deps=['migrate'], now=True)
             # def createAdmin(context):
             #     sh.python3('./sm.py', 'admin-create', 'admin', '', '', '', 'superuser', 'nimda', '--if-no-user')
 
             # Process / copy all static images etc
-            @pp.Proc(now=True)  # type: ignore[misc]
-            def collect_static(context: Any) -> None:
-                sh.python3(
-                    ctx.obj.meta.django_manage_py,
-                    'collectstatic',
-                    '-v0',
-                    '--noinput',
-                    _cwd=ctx.obj.meta.django_working_dir,
-                )
+            for config in ctx.obj.meta.django:
+
+                @pp.Proc(now=True, name=f'collect-static:{config.name()}')  # type: ignore[misc]
+                def collect_static(context: Any, config: DjangoConfig = config) -> None:
+                    sh.python3(
+                        config.manage_py,
+                        'collectstatic',
+                        '-v0',
+                        '--noinput',
+                        _cwd=config.working_dir,
+                    )
 
             # @pp.Proc(name='kill-existing-servers', now=True)
             # def killExistingServers(context):
@@ -343,13 +347,18 @@ def register(config: Any) -> None:
             _djangoSetupTasks(ctx, fast)
             pp.wait_clear(exception_on_failure=True)
 
+            config = ctx.obj.meta.django[0] if ctx.obj.meta.django else None
+            if config is None:
+                print('Runserver not implemented for non-django. Fix!')
+                sys.exit(0)
+
             cmd = sh.python3.bake(
-                ctx.obj.meta.django_manage_py,
+                config.manage_py,
                 'runserver',
                 '--nostatic',
                 *args,
                 _env=os.environ,
-                _cwd=ctx.obj.meta.django_working_dir,
+                _cwd=config.working_dir,
             )
 
             if tee:
@@ -374,7 +383,7 @@ def register(config: Any) -> None:
             if tee:
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
 
-            if not ctx.obj.config.meta.django:
+            if ctx.obj.config.meta.django is None:
                 print('Tests not implemented for non-django. Fix!')
                 sys.exit(0)
 
@@ -397,42 +406,44 @@ def register(config: Any) -> None:
                 pre_args += ['coverage', 'run', f"--rcfile={coverage_config}"]
 
             env = os.environ
+            for config in ctx.obj.meta.django:
+                if coverage:
+                    coverage_config = render_template(ctx, 'config/coveragerc')
+                    env['COVERAGE_FILE'] = '.output/.coverage'
+
+                    cmd = sh.coverage.bake(
+                        'run',
+                        f"--rcfile={coverage_config}",
+                        config.manage_py,
+                        'test',
+                        *sharedArgs,
+                        *args,
+                        _env=env,
+                        _cwd=config.working_dir,
+                    )
+                else:
+                    cmd = sh.python3.bake(
+                        *pre_args,
+                        config.manage_py,
+                        'test',
+                        *sharedArgs,
+                        *args,
+                        _env=env,
+                        _cwd=config.working_dir,
+                    )
+
+                if tee:
+                    sh.tee(
+                        tee_to,
+                        _in=cmd(_piped=True, _err_to_out=True),
+                        _out=sys.stdout,
+                        _err=sys.stderr,
+                    )
+                else:
+                    cmd(_fg=True)
+
             if coverage:
-                coverage_config = render_template(ctx, 'config/coveragerc')
-                env['COVERAGE_FILE'] = '.output/.coverage'
-
-                cmd = sh.coverage.bake(
-                    'run',
-                    f"--rcfile={coverage_config}",
-                    ctx.obj.meta.django_manage_py,
-                    'test',
-                    *sharedArgs,
-                    *args,
-                    _env=env,
-                    _cwd=ctx.obj.meta.django_working_dir,
-                )
-            else:
-                cmd = sh.python3.bake(
-                    *pre_args,
-                    ctx.obj.meta.django_manage_py,
-                    'test',
-                    *sharedArgs,
-                    *args,
-                    _env=env,
-                    _cwd=ctx.obj.meta.django_working_dir,
-                )
-
-            if tee:
-                sh.tee(
-                    tee_to,
-                    _in=cmd(_piped=True, _err_to_out=True),
-                    _out=sys.stdout,
-                    _err=sys.stderr,
-                )
-            else:
-                cmd(_fg=True)
-
-            if coverage:
+                sh.coverage('combine', _fg=True)
                 sh.coverage('report', '-m', _fg=True)
                 sh.coverage('html', '--directory=.output/htmlcov', _fg=True)
 
