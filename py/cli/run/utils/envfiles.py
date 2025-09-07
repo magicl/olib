@@ -2,8 +2,10 @@
 # Copyright 2024 Øivind Loe
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
+import os
 import re
 from collections import defaultdict
+from os import makedirs
 
 
 def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, dict[str, str]]:
@@ -69,6 +71,8 @@ def split_env_files(env_files: list[str], output_prefix: str, substitutions: dic
     FOO=qux
 
     """
+
+    makedirs(os.path.dirname(output_prefix), exist_ok=True)
 
     contents = []
     for env_file in env_files:

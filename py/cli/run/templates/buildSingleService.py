@@ -337,7 +337,9 @@ def docker_run(cls: Any, ctx: click.Context) -> None:
     )
 
 
-def docker_compose(cls: Any, ctx: click.Context, no_build: bool = False) -> None:
+def docker_compose(
+    cls: Any, ctx: click.Context, no_build: bool = False, debug: bool = False, force: bool = False
+) -> None:
     click.echo('Running Docker Compose...')
     meta = ctx.obj.meta
 
@@ -357,10 +359,17 @@ def docker_compose(cls: Any, ctx: click.Context, no_build: bool = False) -> None
     original_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         build_str = '' if no_build else '--build'
+
+        options = ''
+        if debug:
+            options = f"{options} --progress=plain"
+        if force:
+            build_str = f"{build_str} --force-recreate"
+
         sh.bash(
             '-c',
             f"""
-        docker compose -f {meta.build_compose} up {build_str} --abort-on-container-exit --remove-orphans;
+        docker compose -f {meta.build_compose} {options} up {build_str} --abort-on-container-exit --remove-orphans;
         docker compose -f {meta.build_compose} down
         """,
             _fg=True,
@@ -513,12 +522,14 @@ def _implementDocker() -> Any:
     @dockerGroup.command('compose')
     @click.option('--no-build', help='Skip build step', default=False, is_flag=True)
     @click.option('--no-pre-build', help='Skip pre-build step', default=False, is_flag=True)
+    @click.option('--debug', help='Output all build info', default=False, is_flag=True)
+    @click.option('--force', help='Force build.  Ignore cache', default=False, is_flag=True)
     @click.pass_context
-    def compose(ctx: click.Context, no_build: bool, no_pre_build: bool) -> None:
+    def compose(ctx: click.Context, no_build: bool, no_pre_build: bool, debug: bool, force: bool) -> None:
         """Run container in docker"""
         if not no_pre_build:
             run_images_build_pre(ctx.obj.config, ctx, k8s=False)
-        ctx.obj.config.docker_compose(ctx, no_build=no_build)
+        ctx.obj.config.docker_compose(ctx, no_build=no_build, debug=debug, force=force)
 
     @dockerGroup.command('shell')
     @click.pass_context
