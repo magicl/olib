@@ -340,19 +340,25 @@ TEMPLATES: list[dict[str, Any | dict[str, list[Any]]]] = [
         },
         'NAME': 'django',
     },
-    {
-        'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': ['templates', 'olib/py/django/xauth/templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'environment': 'olib.py.django.app.jinja2env.environment',
-            #'extensions': [
-            #    'webpack_loader.contrib.jinja2ext.WebpackExtension',
-            # ],
-        },
-        'NAME': 'jinja2',
-    },
 ]
+
+# Add jinja2 template engine if jinja2 is installed
+try:
+    import jinja2
+
+    TEMPLATES.append(
+        {
+            'BACKEND': 'django.template.backends.jinja2.Jinja2',
+            'DIRS': ['templates', 'olib/py/django/xauth/templates'],
+            'APP_DIRS': True,
+            'OPTIONS': {
+                'environment': 'olib.py.django.app.jinja2env.environment',
+            },
+            'NAME': 'jinja2',
+        }
+    )
+except ImportError:
+    pass
 
 # IMPORTANT: set option to make sure file urls in templates are replaced with filename.hash.ext
 

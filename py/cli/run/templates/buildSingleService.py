@@ -37,7 +37,7 @@ def images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
 def run_images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
     click.echo('Pre-build Steps For Image...')
     cls.images_build_pre(ctx, k8s=k8s)
-    pp.wait_clear(exception_on_failure=True)
+    pp.wait_clear(exception_on_failure=True)  # type: ignore
 
 
 def images_build(

@@ -203,7 +203,7 @@ def register(config: Any) -> None:
             # sh.rm('-rf', '.output/.mypy_cache')
 
             cmd = 'dmypy start --' if daemon else 'nice mypy'
-            exclude = '--exclude=^.*/olib/.*$'
+            exclude = '--exclude=.*/olib/.*'
 
             # Run mypy on all groups
             for (root_path, config), files_list in groups.items():
