@@ -29,6 +29,7 @@ class DjangoConfig(NamedTuple):
     settings: str  # django settings module
     working_dir: str = './'
     manage_py: str = './manage.py'
+    collectstatic: bool = True
 
     def rel_manage_py_path(self) -> str:
         return os.path.normpath(os.path.join(self.working_dir, self.manage_py))

@@ -257,11 +257,13 @@ class TestCliRun(OTestCase):
         from olib.py.cli.run.tools.py import discover_all_roots, group_files_by_root
 
         # Create a mock config for testing
-        config = DjangoConfig('py/django/_app', 'test_settings')
+        config = DjangoConfig(
+            settings='olib.py.django._app.settings', manage_py='py/django/_app/manage.py', working_dir='.'
+        )
         configs = [config]
 
-        self.assertEqual(discover_all_roots(configs), [('.', None), ('py/django/_app', config)])
+        self.assertEqual(discover_all_roots(configs), [('.', config)])
         self.assertEqual(
             group_files_by_root(['py/tests/test_csv.py', 'py/django/_app/settings.py'], configs),
-            {('.', None): ['py/tests/test_csv.py'], ('py/django/_app', config): ['py/django/_app/settings.py']},
+            {('.', config): ['py/tests/test_csv.py', 'py/django/_app/settings.py']},
         )

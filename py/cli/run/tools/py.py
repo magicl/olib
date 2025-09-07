@@ -23,33 +23,27 @@ from ..utils.template import render_template
 def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, DjangoConfig | None]:
     """Find the Python root directory for a given file path.
 
-    Traverses up the directory tree until it finds a directory with manage.py
-    or hits the current working directory.
+    Checks if the file is within any of the configured Django roots.
 
     Args:
         file_path: Path to a file
+        configs: List of Django configurations
 
     Returns:
         tuple: (root_path, config) where:
             - root_path: The root directory path (relative to cwd)
             - config: The Django config for the root directory, or None if no config is found
     """
-    current_dir = os.path.dirname(os.path.abspath(file_path))
-    cwd = os.getcwd()
+    file_path = os.path.abspath(file_path)
 
-    while True:
-        manage_py_path = os.path.join(current_dir, 'manage.py')
-        if os.path.exists(manage_py_path):
-            for config in configs:
-                if config.rel_manage_py_path() == manage_py_path:
-                    return os.path.relpath(current_dir, cwd), config
-            raise Exception(f'Manage.py found in {current_dir} but no config found for it in config.py')
+    # Check if file is within any Django root
+    for config in configs:
+        config_abs_path = os.path.abspath(config.working_dir)
+        if file_path.startswith(config_abs_path):
+            return config.working_dir, config
 
-        if current_dir == cwd or current_dir == os.path.dirname(current_dir):
-            # Hit the working directory or root of filesystem
-            return '.', None
-
-        current_dir = os.path.dirname(current_dir)
+    # If not in any Django root, return current directory as non-Django root
+    return '.', None
 
 
 def group_files_by_root(
@@ -77,35 +71,19 @@ def group_files_by_root(
 
 
 def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoConfig | None]]:
-    """Discover all Python root directories in the current working directory.
+    """Discover all Python root directories from the Django configurations.
 
     Returns:
         list: [(root_path, config)] tuples for all discovered roots
         All paths are relative to the current working directory
     """
     roots: list[tuple[str, DjangoConfig | None]] = []
-    cwd = os.getcwd()
 
-    # Add the current working directory as a root (non-Django by default)
-    # roots.append(('.', None))
+    # Add all Django roots from configs
+    for config in configs:
+        roots.append((config.working_dir, config))
 
-    # Find all directories with manage.py
-    for root, _, filenames in os.walk(cwd):
-        if 'manage.py' in filenames:
-            # Convert to relative path from cwd
-            rel_root = os.path.relpath(root, cwd)
-
-            if any(p in rel_root for p in ['olib', 'node_modules', '.venv']):
-                continue
-
-            for config in configs:
-                if config.rel_manage_py_path() in os.path.normpath(os.path.join(root, 'manage.py')):
-                    roots.append((config.working_dir, config))
-                    break
-            else:
-                raise Exception(f'Manage.py found in {rel_root} but no config found for it in config.py')
-
-    # Add project root if missing
+    # Add current directory as non-Django root if no Django root exists at "."
     if not any(r[0] == '.' for r in roots):
         roots.append(('.', None))
 
@@ -318,9 +296,11 @@ def register(config: Any) -> None:
 
             # Process / copy all static images etc
             for config in ctx.obj.meta.django:
+                if not config.collectstatic:
+                    continue
 
                 @pp.Proc(now=True, name=f'collect-static:{config.name()}')  # type: ignore[misc]
-                def collect_static(context: Any, config: DjangoConfig = config) -> None:
+                def collectstatic(context: Any, config: DjangoConfig = config) -> None:
                     sh.python3(
                         config.manage_py,
                         'collectstatic',
