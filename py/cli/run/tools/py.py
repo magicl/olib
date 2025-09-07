@@ -89,6 +89,10 @@ def discover_all_roots() -> list[tuple[str, bool]]:
         if 'manage.py' in filenames:
             # Convert to relative path from cwd
             rel_root = os.path.relpath(root, cwd)
+
+            if any(p in rel_root for p in ['olib', 'node_modules', '.venv']):
+                continue
+
             if rel_root == '.':
                 # If manage.py is in cwd, update the existing root
                 roots = [('.', True)] + [r for r in roots if r[0] != '.']
@@ -97,7 +101,36 @@ def discover_all_roots() -> list[tuple[str, bool]]:
 
     return roots
 
+def list_py_dirs(root_path: str, exclude_dirs: list[str]) -> list[str]:
+    dir_list = []
 
+    for f in os.scandir(root_path):
+        if (f.is_dir()
+            and not f.name.startswith('.')
+            and f.name not in ['olib', 'node_modules', '.venv']
+            and f.name not in [os.path.basename(d) for d in exclude_dirs]
+            and dir_has_files(f.name, '*.py')):
+            dir_list.append(f.name)
+
+    dir_list = dir_list + ['*.py']
+    return dir_list
+
+
+def get_py_file_groups(files: list[str]) -> dict[tuple[str, bool], list[str]]:
+    if not files:
+        # No files specified - discover all roots and use them as groups
+        roots = discover_all_roots()
+        groups = {}
+
+        django_dirs = [d for d, is_django in roots if is_django]
+        for root_path, is_django in roots:
+            groups[(root_path, is_django)] = list_py_dirs(root_path, django_dirs)
+
+    else:
+        # Files specified - group them by their root directories
+        groups = group_files_by_root(files)
+
+    return groups
 
 
 def pre_commit(cmd: str, files: Sequence[str]) -> None:
@@ -137,34 +170,7 @@ def register(config: Any) -> None:
                 # All python code is in the py folder
                 files = ['py', '*.py']
 
-            if not files:
-                # No files specified - discover all roots and use them as groups
-                roots = discover_all_roots()
-                groups = {}
-
-                for root_path, is_django in roots:
-                    if is_django:
-                        # For Django directories, just use the root path itself
-                        groups[(root_path, is_django)] = [root_path]
-                    else:
-                        # For non-Django root, find Python directories and files, excluding Django dirs
-                        python_dirs = []
-                        django_dirs = [d for d, _ in roots if d != root_path]  # Get all Django dirs except current
-
-                        for f in os.scandir(root_path):
-                            if (f.is_dir()
-                                and not f.name.startswith('.')
-                                and f.name not in ['olib', 'frontend', 'node_modules', '.venv']
-                                and f.name not in [os.path.basename(d) for d in django_dirs]
-                                and dir_has_files(f.name, '*.py')):
-                                python_dirs.append(f.name)
-
-                        files_list = python_dirs + ['*.py']
-                        if files_list:
-                            groups[(root_path, is_django)] = files_list
-            else:
-                # Files specified - group them by their root directories
-                groups = group_files_by_root(files)
+            groups = get_py_file_groups(files)
 
             # Run lint on all groups
             for (root_path, is_django), files_list in groups.items():
@@ -175,6 +181,8 @@ def register(config: Any) -> None:
                     ctx, 'config/pylintrc', {'have_django': is_django},
                     suffix='.django' if is_django else ''
                 )
+
+                print(f'Pylint {root_path} django:{is_django} dirs:{files_list}')
 
                 sh.bash(
                     '-c',
@@ -196,34 +204,7 @@ def register(config: Any) -> None:
                 # All python code is in the py folder
                 files = ['py', '*.py']
 
-            if not files:
-                # No files specified - discover all roots and use them as groups
-                roots = discover_all_roots()
-                groups = {}
-
-                for root_path, is_django in roots:
-                    if is_django:
-                        # For Django directories, just use the root path itself
-                        groups[(root_path, is_django)] = [root_path]
-                    else:
-                        # For non-Django root, find Python directories and files, excluding Django dirs
-                        python_dirs = []
-                        django_dirs = [d for d, _ in roots if d != root_path]  # Get all Django dirs except current
-
-                        for f in os.scandir(root_path):
-                            if (f.is_dir()
-                                and not f.name.startswith('.')
-                                and f.name not in ['olib', 'frontend', 'node_modules', '.venv']
-                                and f.name not in [os.path.basename(d) for d in django_dirs]
-                                and dir_has_files(f.name, '*.py')):
-                                python_dirs.append(f.name)
-
-                        files_list = python_dirs + ['*.py']
-                        if files_list:
-                            groups[(root_path, is_django)] = files_list
-            else:
-                # Files specified - group them by their root directories
-                groups = group_files_by_root(files)
+            groups = get_py_file_groups(files)
 
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
