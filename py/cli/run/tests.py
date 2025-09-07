@@ -249,3 +249,15 @@ class TestCliRun(OTestCase):
 
         # Clean up temp file
         os.unlink(token_file)
+
+
+    def test_py_dir_discovery(self) -> None:
+        """Verify that py dir discovery works for mypy, pylint, ..."""
+
+        from olib.py.cli.run.tools.py import discover_all_roots
+        from olib.py.cli.run.tools.py import group_files_by_root
+        from olib.py.cli.run.tools.py import run_lint_on_groups
+        from olib.py.cli.run.tools.py import run_mypy_on_groups
+
+        self.assertEqual(discover_all_roots(), [('.', False), ('py/django/_app', True)])
+        self.assertEqual(group_files_by_root(['py/tests/test_csv.py', 'py/django/_app/settings.py']), {('.', False): ['py/tests/test_csv.py'], ('py/django/_app', True): ['py/django/_app/settings.py']})

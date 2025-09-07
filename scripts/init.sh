@@ -65,13 +65,18 @@ fi
 #Load env vars
 source .envrc
 
-requirementsPath="."
-if [ -e backend/requirements.txt ]; then
-    requirementsPath="backend"
-fi
-
+# Find and process all requirements*.txt files from direct sub-directories (excluding olib)
 pyRequirements=""
-for f in $requirementsPath/requirements*.txt; do
+for dir in */; do
+    if [[ "$dir" != "olib/" ]] && [[ -e "${dir}requirements"*.txt ]]; then
+        for f in ${dir}requirements*.txt; do
+            pyRequirements+="-r $f "
+        done
+    fi
+done
+
+# Also include any requirements files in the base directory
+for f in requirements*.txt; do
     pyRequirements+="-r $f "
 done
 
