@@ -9,7 +9,7 @@ show_error_codes = True
 strict_equality = True
 local_partial_types = True
 
-plugins = strawberry.ext.mypy_plugin{% if extra_context.have_django %},mypy_django_plugin.main{% endif %}
+plugins = strawberry.ext.mypy_plugin{% if extra_context.django_config %},mypy_django_plugin.main{% endif %}
 
 #Additional stubs. Only needed when olib is used as a library
 {% if not meta.isOlib %}
@@ -18,9 +18,9 @@ mypy_path=./olib/py/stubs
 
 
 
-{% if extra_context.have_django %}
+{% if extra_context.django_config %}
 [mypy.plugins.django-stubs]
-django_settings_module = "{{ meta.django_settings }}"
+django_settings_module = "{{ extra_context.django_config.settings }}"
 {% endif %}
 
 #Migrations may be missing type annotations..

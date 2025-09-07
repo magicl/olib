@@ -22,7 +22,7 @@ jobs=8
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=pylintfileheader,{% if extra_context.have_django %}pylint_django,{% endif %}pylint_celery,pylint.extensions.docparams,pylint.extensions.redefined_loop_name,pylint.extensions.check_elif
+load-plugins=pylintfileheader,{% if extra_context.django_config %}pylint_django,{% endif %}pylint_celery,pylint.extensions.docparams,pylint.extensions.redefined_loop_name,pylint.extensions.check_elif
 
 # Pickle collected data for later comparisons.
 persistent=yes

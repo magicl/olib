@@ -11,12 +11,13 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 os.environ['PYTHONPATH'] = ':'.join(sys.path)
 
 from olib.py.cli.run.templates import django, mysql, postgres, redis
+from olib.py.cli.run.templates.django_ import DjangoConfig
 
 
 @mysql(root=True)
 @postgres(root=True)
 @redis(root=True)
-@django(settings='olib.py.django._app.settings', manage_py='py/django/_app/manage.py', django_working_dir='.')
+@django([DjangoConfig(settings='olib.py.django._app.settings', manage_py='py/django/_app/manage.py', working_dir='.')])
 class Config:
     displayName = 'OLIB'
     insts: list[dict[str, Any]] | None = None

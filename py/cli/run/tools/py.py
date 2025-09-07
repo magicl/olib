@@ -18,10 +18,11 @@ import sh
 
 from ....utils.file import dir_has_files
 from ....utils.listutils import groupByValue
+from ..templates.django_ import DjangoConfig
 from ..utils.template import render_template
 
 
-def find_py_root_dir(file_path: str) -> tuple[str, bool]:
+def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, bool]:
     """Find the Python root directory for a given file path.
 
     Traverses up the directory tree until it finds a directory with manage.py
@@ -31,38 +32,42 @@ def find_py_root_dir(file_path: str) -> tuple[str, bool]:
         file_path: Path to a file
 
     Returns:
-        tuple: (root_path, is_django) where:
+        tuple: (root_path, config) where:
             - root_path: The root directory path (relative to cwd)
-            - is_django: True if the root contains manage.py, False otherwise
+            - config: The Django config for the root directory, or None if no config is found
     """
     current_dir = os.path.dirname(os.path.abspath(file_path))
     cwd = os.getcwd()
 
     while True:
-        if os.path.exists(os.path.join(current_dir, 'manage.py')):
-            return os.path.relpath(current_dir, cwd), True
+        manage_py_path = os.path.join(current_dir, 'manage.py')
+        if os.path.exists(manage_py_path):
+            for config in configs:
+                if config.rel_manage_py_path() == manage_py_path:
+                    return os.path.relpath(current_dir, cwd), config
+            raise Exception(f'Manage.py found in {current_dir} but no config found for it in config.py')
 
         if current_dir == cwd or current_dir == os.path.dirname(current_dir):
             # Hit the working directory or root of filesystem
-            return '.', False
+            return '.', None
 
         current_dir = os.path.dirname(current_dir)
 
 
-def group_files_by_root(files: list[str]) -> dict[tuple[str, bool], list[str]]:
+def group_files_by_root(files: list[str], configs: list[DjangoConfig]) -> dict[tuple[str, DjangoConfig|None], list[str]]:
     """Group files by their Python root directory.
 
     Args:
         files: List of file paths to group
 
     Returns:
-        dict: {(root_path, is_django): [file_paths]} mapping root directories to their files
+        dict: {(root_path, config): [file_paths]} mapping root directories to their files
     """
     groups = {}
 
     for file_path in files:
-        root_path, is_django = find_py_root_dir(file_path)
-        key = (root_path, is_django)
+        root_path, config = find_py_root_dir(file_path, configs)
+        key = (root_path, config)
 
         if key not in groups:
             groups[key] = []
@@ -71,18 +76,18 @@ def group_files_by_root(files: list[str]) -> dict[tuple[str, bool], list[str]]:
     return groups
 
 
-def discover_all_roots() -> list[tuple[str, bool]]:
+def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoConfig|None]]:
     """Discover all Python root directories in the current working directory.
 
     Returns:
-        list: [(root_path, is_django)] tuples for all discovered roots
+        list: [(root_path, config)] tuples for all discovered roots
         All paths are relative to the current working directory
     """
     roots = []
     cwd = os.getcwd()
 
     # Add the current working directory as a root (non-Django by default)
-    roots.append(('.', False))
+    #roots.append(('.', None))
 
     # Find all directories with manage.py
     for root, dirs, filenames in os.walk(cwd):
@@ -93,11 +98,16 @@ def discover_all_roots() -> list[tuple[str, bool]]:
             if any(p in rel_root for p in ['olib', 'node_modules', '.venv']):
                 continue
 
-            if rel_root == '.':
-                # If manage.py is in cwd, update the existing root
-                roots = [('.', True)] + [r for r in roots if r[0] != '.']
+            for config in configs:
+                if config.rel_manage_py_path() in os.path.normpath(os.path.join(root, 'manage.py')):
+                    roots.append((config.working_dir, config))
+                    break
             else:
-                roots.append((rel_root, True))
+                raise Exception(f'Manage.py found in {rel_root} but no config found for it in config.py')
+
+    #Add project root if missing
+    if not any(r[0] == '.' for r in roots):
+        roots.append(('.', None))
 
     return roots
 
@@ -116,19 +126,19 @@ def list_py_dirs(root_path: str, exclude_dirs: list[str]) -> list[str]:
     return dir_list
 
 
-def get_py_file_groups(files: list[str]) -> dict[tuple[str, bool], list[str]]:
+def get_py_file_groups(files: list[str], configs: list[DjangoConfig]) -> dict[tuple[str, DjangoConfig|None], list[str]]:
     if not files:
         # No files specified - discover all roots and use them as groups
-        roots = discover_all_roots()
+        roots = discover_all_roots(configs)
         groups = {}
 
-        django_dirs = [d for d, is_django in roots if is_django]
-        for root_path, is_django in roots:
-            groups[(root_path, is_django)] = list_py_dirs(root_path, django_dirs)
+        django_dirs = [d for d, config in roots if config is not None]
+        for root_path, config in roots:
+            groups[(root_path, config)] = list_py_dirs(root_path, django_dirs)
 
     else:
         # Files specified - group them by their root directories
-        groups = group_files_by_root(files)
+        groups = group_files_by_root(files, configs)
 
     return groups
 
@@ -137,14 +147,6 @@ def pre_commit(cmd: str, files: Sequence[str]) -> None:
     fileStr = '--all-files' if not files else f"--files {' '.join(files)}"
     sh.bash('-c', f"pre-commit run {cmd} {fileStr}", _fg=True)
 
-
-@cache
-def is_manage_py_dir(directory: str, django_working_dir_abs: str) -> bool:
-    if django_working_dir_abs == '.':
-        # Whole project is django
-        return True
-
-    return os.path.abspath(directory).startswith(django_working_dir_abs)
 
 
 def register(config: Any) -> None:
@@ -166,31 +168,36 @@ def register(config: Any) -> None:
         @click.pass_context
         def lint(ctx: click.Context, files: list[str], quiet: bool) -> None:
             """Run pylint"""
-            if ctx.obj.meta.isOlib:
-                # All python code is in the py folder
-                files = ['py', '*.py']
+            #if ctx.obj.meta.isOlib:
+            #    # All python code is in the py folder
+            #    files = ['py', '*.py']
 
-            groups = get_py_file_groups(files)
+            groups = get_py_file_groups(files, ctx.obj.meta.django)
 
             # Run lint on all groups
-            for (root_path, is_django), files_list in groups.items():
+            for (root_path, config), files_list in groups.items():
                 if not files_list:
                     continue
 
-                config = render_template(
-                    ctx, 'config/pylintrc', {'have_django': is_django},
-                    suffix='.django' if is_django else ''
+                pylintrc_path = render_template(
+                    ctx, 'config/pylintrc', {'django_config': config},
+                    suffix=f'.django.{config.hash()}' if config is not None else ''
                 )
 
-                print(f'Pylint {root_path} django:{is_django} dirs:{files_list}')
+                print(f'Pylint {root_path} : {files_list} {"[django]" if config is not None else ""} {pylintrc_path}')
+                print('=======================================================================================')
 
                 sh.bash(
                     '-c',
                     f"""
-                    nice pylint --rcfile={config} {'-rn -sn' if quiet else ''} {' '.join(files_list)}
+                    nice pylint --rcfile={pylintrc_path} {'-rn -sn' if quiet else ''} {' '.join(files_list)}
                     """,
                     _fg=True,
-                    _env=os.environ,
+                    _env={
+                        **os.environ,
+                        'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
+                        'DJANGO_SETTINGS_MODULE': config.settings,
+                    } if config is not None else os.environ,
                 )
 
         @py.command()
@@ -200,34 +207,39 @@ def register(config: Any) -> None:
         @click.pass_context
         def mypy(ctx: click.Context, files: list[str], no_install_types: bool, daemon: bool) -> None:
             """Run mypy"""
-            if ctx.obj.meta.isOlib:
-                # All python code is in the py folder
-                files = ['py', '*.py']
-
-            groups = get_py_file_groups(files)
+            groups = get_py_file_groups(files, ctx.obj.meta.django)
 
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
-            click.echo('CLEARING MYPY CACHE (mypy has been craching on me a lot)')
-            sh.rm('-rf', '.output/.mypy_cache')
+            #click.echo('CLEARING MYPY CACHE (mypy has been craching on me a lot)')
+            #sh.rm('-rf', '.output/.mypy_cache')
 
             cmd = 'dmypy start --' if daemon else 'nice mypy'
             exclude = '--exclude=^.*/olib/.*$'
 
             # Run mypy on all groups
-            for (root_path, is_django), files_list in groups.items():
+            for (root_path, config), files_list in groups.items():
                 if not files_list:
                     continue
 
-                config = render_template(ctx, 'config/mypy', {'have_django': is_django})
+                mypyrc_path = render_template(ctx, 'config/mypy', {'django_config': config},
+                    suffix=f'.django.{config.hash()}' if config is not None else ''
+                )
+
+                print(f'Mypy {root_path} : {files_list} {"[django]" if config is not None else ""} {mypyrc_path}')
+                print('=======================================================================================')
 
                 sh.bash(
                     '-c',
                     f"""
-                    {cmd} --config-file={config} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(files_list)}
+                    {cmd} --config-file={mypyrc_path} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(files_list)}
                     """,
                     _fg=True,
-                    _env=os.environ,
+                    _env={
+                        **os.environ,
+                        'PYTHONPATH': f'{os.environ.get('PYTHONPATH', '')}:{root_path}',
+                        'DJANGO_SETTINGS_MODULE': config.settings,
+                    } if config is not None else os.environ,
                 )
 
         @py.command()
