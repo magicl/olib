@@ -80,3 +80,6 @@ pylsp-mypy
 pylsp-rope
 python-lsp-ruff
 python-lsp-black
+
+#Generally useful
+semver

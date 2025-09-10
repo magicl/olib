@@ -8,7 +8,7 @@
 import os
 import shutil
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import click
@@ -18,6 +18,8 @@ import sh
 from ....utils.file import dir_has_files
 from ..templates.django_ import DjangoConfig
 from ..utils.template import render_template
+
+type FilenameFilter = Callable[[str], bool]
 
 
 def find_py_root_dir(file_path: str, configs: list[DjangoConfig]) -> tuple[str, DjangoConfig | None]:
@@ -90,7 +92,9 @@ def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoCon
     return roots
 
 
-def list_py_dirs(root_path: str, exclude_dirs: list[str]) -> list[str]:
+def list_py_dirs(
+    root_path: str, exclude_dirs: list[str], filename_match: str = '*.py', dir_default: str | None = '*.py'
+) -> list[str]:
     dir_list = []
 
     for f in os.scandir(root_path):
@@ -99,16 +103,18 @@ def list_py_dirs(root_path: str, exclude_dirs: list[str]) -> list[str]:
             and not f.name.startswith('.')
             and f.name not in ['olib', 'node_modules', '.venv']
             and f.name not in [os.path.basename(d) for d in exclude_dirs]
-            and dir_has_files(f.name, '*.py')
+            and dir_has_files(f.path, filename_match)
         ):
             dir_list.append(f.name)
 
-    dir_list = dir_list + ['*.py']
+    if dir_default:
+        dir_list = dir_list + [dir_default]
+
     return dir_list
 
 
 def get_py_file_groups(
-    files: list[str], configs: list[DjangoConfig]
+    files: list[str], configs: list[DjangoConfig], filename_match: str = '*.py', dir_default: str | None = '*.py'
 ) -> dict[tuple[str, DjangoConfig | None], list[str]]:
     if not files:
         # No files specified - discover all roots and use them as groups
@@ -117,7 +123,9 @@ def get_py_file_groups(
 
         django_dirs = [d for d, config in roots if config is not None]
         for root_path, config in roots:
-            groups[(root_path, config)] = list_py_dirs(root_path, django_dirs)
+            dirs = list_py_dirs(root_path, django_dirs, filename_match, dir_default=dir_default)
+            if dirs:
+                groups[(root_path, config)] = dirs
 
     else:
         # Files specified - group them by their root directories
@@ -363,13 +371,16 @@ def register(config: Any) -> None:
             if tee:
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
 
-            if ctx.obj.config.meta.django is None:
-                print('Tests not implemented for non-django. Fix!')
-                sys.exit(0)
+            groups = get_py_file_groups([], ctx.obj.meta.django, filename_match='test_*.py', dir_default=None)
+            django_configs = [g[1] for g, _ in groups.items() if g[1] is not None]
 
-            # pp.setOptions(dynamic=sys.stdout.isatty())
-            _djangoSetupTasks(ctx, fast)
-            pp.wait_clear(exception_on_failure=True)
+            if django_configs:
+                # We have django tests. initialize them
+                _djangoSetupTasks(ctx, fast)
+                pp.wait_clear(exception_on_failure=True)
+
+            else:
+                raise Exception('Currently need django in project to run tests')
 
             # if fast:
             #    args = (*args, '--keepdb')
@@ -386,7 +397,11 @@ def register(config: Any) -> None:
                 pre_args += ['coverage', 'run', f"--rcfile={coverage_config}"]
 
             env = os.environ
-            for config in ctx.obj.meta.django:
+            for (root_path, django_config_), _ in groups.items():
+                # If it is not a django test, use the first django to run the test anyway..
+                django_config = django_config_ if django_config_ is not None else django_configs[0]
+                manage_py = os.path.abspath(os.path.join(django_config.working_dir, django_config.manage_py))
+
                 if coverage:
                     coverage_config = render_template(ctx, 'config/coveragerc')
                     env['COVERAGE_FILE'] = '.output/.coverage'
@@ -394,22 +409,22 @@ def register(config: Any) -> None:
                     cmd = sh.coverage.bake(
                         'run',
                         f"--rcfile={coverage_config}",
-                        config.manage_py,
+                        manage_py,
                         'test',
                         *sharedArgs,
                         *args,
                         _env=env,
-                        _cwd=config.working_dir,
+                        _cwd=root_path,
                     )
                 else:
                     cmd = sh.python3.bake(
                         *pre_args,
-                        config.manage_py,
+                        manage_py,
                         'test',
                         *sharedArgs,
                         *args,
                         _env=env,
-                        _cwd=config.working_dir,
+                        _cwd=root_path,
                     )
 
                 if tee:

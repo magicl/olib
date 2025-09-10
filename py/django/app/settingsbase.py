@@ -344,7 +344,7 @@ TEMPLATES: list[dict[str, Any | dict[str, list[Any]]]] = [
 
 # Add jinja2 template engine if jinja2 is installed
 try:
-    import jinja2
+    import jinja2  # pylint: disable=unused-import
 
     TEMPLATES.append(
         {
