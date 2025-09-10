@@ -8,7 +8,7 @@ set -euo pipefail
 shopt -s nullglob #prevent glob from expanding to glob itself when no files are found
 trap "exit 1" ERR
 
-PYTHON_VERSION=3.12.10
+PYTHON_VERSION=3.13
 CUR_DIR=${PWD##*/}
 VENV_NAME=$CUR_DIR
 #VENV_PATH=~/.pyenv/versions/${VENV_NAME}
@@ -66,19 +66,14 @@ fi
 source .envrc
 
 # Find and process all requirements*.txt files from direct sub-directories (excluding olib)
-pyRequirements=""
-for dir in */; do
-    if [[ "$dir" != "olib/" ]] && [[ -e "${dir}requirements"*.txt ]]; then
-        for f in ${dir}requirements*.txt; do
-            pyRequirements+="-r $f "
-        done
-    fi
-done
+pyRequirements=()
+while IFS= read -r f; do
+  # skip anything in olib/
+  #[[ $f == ./olib/* ]] && continue
+  [[ $f =~ \.venv ]] && continue
+  pyRequirements+=( -r "$f" )
+done < <(find . -type f -name 'requirements*.txt')
 
-# Also include any requirements files in the base directory
-for f in requirements*.txt; do
-    pyRequirements+="-r $f "
-done
 
 if [[ $CUR_DIR != "olib" ]]; then
     #if [[ ! -e .gitignore ]]; then
@@ -88,8 +83,6 @@ if [[ $CUR_DIR != "olib" ]]; then
     if [[ ! -e .pre-commit-config.yaml ]]; then
         ln -sf olib/.pre-commit-config.yaml .pre-commit-config.yaml
     fi
-
-    pyRequirements+="-r $OLIB_PATH/requirements_dev.txt"
 fi
 
 
@@ -141,8 +134,8 @@ if [[ "$upgrade" == true ]]; then
     extraArgs="--upgrade"
 fi
 
-echo "Installing dependencies"
-uv pip install $pyRequirements $extraArgs
+echo "Installing dependencies: ${pyRequirements[*]} $extraArgs"
+uv pip install "${pyRequirements[@]}" $extraArgs
 
 #Ensure pre-commit is installed (git hooks)
 if [[ "$dev" == true && "$havegit" == true ]]; then

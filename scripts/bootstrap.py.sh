@@ -12,7 +12,7 @@
 set -euo pipefail
 trap "exit 1" ERR
 
-PYTHON_VERSION=3.12.6
+PYTHON_VERSION=3.13.3
 
 LOCAL_DIR=$(dirname "$(realpath "$0")")
 MODE=${1:-}
