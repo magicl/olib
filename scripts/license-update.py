@@ -6,6 +6,7 @@
 # Update license headers for all source files including self and lint files
 
 import glob
+import os
 import re
 from typing import Any
 
@@ -88,6 +89,10 @@ def get_headers(use_apache: bool = False) -> list[dict[str, Any]]:
 
 
 def updateFile(spec: dict[str, Any], filename: str, dryrun: bool) -> str:
+    # Safety check: ensure we're processing a file, not a directory
+    if os.path.isdir(filename):
+        raise Exception(f'Path `{filename}` is a directory, not a file')
+    
     with open(filename, encoding='utf-8') as f:
         content = f.read()
 
@@ -151,6 +156,10 @@ def pathGenerator(spec: dict[str, Any], paths: list[str] | None = None) -> Any:
                     totalExcludes += 1
                     continue
 
+                # Skip directories - only process files
+                if os.path.isdir(path):
+                    continue
+
                 totalMatches += 1
                 headerMatches += 1
 
@@ -170,6 +179,10 @@ def pathGenerator(spec: dict[str, Any], paths: list[str] | None = None) -> Any:
             # Check excludes
             if any(ex.match(path) for ex in excludeRegs):
                 totalExcludes += 1
+                continue
+
+            # Skip directories - only process files
+            if os.path.isdir(path):
                 continue
 
             totalMatches += 1

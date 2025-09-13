@@ -6,7 +6,6 @@ import os
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
 
 import sh
 
@@ -22,7 +21,7 @@ def ssh_session(
     forward_agent: bool = False,
     strict_host_key_checking: str | None = None,  # e.g. 'no'
     close_on_exit: bool = True,
-) -> Generator[tuple[Any, Any], None, None]:
+) -> Generator[tuple[sh.Command, sh.Command], None, None]:
     """
     Context manager that sets up an SSH master connection
     and yields baked ssh/scp commands.

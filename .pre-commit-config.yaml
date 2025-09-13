@@ -85,12 +85,12 @@ repos:
         language: system
         types: [python]
         args: ['--py313-plus']
-      - id: unify
-        name: unify
-        entry: unify
-        language: system
-        types: [python]
-        args: ['--in-place', "--quote='"]
+#      - id: unify
+#        name: unify
+#        entry: unify
+#        language: system
+#        types: [python]
+#        args: ['--in-place', "--quote='"]
       - id: black
         name: black
         entry: black
