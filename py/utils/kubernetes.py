@@ -15,12 +15,38 @@ if TYPE_CHECKING:
     from kubernetes import client
 
 
-def k8s_namespace_exists(name: str, context: str) -> bool:
+def _k8s_client(context: str) -> 'client.CoreV1Api':
     from kubernetes import client, config
 
-    config.load_kube_config(context=context)
+    # config.load_kube_config(context=context)
+    # return client.CoreV1Api()
 
-    v1 = client.CoreV1Api()
+    cfg = client.Configuration()
+    config.load_kube_config(client_configuration=cfg)
+    cfg.host = 'https://127.0.0.1:16443'
+    cfg.assert_hostname = False  # TEMP: skip host/SAN check
+    cfg.verify_ssl = False  # LAST RESORT: skip all TLS checks
+    # cfg.verify_ssl = False         # LAST RESORT: skip all TLS checks
+    return client.CoreV1Api(client.ApiClient(cfg))
+
+
+def _k8s_batch_client(context: str) -> 'client.BatchV1Api':
+    from kubernetes import client, config
+
+    cfg = client.Configuration()
+    config.load_kube_config(client_configuration=cfg)
+    cfg.host = 'https://127.0.0.1:16443'
+    cfg.assert_hostname = False  # TEMP: skip host/SAN check
+    cfg.verify_ssl = False  # LAST RESORT: skip all TLS checks
+    # cfg.verify_ssl = False         # LAST RESORT: skip all TLS checks
+    return client.BatchV1Api(client.ApiClient(cfg))
+
+
+def k8s_namespace_exists(name: str, context: str) -> bool:
+    from kubernetes import client
+
+    v1 = _k8s_client(context)
+
     try:
         namespaces = v1.list_namespace()
         for ns in namespaces.items:
@@ -33,7 +59,7 @@ def k8s_namespace_exists(name: str, context: str) -> bool:
 
 
 def k8s_namespace_create(name: str, context: str, exist_ok: bool = True) -> None:
-    from kubernetes import client, config
+    from kubernetes import client
 
     if k8s_namespace_exists(name, context=context):
         if not exist_ok:
@@ -41,18 +67,17 @@ def k8s_namespace_create(name: str, context: str, exist_ok: bool = True) -> None
 
         return
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
 
     namespace = client.V1Namespace(metadata=client.V1ObjectMeta(name=name))
     v1.create_namespace(namespace)
 
 
 def k8s_secret_create(name: str, namespace: str, context: str, data: dict[str, str]) -> None:
-    from kubernetes import client, config
+    from kubernetes import client
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
+
     v1.create_namespaced_secret(
         namespace=namespace,
         body=client.V1Secret(
@@ -63,10 +88,10 @@ def k8s_secret_create(name: str, namespace: str, context: str, data: dict[str, s
 
 
 def k8s_secret_update(name: str, namespace: str, context: str, data: dict[str, str]) -> None:
-    from kubernetes import client, config
+    from kubernetes import client
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
+
     v1.replace_namespaced_secret(
         name=name,
         namespace=namespace,
@@ -85,18 +110,15 @@ def k8s_secret_create_or_update(name: str, namespace: str, context: str, data: d
 
 
 def k8s_secret_delete(name: str, namespace: str, context: str) -> None:
-    from kubernetes import client, config
+    v1 = _k8s_client(context)
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
     v1.delete_namespaced_secret(name=name, namespace=namespace)
 
 
 def k8s_secret_read(name: str, namespace: str, context: str, exit_on_missing: bool = True) -> dict[str, str]:
-    from kubernetes import client, config
+    from kubernetes import client
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
 
     try:
         secret = v1.read_namespaced_secret(name=name, namespace=namespace)
@@ -123,10 +145,9 @@ def k8s_secret_read_single(name: str, namespace: str, context: str, *keys: str) 
 
 
 def k8s_secret_exists(name: str, namespace: str, context: str) -> bool:
-    from kubernetes import client, config
+    from kubernetes import client
 
-    config.load_kube_config(context=context)
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
 
     try:
         v1.read_namespaced_secret(name=name, namespace=namespace)
@@ -139,10 +160,9 @@ def k8s_secret_exists(name: str, namespace: str, context: str) -> bool:
 def k8s_job_create(
     image: str, command: list[str], jobName: str, namespace: str, context: str, pod_name: str | None = None
 ) -> None:
-    from kubernetes import client, config
+    from kubernetes import client
 
-    config.load_kube_config(context=context)
-    batch_v1 = client.BatchV1Api()
+    batch_v1 = _k8s_batch_client(context)
 
     batch_v1.create_namespaced_job(
         body=client.V1Job(
@@ -183,13 +203,12 @@ def k8s_pod_get_log(v1: 'client.CoreV1Api', podName: str, namespace: str, prev_l
         return ''
 
 
-def k8s_job_wait_for_completion(jobName: str, namespace: str, context: str | None = None) -> bool:
+def k8s_job_wait_for_completion(jobName: str, namespace: str, context: str) -> bool:
     """Rneturns true on success, false on error"""
-    from kubernetes import client, config, watch
+    from kubernetes import watch
 
-    config.load_kube_config(context=context)
-    batch_v1 = client.BatchV1Api()
-    v1 = client.CoreV1Api()
+    v1 = _k8s_client(context)
+    batch_v1 = _k8s_batch_client(context)
     w = watch.Watch()
 
     print('Waiting for job pod...')
