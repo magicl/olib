@@ -36,7 +36,8 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
                 key, value = line.split('=', 1)
 
                 if current_groups is None:
-                    raise ValueError(f'No group found for {env_file}: {line}')
+                    errors.append(f'No group found for {env_file}: {line}')
+                    continue
 
                 for group in current_groups:
                     grouped_vars[group][key] = value
