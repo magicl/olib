@@ -20,7 +20,7 @@ def createUser(username: Any = None, permissions: Any = None, **kwargs: Any) -> 
     if 'email' not in kwargs:
         kwargs = {**kwargs, 'email': username}
 
-    user = User.objects.create_user(username, **kwargs)
+    user = User.objects.create_user(username, **kwargs)  # type: ignore[attr-defined]
 
     if permissions:
         permissionObjs = list(Permission.objects.filter(codename__in=permissions).all())
