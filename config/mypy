@@ -1,6 +1,6 @@
 [mypy]
 python_version = 3.13
-cache_dir=.output/.mypy_cache
+cache_dir=.output/.mypy_cache.{{ extra_context.config_hash }}
 
 strict = True
 warn_unused_configs = True

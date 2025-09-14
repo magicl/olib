@@ -21,7 +21,7 @@ def openOrPassthrough(
     *args: Any,
     storage: Any | None = None,
     **kwargs: Any,
-) -> Generator[IO[Any] | io.IOBase, None, None]:
+) -> Generator[IO[Any] | io.IOBase]:
     """If a string object is received, opens the file. Else, treats it as an in-memory or previously opened file, and passes it through"""
     if isinstance(filenameOrFile, (str, bytes, os.PathLike)):
         if storage is None:
@@ -48,9 +48,14 @@ def acceptableFilename(name: str, lower: bool = True) -> str:
     return name
 
 
-def dir_has_files(directory: str, *match: str) -> bool:
-    for _, _, files in os.walk(directory):
+def dir_has_files(directory: str, *match: str, exclude: list[str] | None = None) -> bool:
+    exclude = exclude or []
+
+    for root, _, files in os.walk(directory):
         for file in files:
             if any(fnmatch.fnmatch(file, m) for m in match):
+                path = os.path.abspath(os.path.join(root, file))
+                if any(fnmatch.fnmatch(path, e) for e in exclude):
+                    continue
                 return True
     return False
