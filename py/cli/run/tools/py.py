@@ -105,10 +105,10 @@ def list_py_dirs(
             and f.name not in [os.path.basename(d) for d in exclude_dirs]
             and dir_has_files(f.path, filename_match, exclude=['**/olib/**', '**/node_modules/**', '**/.venv/**'])
         ):
-            dir_list.append(f.name)
+            dir_list.append(os.path.join(root_path, f.name))
 
     if dir_default:
-        dir_list = dir_list + [dir_default]
+        dir_list = dir_list + [os.path.join(root_path, dir_default)]
 
     return dir_list
 
@@ -179,12 +179,10 @@ def register(config: Any) -> None:
                 print(f'Pylint {root_path} : {files_list} {'[django]' if config is not None else ''} {pylintrc_path}')
                 print('=======================================================================================')
 
-                rel_files_list = [f'{root_path}/{f}' for f in files_list]
-
                 sh.bash(
                     '-c',
                     f"""
-                    nice pylint --rcfile={pylintrc_path} {'-rn -sn' if quiet else ''} {' '.join(rel_files_list)}
+                    nice pylint --rcfile={pylintrc_path} {'-rn -sn' if quiet else ''} {' '.join(files_list)}
                     """,
                     _fg=True,
                     _env=(
@@ -231,12 +229,10 @@ def register(config: Any) -> None:
                 print(f'Mypy {root_path} : {files_list} {'[django]' if config is not None else ''} {mypyrc_path}')
                 print('=======================================================================================')
 
-                rel_files_list = [f'{root_path}/{f}' for f in files_list]
-
                 sh.bash(
                     '-c',
                     f"""
-                    {cmd} --config-file={mypyrc_path} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(rel_files_list)}
+                    {cmd} --config-file={mypyrc_path} {'--install-types --non-interactive' if not no_install_types and not daemon else ''} {exclude} {' '.join(files_list)}
                     """,
                     _fg=True,
                     _env=(
