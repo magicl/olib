@@ -8,6 +8,26 @@ from collections import defaultdict
 from os import makedirs
 
 
+def _strip_comments_outside_quotes(value: str) -> str:
+    """
+    Strip comments (#) from a string, but only if they are not inside quotes.
+    Finds the first # character that is outside quotes and strips from there.
+    """
+    in_single_quotes = False
+    in_double_quotes = False
+
+    for i, char in enumerate(value):
+        if char == "'" and not in_double_quotes:
+            in_single_quotes = not in_single_quotes
+        elif char == '"' and not in_single_quotes:
+            in_double_quotes = not in_double_quotes
+        elif char == '#' and not in_single_quotes and not in_double_quotes:
+            # Found first # that's outside quotes
+            return value[:i]
+
+    return value
+
+
 def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, dict[str, str]]:
 
     grouped_vars: dict[str, dict[str, str]] = defaultdict(dict)
@@ -34,6 +54,10 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
 
             try:
                 key, value = line.split('=', 1)
+
+                # Remove any # comment from value, and trim whitespace
+                # Only strip comments that are not inside quotes
+                value = _strip_comments_outside_quotes(value).strip()
 
                 if current_groups is None:
                     errors.append(f'No group found for {env_file}: {line}')

@@ -93,9 +93,17 @@ def discover_all_roots(configs: list[DjangoConfig]) -> list[tuple[str, DjangoCon
 
 
 def list_py_dirs(
-    root_path: str, exclude_dirs: list[str], filename_match: str = '*.py', dir_default: str | None = '*.py'
+    ctx: click.Context,
+    root_path: str,
+    exclude_dirs: list[str],
+    filename_match: str = '*.py',
+    dir_default: str | None = '*.py',
 ) -> list[str]:
     dir_list = []
+
+    path_excludes = ['**/node_modules/**', '**/.venv/**']
+    if not ctx.obj.meta.isOlib:
+        path_excludes.append('**/olib/**')
 
     for f in os.scandir(root_path):
         if (
@@ -103,7 +111,7 @@ def list_py_dirs(
             and not f.name.startswith('.')
             and f.name not in ['olib', 'node_modules', '.venv']
             and f.name not in [os.path.basename(d) for d in exclude_dirs]
-            and dir_has_files(f.path, filename_match, exclude=['**/olib/**', '**/node_modules/**', '**/.venv/**'])
+            and dir_has_files(f.path, filename_match, exclude=path_excludes)
         ):
             dir_list.append(os.path.join(root_path, f.name))
 
@@ -114,7 +122,11 @@ def list_py_dirs(
 
 
 def get_py_file_groups(
-    files: list[str], configs: list[DjangoConfig], filename_match: str = '*.py', dir_default: str | None = '*.py'
+    ctx: click.Context,
+    files: list[str],
+    configs: list[DjangoConfig],
+    filename_match: str = '*.py',
+    dir_default: str | None = '*.py',
 ) -> dict[tuple[str, DjangoConfig | None], list[str]]:
     if not files:
         # No files specified - discover all roots and use them as groups
@@ -123,7 +135,7 @@ def get_py_file_groups(
 
         django_dirs = [d for d, config in roots if config is not None]
         for root_path, config in roots:
-            dirs = list_py_dirs(root_path, django_dirs, filename_match, dir_default=dir_default)
+            dirs = list_py_dirs(ctx, root_path, django_dirs, filename_match, dir_default=dir_default)
             if dirs:
                 groups[(root_path, config)] = dirs
 
@@ -162,7 +174,7 @@ def register(config: Any) -> None:
             #    # All python code is in the py folder
             #    files = ['py', '*.py']
 
-            groups = get_py_file_groups(files, ctx.obj.meta.django)
+            groups = get_py_file_groups(ctx, files, ctx.obj.meta.django)
 
             # Run lint on all groups
             for (root_path, config), files_list in groups.items():
@@ -203,7 +215,7 @@ def register(config: Any) -> None:
         @click.pass_context
         def mypy(ctx: click.Context, files: list[str], no_install_types: bool, daemon: bool) -> None:
             """Run mypy"""
-            groups = get_py_file_groups(files, ctx.obj.meta.django)
+            groups = get_py_file_groups(ctx, files, ctx.obj.meta.django)
 
             # Config puts mypy cache in .output
             os.makedirs('.output', exist_ok=True)
@@ -372,7 +384,7 @@ def register(config: Any) -> None:
             if tee:
                 os.makedirs(tee_to.rsplit('/', 1)[0], exist_ok=True)
 
-            groups = get_py_file_groups([], ctx.obj.meta.django, filename_match='test_*.py', dir_default=None)
+            groups = get_py_file_groups(ctx, [], ctx.obj.meta.django, filename_match='test_*.py', dir_default=None)
             django_configs = [g[1] for g, _ in groups.items() if g[1] is not None]
 
             if django_configs:

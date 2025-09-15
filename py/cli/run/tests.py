@@ -15,6 +15,7 @@ from django.test import tag
 from olib.py.cli.run.defaults import Config as defaultConfig
 from olib.py.cli.run.run import create_cli
 from olib.py.cli.run.templates import remote
+from olib.py.cli.run.utils.envfiles import _strip_comments_outside_quotes
 from olib.py.cli.run.utils.remote import RemoteHost, clear_sessions
 from olib.py.django.conf.remote import conf_cli
 from olib.py.django.test.cases import OTestCase
@@ -267,3 +268,47 @@ class TestCliRun(OTestCase):
             group_files_by_root(['py/tests/test_csv.py', 'py/django/_app/settings.py'], configs),
             {('.', config): ['py/tests/test_csv.py', 'py/django/_app/settings.py']},
         )
+
+    def test_strip_comments_outside_quotes(self) -> None:
+        """Test that comment stripping works correctly with quoted values"""
+
+        # Test cases: (input, expected_output, description)
+        test_cases = [
+            # Simple comment
+            ('value # this is a comment', 'value ', 'Simple comment'),
+            # No comment
+            ('value', 'value', 'No comment'),
+            # Comment inside single quotes (should be preserved)
+            ("value 'this # is not a comment'", "value 'this # is not a comment'", 'Comment in single quotes'),
+            # Comment inside double quotes (should be preserved)
+            ('value "this # is not a comment"', 'value "this # is not a comment"', 'Comment in double quotes'),
+            # Mixed quotes with real comment
+            (
+                "value 'single' and \"double\" and # real comment",
+                "value 'single' and \"double\" and ",
+                'Mixed quotes with real comment',
+            ),
+            # Nested quotes
+            (
+                "value 'outer \"inner # not comment\" end' # real comment",
+                "value 'outer \"inner # not comment\" end' ",
+                'Nested quotes',
+            ),
+            # Empty quotes
+            ("value '' and \"\" and # comment", "value '' and \"\" and ", 'Empty quotes'),
+            # Multiple # characters
+            ('value # first # second', 'value ', 'Multiple comment characters'),
+            # # inside quotes followed by real comment
+            ('value "has # inside" # real comment', 'value "has # inside" ', 'Hash in quotes then real comment'),
+            # Unmatched quotes (edge case)
+            ('value "unmatched # comment', 'value "unmatched # comment', 'Unmatched quotes'),
+        ]
+
+        for input_value, expected, description in test_cases:
+            with self.subTest(description=description, input_value=input_value):
+                result = _strip_comments_outside_quotes(input_value)
+                self.assertEqual(
+                    result,
+                    expected,
+                    f"Failed for {description}: '{input_value}' -> expected '{expected}', got '{result}'",
+                )
