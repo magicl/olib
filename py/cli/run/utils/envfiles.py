@@ -16,6 +16,10 @@ def _strip_comments_outside_quotes(value: str) -> str:
     in_single_quotes = False
     in_double_quotes = False
 
+    # Hot path
+    if '#' not in value:
+        return value
+
     for i, char in enumerate(value):
         if char == "'" and not in_double_quotes:
             in_single_quotes = not in_single_quotes
