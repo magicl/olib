@@ -251,7 +251,7 @@ if env('POSTGRES_URL', default=''):
 
 DATABASES = {
     'default': {
-        **env.db_url('_DB_URL', default=f"sqlite:///{BASE_DIR}/db.sqlite3"),
+        **env.db_url('_DB_URL', default=f"sqlite:///{env('SQLITE_PATH', default=f'{BASE_DIR}/db.sqlite3')}"),
         'isolation_level': 'read committed',
         **db_options,
     }

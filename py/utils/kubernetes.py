@@ -9,6 +9,7 @@ import sys
 import time
 from typing import TYPE_CHECKING, cast
 
+import urllib3
 from urllib3.exceptions import MaxRetryError
 
 if TYPE_CHECKING:
@@ -27,6 +28,9 @@ def _k8s_client(context: str) -> 'client.CoreV1Api':
     cfg.assert_hostname = False  # TEMP: skip host/SAN check
     cfg.verify_ssl = False  # LAST RESORT: skip all TLS checks
     # cfg.verify_ssl = False         # LAST RESORT: skip all TLS checks
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     return client.CoreV1Api(client.ApiClient(cfg))
 
 
