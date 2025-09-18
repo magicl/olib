@@ -6,6 +6,8 @@
 import os
 from typing import TYPE_CHECKING, Any
 
+from olib.infra.services.version import VersionManager
+
 if TYPE_CHECKING:
     from olib.py.cli.run.utils.remote import RemoteHost
 
@@ -30,6 +32,9 @@ class ConfigMeta:
     mysql = False
     postgres = False
     redis = False
+
+    # Version
+    version = VersionManager()
 
     def __init__(self, command_groups: Any = None) -> None:
         self.commandGroups = command_groups or []
