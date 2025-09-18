@@ -2,8 +2,9 @@
 # Copyright 2024 Øivind Loe
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
-import cgi  # pylint: disable=deprecated-module
 import datetime
+import email.message
+import email.parser
 import gc
 import json
 import logging
@@ -32,6 +33,95 @@ from olib.py.utils.synchronization import synchronized
 from olib.py.utils.url import split_url
 
 logger = logging.getLogger(__name__)
+
+
+# NOT TESTED
+def parse_content_type_header(content_type):
+    """Parse Content-Type header and return (main_type, params_dict)"""
+    if not content_type:
+        return None, {}
+
+    # Use email.message.EmailMessage to parse the header
+    msg = email.message.EmailMessage()
+    msg['Content-Type'] = content_type
+
+    # Get the main content type
+    main_type = msg.get_content_type()
+
+    # Get parameters
+    params = {}
+    if msg.get_content_type() == 'multipart/form-data':
+        # For multipart, we need to extract the boundary
+        boundary = msg.get_boundary()
+        if boundary:
+            params['boundary'] = boundary
+
+    return main_type, params
+
+
+# NOT TESTED
+def parse_multipart_data(rfile, boundary):
+    """Parse multipart/form-data using email.parser"""
+    if not boundary:
+        raise MockServerException('No boundary found in multipart data')
+
+    # Read the content length
+    content_length = int(rfile.headers.get('content-length', 0))
+    if content_length == 0:
+        return {}
+
+    # Read the raw content
+    raw_content = rfile.read(content_length)
+
+    # Create a proper multipart message
+    msg_data = f"Content-Type: multipart/form-data; boundary={boundary}\r\n\r\n"
+    msg_data = msg_data.encode('utf-8') + raw_content
+
+    # Parse using email.parser
+    parser = email.parser.BytesParser()
+    msg = parser.parsebytes(msg_data)
+
+    result = {}
+
+    # Extract form data from multipart message
+    for part in msg.walk():
+        if part.get_content_type() == 'multipart/form-data':
+            continue
+
+        # Get the Content-Disposition header
+        disposition = part.get('Content-Disposition', '')
+        if not disposition:
+            continue
+
+        # Parse the disposition header to get name and filename
+        name = None
+        filename = None
+
+        # Simple parsing of Content-Disposition header
+        if 'name=' in disposition:
+            name_start = disposition.find('name="') + 6
+            name_end = disposition.find('"', name_start)
+            if 5 < name_start < name_end:
+                name = disposition[name_start:name_end]
+
+        if 'filename=' in disposition:
+            filename_start = disposition.find('filename="') + 10
+            filename_end = disposition.find('"', filename_start)
+            if 9 < filename_start < filename_end:
+                filename = disposition[filename_start:filename_end]
+
+        if name:
+            # Get the payload
+            payload = part.get_payload(decode=True)
+            if payload:
+                if filename:
+                    # This is a file upload
+                    result[name] = [payload.decode('utf-8', errors='ignore')]
+                else:
+                    # This is a regular form field
+                    result[name] = [payload.decode('utf-8', errors='ignore')]
+
+    return result
 
 
 class MockServerException(Exception):
@@ -508,10 +598,11 @@ class MockRequestHandler(BaseHTTPRequestHandler):
             if self.headers['content-type'] is None:
                 postvars = None
             else:
-                ctype, pdict = cgi.parse_header(self.headers['content-type'])
+                ctype, pdict = parse_content_type_header(self.headers['content-type'])
                 if ctype == 'multipart/form-data':
-                    multi = cgi.parse_multipart(self.rfile, pdict)  # type: ignore
-                    postvars = {k.decode('utf-8'): v[0].decode('utf-8') for k, v in multi.items()}  # type: ignore
+                    boundary = pdict.get('boundary')
+                    multi = parse_multipart_data(self.rfile, boundary)
+                    postvars = {k: v[0] for k, v in multi.items()}
                 elif ctype == 'application/x-www-form-urlencoded':
                     length = int(self.headers['content-length'])
                     parsed = parse_qs(self.rfile.read(length), keep_blank_values=True)

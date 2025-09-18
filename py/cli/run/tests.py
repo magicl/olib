@@ -94,7 +94,7 @@ class TestCliRun(OTestCase):
         """Print exception in cli result if any"""
 
         output = result.stdout_bytes.decode('utf-8')
-        error = result.stderr_bytes.decode('utf-8')
+        error = result.stderr_bytes.decode('utf-8') if result.stderr_bytes is not None else ''
         logger.info(f'  exit_code={result.exit_code}')
         logger.info(f'  stdout={output}')
         logger.info(f'  stderr={error}')

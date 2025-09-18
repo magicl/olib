@@ -34,10 +34,24 @@ def images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
     click.echo('  None')
 
 
+def k8s_update_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
+    """
+    Override in Config to do work before k8s is updated. Either run actions directly, or set up
+    parproc tasks with now=True
+    """
+    click.echo('  None')
+
+
 def run_images_build_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
     click.echo('Pre-build Steps For Image...')
     cls.images_build_pre(ctx, k8s=k8s)
-    pp.wait_clear(exception_on_failure=True)  # type: ignore
+    pp.wait_clear(exception_on_failure=True)
+
+
+def run_k8s_update_pre(cls: Any, ctx: click.Context, k8s: bool = False) -> None:
+    click.echo('Pre-update Steps For K8s...')
+    cls.k8s_update_pre(ctx, k8s=k8s)
+    pp.wait_clear(exception_on_failure=True)
 
 
 def images_build(
@@ -479,6 +493,7 @@ def _implementApp() -> Any:
         if not no_build:
             ctx.obj.config.images_build(ctx, images=images, no_pre_build=no_pre_build, k8s=True)
             ctx.obj.config.images_push(ctx, images=images)
+
         ctx.obj.config.k8s_push_secrets(ctx)
         ctx.obj.config.k8s_push_config(ctx)
         if ctx.obj.meta.django and not no_migrate:
@@ -581,6 +596,7 @@ def buildSingleService(
             images_build,
             images_push,
             images_analyze,
+            k8s_update_pre,
             k8s_push_config,
             k8s_push_secrets,
             k8s_migrate,
