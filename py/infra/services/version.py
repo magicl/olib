@@ -178,5 +178,5 @@ class VersionManager:
             result = chars[num % 62] + result
             num //= 62
 
-        # Pad with zeros to make it 8 characters long. More than we need, but let's be on the safe side.
-        return result.zfill(8)
+        # Pad with zeros to make it 6 characters long.. More than enough
+        return result.zfill(6)
