@@ -2,7 +2,6 @@
 # Copyright 2024 Øivind Loe
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
-import base64
 import datetime
 import time
 
@@ -84,13 +83,13 @@ class VersionManager:
 
         self.initialized = True
 
-        last_version = self._getLastVersionFromGit()
+        last_version = self._get_last_version_from_git()
         next_version = last_version
 
         if self.is_prod:
             next_version = next_version.next_version(part=self.inc_type)
         else:
-            next_version = next_version.replace(prerelease=self._getDevVersionSuffix())
+            next_version = next_version.replace(prerelease=self._get_dev_version_suffix())
 
         if self.name:
             self._next_version_str = f'{self.name}-{next_version}'
@@ -104,7 +103,7 @@ class VersionManager:
             ]
         )
 
-    def _getLastVersionFromGit(self) -> semver.VersionInfo:
+    def _get_last_version_from_git(self) -> semver.VersionInfo:
         """
         Fetch all git tags, filter by name prefix, and return the latest one sorted by semver.
 
@@ -145,27 +144,39 @@ class VersionManager:
 
         return latest_version
 
-    def _getDevVersionSuffix(self) -> str:
+    @staticmethod
+    def _get_dev_version_suffix() -> str:
         """
-        Creates a fixed-width number that is strictly increasing.
-        Uses time.time(), pads it to N digits for the next 100 years,
-        base64 encodes it, and strips any = suffix.
+        Creates a compressed timestamp that is strictly increasing in lexicographic order.
+        Uses time.time(), converts to a custom base62 encoding that preserves ordering.
         """
         # Get current timestamp
         timestamp = time.time()
-
-        # Calculate how many digits we need for the next 100 years
-        # Current time is around 1.7 billion seconds since epoch
-        # In 100 years (2124), we'll be around 4.7 billion seconds
-        # So we need at least 10 digits to be safe. Use 12
-        N = 12
-
-        # Convert to integer and pad with leading zeros
         timestamp_int = int(timestamp)
-        padded_timestamp = str(timestamp_int).zfill(N)
 
-        # Base64 encode the padded timestamp
-        encoded = base64.b64encode(padded_timestamp.encode('utf-8')).decode('utf-8')
+        # Use base62 encoding with custom character set that preserves lexicographic ordering
+        # Characters: 0-9, A-Z, a-z (62 characters total)
+        # This ensures that lexicographic comparison matches numeric comparison
+        return VersionManager._encode_base62_ordered(timestamp_int)
 
-        # Strip any = padding suffix
-        return encoded.rstrip('=')
+    @staticmethod
+    def _encode_base62_ordered(num: int) -> str:
+        """
+        Encode a number using base62 with a character set that preserves lexicographic ordering.
+        Uses characters: 0-9, A-Z, a-z (62 characters total)
+        This ensures that if num1 < num2, then encode(num1) < encode(num2) lexicographically.
+        """
+        if num == 0:
+            return '0'
+
+        # Character set: 0-9 (10), A-Z (26), a-z (26) = 62 characters
+        # This ordering ensures lexicographic comparison matches numeric comparison
+        chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+
+        result = ''
+        while num > 0:
+            result = chars[num % 62] + result
+            num //= 62
+
+        # Pad with zeros to make it 8 characters long. More than we need, but let's be on the safe side.
+        return result.zfill(8)

@@ -21,7 +21,7 @@ def ssh_session(
     forward_agent: bool = False,
     strict_host_key_checking: str | None = None,  # e.g. 'no'
     close_on_exit: bool = True,
-) -> Generator[tuple[sh.Command, sh.Command], None, None]:
+) -> Generator[tuple[sh.Command, sh.Command]]:
     """
     Context manager that sets up an SSH master connection
     and yields baked ssh/scp commands.

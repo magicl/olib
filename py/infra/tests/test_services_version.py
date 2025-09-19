@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import semver
 
-from olib.infra.services.version import VersionManager
 from olib.py.django.test.cases import OTestCase
+from olib.py.infra.services.version import VersionManager
 
 
 class TestVersionManager(OTestCase):
@@ -77,7 +77,7 @@ class TestVersionManager(OTestCase):
                         self.assertIn('Version manager not configured', str(context.exception))
                     else:
                         # Test that initialize() raises ValueError for invalid increment type
-                        with patch.object(version_manager, '_getLastVersionFromGit') as mock_git:
+                        with patch.object(version_manager, '_get_last_version_from_git') as mock_git:
                             mock_git.return_value = (
                                 semver.Version.parse(last_version) if last_version else semver.Version.parse('0.0.0')
                             )
@@ -90,8 +90,8 @@ class TestVersionManager(OTestCase):
                 else:
                     # Test normal functionality
                     with (
-                        patch.object(version_manager, '_getLastVersionFromGit') as mock_git,
-                        patch.object(version_manager, '_getDevVersionSuffix') as mock_suffix,
+                        patch.object(version_manager, '_get_last_version_from_git') as mock_git,
+                        patch.object(version_manager, '_get_dev_version_suffix') as mock_suffix,
                     ):
 
                         mock_git.return_value = (
@@ -106,3 +106,14 @@ class TestVersionManager(OTestCase):
                         result = version_manager.get()
 
                         self.assertEqual(result, expected_result)
+
+    def test_ordered_base62_version(self) -> None:
+        VM = VersionManager
+
+        for start in [1, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]:
+            for offset in range(1, 1000):
+                # pylint: disable=protected-access
+                self.assertGreater(
+                    VM._encode_base62_ordered(start + offset), VM._encode_base62_ordered(start + offset - 1)
+                )
+                # pylint: enable=protected-access

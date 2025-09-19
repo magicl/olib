@@ -6,7 +6,7 @@
 import os
 from typing import TYPE_CHECKING, Any
 
-from olib.infra.services.version import VersionManager
+from ....infra.services.version import VersionManager
 
 if TYPE_CHECKING:
     from olib.py.cli.run.utils.remote import RemoteHost
