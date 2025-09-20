@@ -34,9 +34,27 @@ def _strip_comments_outside_quotes(value: str) -> str:
 
 def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, dict[str, str]]:
 
-    grouped_vars: dict[str, dict[str, str]] = defaultdict(dict)
+    grouped_vars: dict[str, dict[str, str]] = {}
     errors = []
 
+    # First pass: Find all groups
+    for env_file, content in env_contents:
+        for line_ in content.splitlines():
+            line = line_.strip()
+            if not line:
+                continue
+
+            # Match group headers like #[somename] and capture the name. Do not match [*]
+            if line.startswith('#'):
+                group_match = re.match(r'^#\[([\w\-\.,]+)\]$', line)
+                if group_match:
+                    groups = group_match.group(1).split(',')
+                    for group in groups:
+                        group = group.strip()
+                        if group != '*':  # Don't include * in all_groups
+                            grouped_vars[group] = {}
+
+    # Second pass: Process each line
     for env_file, content in env_contents:
         current_groups: list[str] | None = None
 
@@ -48,11 +66,13 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
             if not line:
                 continue
 
-            # Match group headers like #[somename] and capture the name
+            # Match group headers like #[somename] and capture the name. Match [*]
             if line.startswith('#'):
-                group_match = re.match(r'^#\[([\w\-\.,]+)\]$', line)
+                group_match = re.match(r'^#\[([\w\-\.\*,]+)\]$', line)
                 if group_match:
                     current_groups = group_match.group(1).split(',')
+                    if '*' in current_groups:
+                        current_groups = list(grouped_vars.keys())
                 # print('  continue')
                 continue
 
@@ -67,9 +87,11 @@ def _split_env_files_content(env_contents: list[tuple[str, str]]) -> dict[str, d
                     errors.append(f'No group found for {env_file}: {line}')
                     continue
 
+                # Process each group in current_groups
                 for group in current_groups:
+                    group = group.strip()
                     grouped_vars[group][key] = value
-                    # print(f'  values: {key}={value} for group {current_group}')
+                    # print(f'  values: {key}={value} for group {group}')
             except ValueError:
                 errors.append(f'{env_file}: {line}')
 
@@ -85,19 +107,23 @@ def split_env_files(env_files: list[str], output_prefix: str, substitutions: dic
     to files under the output_prefix with ".groupname" as suffixes
 
     Vars in later files or later in files take priority in case there are duplicates
+    Any * group is applied to all other groups.
 
     @param substitutions: If any {key} is found in the env files, it will be replaced with the value
 
     env file example:
 
-    [backend]
+    #[backend]
     FOO=bar
 
-    [frontend]
+    #[frontend]
     FOO=baz
 
-    [frontend,frontend]
+    #[frontend,frontend]
     FOO=qux
+
+    #[*]
+    BACKEND_HOST=https://backend.example.com
 
     """
 

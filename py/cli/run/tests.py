@@ -15,7 +15,7 @@ from django.test import tag
 from olib.py.cli.run.defaults import Config as defaultConfig
 from olib.py.cli.run.run import create_cli
 from olib.py.cli.run.templates import remote
-from olib.py.cli.run.utils.envfiles import _strip_comments_outside_quotes
+from olib.py.cli.run.utils.envfiles import _split_env_files_content, _strip_comments_outside_quotes
 from olib.py.cli.run.utils.remote import RemoteHost, clear_sessions
 from olib.py.django.conf.remote import conf_cli
 from olib.py.django.test.cases import OTestCase
@@ -312,3 +312,53 @@ class TestCliRun(OTestCase):
                     expected,
                     f"Failed for {description}: '{input_value}' -> expected '{expected}', got '{result}'",
                 )
+
+    def test_split_env_files_content_with_wildcard(self) -> None:
+        """Test that env files are processed correctly with [*] wildcard applying to all groups"""
+
+        # Test data with groups and wildcard
+        test_content = [
+            ('test.env', '''#[backend]
+FOO=backend_value
+BAR=backend_bar
+
+#[frontend]
+FOO=frontend_value
+BAZ=frontend_baz
+
+#[*]
+COMMON=shared_value
+ANOTHER=also_shared
+
+#[backend]
+SPECIFIC=backend_specific
+''')
+        ]
+        result = _split_env_files_content(test_content)
+
+
+        # Verify backend group has all expected variables
+        backend_vars = dict(result['backend'])
+        self.assertEqual(backend_vars['FOO'], 'backend_value')
+        self.assertEqual(backend_vars['BAR'], 'backend_bar')
+        self.assertEqual(backend_vars['COMMON'], 'shared_value')  # From [*]
+        self.assertEqual(backend_vars['ANOTHER'], 'also_shared')  # From [*]
+        self.assertEqual(backend_vars['SPECIFIC'], 'backend_specific')
+
+        # Verify frontend group has all expected variables
+        frontend_vars = dict(result['frontend'])
+        self.assertEqual(frontend_vars['FOO'], 'frontend_value')
+        self.assertEqual(frontend_vars['BAZ'], 'frontend_baz')
+        self.assertEqual(frontend_vars['COMMON'], 'shared_value')  # From [*]
+        self.assertEqual(frontend_vars['ANOTHER'], 'also_shared')  # From [*]
+
+        # Verify that [*] variables are applied to both groups
+        self.assertIn('COMMON', backend_vars)
+        self.assertIn('COMMON', frontend_vars)
+        self.assertIn('ANOTHER', backend_vars)
+        self.assertIn('ANOTHER', frontend_vars)
+
+        # Verify that group-specific variables are not cross-contaminated
+        self.assertNotIn('BAR', frontend_vars)
+        self.assertNotIn('BAZ', backend_vars)
+        self.assertNotIn('SPECIFIC', frontend_vars)
