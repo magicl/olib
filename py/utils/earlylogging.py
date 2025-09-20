@@ -8,6 +8,8 @@ import logging
 import os
 import sys
 
+from olib.py.utils.execenv import isEnvTest
+
 cliLevel: int | None = None  # Set via cli -vvv or -v3, or LOG_LEVEL env variable
 fileLevel: int | None = None  # Defaults to DEBUG. Set via LOG_LEVEL env variable
 
@@ -18,7 +20,7 @@ def cliLogLevel() -> int:
     global cliLevel  # pylint: disable=global-statement
 
     if cliLevel is None:
-        if len(sys.argv) > 1:  # and (sys.argv[1] in ["test", "runserver"]):
+        if len(sys.argv) > 1:
             verbose = 1
 
             if '-v3' in sys.argv or '-vvv' in sys.argv:
@@ -40,7 +42,11 @@ def cliLogLevel() -> int:
             else:
                 cliLevel = logging.WARNING
 
-        if (logLevel := os.environ.get('LOG_LEVEL')) is not None:
+        elif isEnvTest():
+            # Default to warning in test environment
+            cliLevel = logging.WARNING
+
+        elif (logLevel := os.environ.get('LOG_LEVEL')) is not None:
             try:
                 cliLevel = int(logLevel)
             except ValueError:
@@ -49,8 +55,9 @@ def cliLogLevel() -> int:
                 except KeyError:
                     print(f"INVALID LOG_LEVEL IN ENVIRONMENT VARIABLE: {logLevel}")
 
-    if cliLevel is None:
-        cliLevel = logging.WARNING
+        # Final default
+        if cliLevel is None:
+            cliLevel = logging.WARNING
 
     return cliLevel
 

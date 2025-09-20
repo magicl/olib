@@ -65,7 +65,6 @@ logLevelLog = fileLogLevel()
 # Extended logging enabled internally in modules. This adds significant time to test cases
 LOG_DEBUG_ENABLED = logging.DEBUG in (logLevelConsole, logLevelLog)
 
-
 LOGGING_CONFIG: None = None  # Disable django default logging config
 
 LOGGING: dict[str, Any] = {
