@@ -21,7 +21,7 @@ def cliLogLevel() -> int:
 
     if cliLevel is None:
         if len(sys.argv) > 1:
-            verbose = 1
+            verbose: int | None = None
 
             if '-v3' in sys.argv or '-vvv' in sys.argv:
                 verbose = 3
@@ -39,21 +39,24 @@ def cliLogLevel() -> int:
                 cliLevel = logging.DEBUG
             elif verbose == 2:
                 cliLevel = logging.INFO
-            else:
+            elif verbose == 1:
+                cliLevel = logging.WARNING
+            elif verbose == 0:
+                cliLevel = logging.ERROR
+
+        if cliLevel is None:
+            if isEnvTest():
+                # Default to warning in test environment
                 cliLevel = logging.WARNING
 
-        elif isEnvTest():
-            # Default to warning in test environment
-            cliLevel = logging.WARNING
-
-        elif (logLevel := os.environ.get('LOG_LEVEL')) is not None:
-            try:
-                cliLevel = int(logLevel)
-            except ValueError:
+            elif (logLevel := os.environ.get('LOG_LEVEL')) is not None:
                 try:
-                    cliLevel = _levels[logLevel]
-                except KeyError:
-                    print(f"INVALID LOG_LEVEL IN ENVIRONMENT VARIABLE: {logLevel}")
+                    cliLevel = int(logLevel)
+                except ValueError:
+                    try:
+                        cliLevel = _levels[logLevel]
+                    except KeyError:
+                        print(f"INVALID LOG_LEVEL IN ENVIRONMENT VARIABLE: {logLevel}")
 
         # Final default
         if cliLevel is None:

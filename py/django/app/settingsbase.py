@@ -59,6 +59,7 @@ initExecEnv()
 # Logging
 ###############################################################
 
+
 logLevelConsole = cliLogLevel()
 logLevelLog = fileLogLevel()
 
@@ -96,6 +97,10 @@ LOGGING: dict[str, Any] = {
         'level': 'DEBUG',
     },
     'loggers': {
+        # Make uvicorn logs *not* use the formatter that expects req_id/sess_id.
+        'uvicorn': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'uvicorn.error': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'uvicorn.access': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
         'environ.environ': {
             'level': 'INFO',  # At DEBUG, all settings are output to log
         },
