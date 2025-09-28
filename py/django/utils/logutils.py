@@ -3,6 +3,7 @@
 # See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
 # ~
 
+import datetime
 import logging
 import os
 import sys
@@ -43,6 +44,10 @@ class Formatter(logging.Formatter):
 
     def _should_use_colors(self) -> bool:
         """Determine if colors should be used based on terminal capabilities"""
+        # Check if FORCE_COLOR is set (for CI environments)
+        if os.environ.get('FORCE_COLOR'):
+            return True
+
         # Check if we're in a terminal that supports colors
         if not hasattr(sys.stdout, 'isatty') or not sys.stdout.isatty():
             return False
@@ -53,10 +58,6 @@ class Formatter(logging.Formatter):
 
         if os.environ.get('TERM') == 'dumb':
             return False
-
-        # Check if FORCE_COLOR is set (for CI environments)
-        if os.environ.get('FORCE_COLOR'):
-            return True
 
         # Default to using colors in interactive terminals
         return True
@@ -71,6 +72,10 @@ class Formatter(logging.Formatter):
             from olib.py.django.test.runner import get_test_thread_id
 
             record.__dict__['testThreadId'] = get_test_thread_id()
+
+        # Add custom timestamp with microseconds
+        dt = datetime.datetime.fromtimestamp(record.created)
+        record.__dict__['asctime'] = dt.strftime('%H:%M:%S.%f')[:-3]  # Remove last 3 digits to get milliseconds
 
         request = self.getRequest()
         if request is not None:

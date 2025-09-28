@@ -79,7 +79,8 @@ LOGGING: dict[str, Any] = {
         # },
         'default': {
             '()': 'olib.py.django.utils.logutils.Formatter',
-            'format': '%(levelname)s [%(name)s:%(lineno)s] %(req_id)s/%(sess_id)s %(message)s',
+            'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(req_id)s/%(sess_id)s %(message)s',
+            #'datefmt': '%H:%M:%S',
         },
     },
     'handlers': {
