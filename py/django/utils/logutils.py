@@ -4,6 +4,8 @@
 # ~
 
 import logging
+import os
+import sys
 from collections.abc import Callable
 from typing import Any
 
@@ -12,6 +14,16 @@ from django.conf import settings
 
 class Formatter(logging.Formatter):
     """Provides facilities to add request ID to log items from web requests and task ID for tasks"""
+
+    # ANSI color codes
+    COLORS = {
+        'DEBUG': '\033[36m',  # Cyan
+        'INFO': '\033[32m',  # Green
+        'WARNING': '\033[33m',  # Yellow
+        'ERROR': '\033[31m',  # Red
+        'CRITICAL': '\033[35m',  # Magenta
+        'RESET': '\033[0m',  # Reset
+    }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -27,6 +39,27 @@ class Formatter(logging.Formatter):
         self.getRequest = get_request
         self.notReprLog: bool | None = None
         self.parallelTest: bool | None = None
+        self._use_colors: bool | None = None
+
+    def _should_use_colors(self) -> bool:
+        """Determine if colors should be used based on terminal capabilities"""
+        # Check if we're in a terminal that supports colors
+        if not hasattr(sys.stdout, 'isatty') or not sys.stdout.isatty():
+            return False
+
+        # Check environment variables that might disable colors
+        if os.environ.get('NO_COLOR'):
+            return False
+
+        if os.environ.get('TERM') == 'dumb':
+            return False
+
+        # Check if FORCE_COLOR is set (for CI environments)
+        if os.environ.get('FORCE_COLOR'):
+            return True
+
+        # Default to using colors in interactive terminals
+        return True
 
     def format(self, record: logging.LogRecord) -> str:
         # If format called before full settings loaded, don't read settings, but read later
@@ -67,4 +100,21 @@ class Formatter(logging.Formatter):
             else:
                 record.__dict__.setdefault('task_name', '')
                 record.__dict__.setdefault('task_id', '')
-        return super().format(record)
+
+        # Get the base formatted message
+        formatted = super().format(record)
+
+        # Add colors if supported
+        if self._use_colors is None:
+            self._use_colors = self._should_use_colors()
+
+        if self._use_colors:
+            level_name = record.levelname
+            color = self.COLORS.get(level_name, '')
+            reset = self.COLORS['RESET']
+
+            if color:
+                # Colorize the level name in the formatted message
+                formatted = formatted.replace(level_name, f"{color}{level_name}{reset}")
+
+        return formatted
