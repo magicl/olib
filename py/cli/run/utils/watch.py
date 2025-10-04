@@ -7,7 +7,7 @@ from collections.abc import Callable
 import sh
 
 
-def watch_files(path: str, cwd: str, func: Callable[[], None], run_on_start: bool = True) -> None:
+def watch_files(path: list[str], cwd: str, func: Callable[[], None], run_on_start: bool = True) -> None:
     """
     Watch a path for changes and run a function when it changes
     """
@@ -20,7 +20,7 @@ def watch_files(path: str, cwd: str, func: Callable[[], None], run_on_start: boo
             pass
 
     try:
-        for line in sh.inotifywait('-m', '-r', '-e', 'close_write', path, _cwd=cwd, _iter=True):
+        for line in sh.inotifywait('-m', '-r', '-e', 'close_write', *path, _cwd=cwd, _iter=True):
             print('Updated: ', line)
             try:
                 func()
