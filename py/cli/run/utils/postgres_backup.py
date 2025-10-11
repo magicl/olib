@@ -38,11 +38,10 @@ def _get_databases(host: str, port: int, username: str, password: Optional[str] 
             '--tuples-only',
             '--no-align',
             '--command=SELECT datname FROM pg_database WHERE datistemplate = false;',
-            _env=env,
-            _capture=True
+            _env=env
         )
         
-        databases = [db.strip() for db in result.stdout.strip().split('\n') if db.strip()]
+        databases = [db.strip() for db in str(result).strip().split('\n') if db.strip()]
         logger.info(f"Found {len(databases)} databases: {', '.join(databases)}")
         return databases
         
