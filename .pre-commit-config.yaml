@@ -26,7 +26,7 @@ repos:
       - id: yamlfmt
         exclude: '/templates/'
   - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.7
+    rev: v0.3.8
     hooks:
       - id: dockerfmt
         args:
@@ -85,12 +85,12 @@ repos:
         language: system
         types: [python]
         args: ['--py313-plus']
-#      - id: unify
-#        name: unify
-#        entry: unify
-#        language: system
-#        types: [python]
-#        args: ['--in-place', "--quote='"]
+        #      - id: unify
+        #        name: unify
+        #        entry: unify
+        #        language: system
+        #        types: [python]
+        #        args: ['--in-place', "--quote='"]
       - id: black
         name: black
         entry: black
