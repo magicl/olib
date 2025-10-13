@@ -68,9 +68,10 @@ def images_build(
 
     click.echo('Building Image...')
     meta = ctx.obj.config.meta
+    containers = {**meta.build_containers, **ctx.obj.inst.get('containers', {})}
 
     accepted_images = images.split(',') if images is not None else None
-    for image_name, dockerfile in meta.build_containers.items():
+    for image_name, dockerfile in containers.items():
         if accepted_images is not None and image_name not in accepted_images:
             continue
 
@@ -87,9 +88,10 @@ def images_push(cls: Any, ctx: click.Context, images: str | None = None) -> None
     click.echo('Pushing Image...')
     meta = ctx.obj.config.meta
     inst = ctx.obj.inst
+    containers = {**meta.build_containers, **ctx.obj.inst.get('containers', {})}
 
     accepted_images = images.split(',') if images is not None else None
-    for image_name, _ in meta.build_containers.items():
+    for image_name, _ in containers.items():
         if accepted_images is not None and image_name not in accepted_images:
             continue
 
@@ -124,9 +126,10 @@ def images_analyze(cls: Any, ctx: click.Context, images: str | None = None) -> N
     click.echo('Running dive...')
     meta = ctx.obj.config.meta
     inst = ctx.obj.inst
+    containers = {**meta.build_containers, **ctx.obj.inst.get('containers', {})}
 
     accepted_images = images.split(',') if images is not None else None
-    for image_name, _ in meta.build_containers.items():
+    for image_name, _ in containers.items():
         if accepted_images is not None and image_name not in accepted_images:
             continue
 
