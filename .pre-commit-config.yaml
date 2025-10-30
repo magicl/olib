@@ -21,12 +21,12 @@ repos:
       - id: trailing-whitespace
       - id: double-quote-string-fixer #Does the same as unify, but unify is lagging
   - repo: https://github.com/google/yamlfmt
-    rev: v0.17.2
+    rev: v0.20.0
     hooks:
       - id: yamlfmt
         exclude: '/templates/'
   - repo: https://github.com/reteps/dockerfmt
-    rev: v0.3.8
+    rev: v0.3.9
     hooks:
       - id: dockerfmt
         args:
