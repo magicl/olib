@@ -5,7 +5,6 @@
 
 # pylint: disable=duplicate-code
 
-import getpass
 import hashlib
 import os
 from functools import partial
@@ -30,13 +29,18 @@ class DjangoConfig(NamedTuple):
     working_dir: str = './'
     manage_py: str = './manage.py'
     collectstatic: bool = True
+    admin_user_extra_fields: dict[str, Any] = {}
+    user_table: str = 'auth_user'
 
-    def rel_manage_py_path(self) -> str:
-        return os.path.normpath(os.path.join(self.working_dir, self.manage_py))
+    # def rel_manage_py_path(self) -> str:
+    #    return os.path.normpath(os.path.join(self.working_dir, self.manage_py))
 
     def hash(self) -> str:
         # Create a simple 6 digit hash of the settings_module and working_dir for caching
         return hashlib.sha256(f'{self.settings}{self.working_dir}'.encode()).hexdigest()[:6]
+
+    def __hash__(self) -> str:
+        return hash(f'{self.settings}{self.working_dir}')
 
     def name(self) -> str:
         return self.settings.split('.')[-2]
@@ -85,39 +89,47 @@ def _implement() -> Any:
     @click.pass_context
     def app_create_superuser(ctx: Any) -> None:
         """Create superuser for django app"""
+        django_config = ctx.obj.meta.django_primary
 
-        fname = mysql_escape(input('first name:'))
-        username = mysql_escape(input('username:'))
-        email = mysql_escape(input('email:'))
-        password = getpass.getpass('password:')
+        fname = mysql_escape(click.prompt('first name'))
+        username = mysql_escape(click.prompt('username'))
+        email = mysql_escape(click.prompt('email'))
+        password = click.prompt('password', hide_input=True)
         password_hash = sh.python3(
-            ctx.obj.meta.django_manage_py, 'hash_password', password, _bg=True, _cwd=ctx.obj.meta.django_working_dir
+            django_config.manage_py, 'hash_password', password, _bg=True, _cwd=django_config.working_dir
         ).strip()
 
-        user_table = sh.python3(
-            ctx.obj.meta.django_manage_py,
-            'shell',
-            '-c',
-            'from django.contrib.auth import get_user_model; print(get_user_model()._meta.db_table)',
-            _bg=True,
-            _cwd=ctx.obj.meta.django_working_dir,
-        ).strip()
+        # Build extra fields columns and values
+        extra_fields = django_config.admin_user_extra_fields
+        extra_columns = ', '.join(extra_fields.keys()) if extra_fields else ''
+        extra_columns_prefix = ', ' + extra_columns if extra_columns else ''
 
         if ctx.obj.meta.mysql:
             with mysql_connect(ctx, root=False) as db:
                 q = partial(mysql_query, db)
 
+                # Build extra field values for MySQL (escape each value)
+                if extra_fields:
+                    extra_escaped_values = [f"'{mysql_escape(str(value))}'" for value in extra_fields.values()]
+                    extra_values = ', ' + ', '.join(extra_escaped_values)
+                else:
+                    extra_values = ''
+
                 q(
-                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values ('{username}', '{email}', '{password_hash}', '{fname}', "", true, true, true, now());""",  # nosec
+                    f"""INSERT INTO {django_config.user_table} (username, email, password, first_name, last_name{extra_columns_prefix}, is_superuser, is_staff, is_active, date_joined) values ('{username}', '{email}', '{password_hash}', '{fname}', ''{extra_values}, true, true, true, now());""",  # nosec
                 )
 
         elif ctx.obj.meta.postgres:
             with postgres_connect(ctx, use_db=True) as db:
                 q = partial(postgres_query, db)
 
+                # Build parameter placeholders and values for PostgreSQL
+                extra_placeholders = ', ' + ', '.join(['%s'] * len(extra_fields)) if extra_fields else ''
+                extra_values = tuple(extra_fields.values()) if extra_fields else ()
+
                 q(
-                    f"""INSERT INTO {user_table} (username, email, password, first_name, last_name, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s, true, true, true, now());""",  # nosec
-                    (username, email, password_hash, fname, ''),
+                    f"""INSERT INTO {django_config.user_table} (username, email, password, first_name, last_name{extra_columns_prefix}, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s{extra_placeholders}, true, true, true, now());""",  # nosec
+                    (username, email, password_hash, fname, '') + extra_values,
                 )
 
         else:
@@ -130,7 +142,8 @@ def _implement() -> Any:
     @click.pass_context
     def manage(ctx: Any, args: tuple[str, ...]) -> None:
         """Run manage.py commands"""
-        sh.python3(ctx.obj.meta.django_manage_py, *args, _fg=True, _cwd=ctx.obj.meta.django_working_dir)
+        django_config = ctx.obj.meta.django_primary
+        sh.python3(django_config.manage_py, *args, _fg=True, _cwd=django_config.working_dir)
 
     return mysqlGroup
 
@@ -147,6 +160,8 @@ def django(configs: list[DjangoConfig]) -> Any:
         prep_config(cls)
 
         cls.meta.django = configs
+        cls.meta.django_primary = configs[0]
+
         cls.meta.commandGroups.append(('django', _implement()))
 
         # Ensure correct django settings have been configurated

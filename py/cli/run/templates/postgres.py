@@ -138,7 +138,7 @@ def _implement(defaultRoot: bool = True) -> Any:
             click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             click.echo('This will delete the given app from postgres, including the app database and user')
 
-            if input('Re-type the app name to continue: ') != ctx.obj.k8sAppName:
+            if click.prompt('Re-type the app name to continue') != ctx.obj.k8sAppName:
                 click.echo('Wrong name entered. Aborting', err=True)
                 sys.exit(1)
 
@@ -163,7 +163,7 @@ def _implement(defaultRoot: bool = True) -> Any:
             click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
             click.echo('This will delete all data in the database for the given app')
 
-            if input('Re-type the app name to continue: ') != ctx.obj.k8sAppName:
+            if click.prompt('Re-type the app name to continue') != ctx.obj.k8sAppName:
                 click.echo('Wrong name entered. Aborting', err=True)
                 sys.exit(1)
 
@@ -200,7 +200,7 @@ def _implement(defaultRoot: bool = True) -> Any:
                 click.echo('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                 click.echo('This will overwrite the database for the current app!')
 
-                if input('Re-type the app name to continue: ') != ctx.obj.k8sAppName:
+                if click.prompt('Re-type the app name to continue') != ctx.obj.k8sAppName:
                     click.echo('Wrong name entered. Aborting', err=True)
                     sys.exit(1)
 
