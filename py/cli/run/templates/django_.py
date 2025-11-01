@@ -39,7 +39,7 @@ class DjangoConfig(NamedTuple):
         # Create a simple 6 digit hash of the settings_module and working_dir for caching
         return hashlib.sha256(f'{self.settings}{self.working_dir}'.encode()).hexdigest()[:6]
 
-    def __hash__(self) -> str:
+    def __hash__(self) -> int:
         return hash(f'{self.settings}{self.working_dir}')
 
     def name(self) -> str:
