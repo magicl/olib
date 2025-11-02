@@ -6,7 +6,6 @@
 # pylint: disable=duplicate-code
 
 import hashlib
-import os
 from functools import partial
 from typing import Any, NamedTuple
 
@@ -111,12 +110,16 @@ def _implement() -> Any:
                 # Build extra field values for MySQL (escape each value)
                 if extra_fields:
                     extra_escaped_values = [f"'{mysql_escape(str(value))}'" for value in extra_fields.values()]
-                    extra_values = ', ' + ', '.join(extra_escaped_values)
+                    extra_values_str = ', ' + ', '.join(extra_escaped_values)
                 else:
-                    extra_values = ''
+                    extra_values_str = ''
 
                 q(
-                    f"""INSERT INTO {django_config.user_table} (username, email, password, first_name, last_name{extra_columns_prefix}, is_superuser, is_staff, is_active, date_joined) values ('{username}', '{email}', '{password_hash}', '{fname}', ''{extra_values}, true, true, true, now());""",  # nosec
+                    f"""INSERT INTO {django_config.user_table} """
+                    f"""(username, email, password, first_name, last_name{extra_columns_prefix}, """
+                    f"""is_superuser, is_staff, is_active, date_joined) """
+                    f"""values ('{username}', '{email}', '{password_hash}', '{fname}', ''{extra_values_str}, """
+                    f"""true, true, true, now());""",  # nosec
                 )
 
         elif ctx.obj.meta.postgres:
@@ -125,11 +128,11 @@ def _implement() -> Any:
 
                 # Build parameter placeholders and values for PostgreSQL
                 extra_placeholders = ', ' + ', '.join(['%s'] * len(extra_fields)) if extra_fields else ''
-                extra_values = tuple(extra_fields.values()) if extra_fields else ()
+                extra_values_tup: tuple[Any, ...] = tuple(extra_fields.values()) if extra_fields else ()
 
                 q(
                     f"""INSERT INTO {django_config.user_table} (username, email, password, first_name, last_name{extra_columns_prefix}, is_superuser, is_staff, is_active, date_joined) values (%s, %s, %s, %s, %s{extra_placeholders}, true, true, true, now());""",  # nosec
-                    (username, email, password_hash, fname, '') + extra_values,
+                    (username, email, password_hash, fname, '') + extra_values_tup,
                 )
 
         else:
